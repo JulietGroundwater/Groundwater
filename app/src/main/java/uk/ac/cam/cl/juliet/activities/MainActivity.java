@@ -13,7 +13,6 @@ import uk.ac.cam.cl.juliet.fragments.DataFragment;
 import uk.ac.cam.cl.juliet.fragments.InfoFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
 
-
 /**
  * The home screen for the application.
  *
