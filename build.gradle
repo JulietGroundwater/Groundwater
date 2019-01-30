@@ -14,14 +14,21 @@ buildscript {
     }
 }
 
+plugins {
+    id "com.diffplug.gradle.spotless" version "3.17.0"
+}
+
+spotless {
+    java {
+        googleJavaFormat().aosp()
+        target '**/*.java'
+    }
+}
+
 allprojects {
     repositories {
         google()
         jcenter()
         
     }
-}
-
-task clean(type: Delete) {
-    delete rootProject.buildDir
 }
