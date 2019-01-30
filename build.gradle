@@ -21,7 +21,7 @@ plugins {
 
 spotless {
     java {
-        googleJavaFormat()
+        googleJavaFormat().aosp()
         target '**/*.java'
     }
 }
