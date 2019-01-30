@@ -15,7 +15,6 @@ buildscript {
 }
 
 plugins {
-    id 'com.github.sherter.google-java-format' version '0.8'
     id "com.diffplug.gradle.spotless" version "3.17.0"
 }
 
