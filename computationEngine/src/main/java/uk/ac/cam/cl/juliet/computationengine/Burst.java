@@ -3,7 +3,7 @@ package uk.ac.cam.cl.juliet.computationengine;
 import java.util.List;
 
 /**
- * Interface to represent a Burst from the radar, this is a java representation of the vdat struct
+ * Class to represent a Burst from the radar, this is a java representation of the vdat struct
  * from {@code fmcw_load()}. The only required methods are getters for each of the fields in the
  * struct.
  */
