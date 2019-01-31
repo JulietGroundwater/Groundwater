@@ -10,7 +10,6 @@ import android.support.v4.view.ViewPager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import uk.ac.cam.cl.juliet.R;
 
 /**
@@ -49,8 +48,8 @@ public class InfoFragment extends Fragment {
     }
 
     /**
-     * Supplies inner fragments to the TabLayout, so that the fragment can be replaced when a tab
-     * is clicked.
+     * Supplies inner fragments to the TabLayout, so that the fragment can be replaced when a tab is
+     * clicked.
      */
     private class InfoPagerAdapter extends FragmentStatePagerAdapter {
 
@@ -86,5 +85,4 @@ public class InfoFragment extends Fragment {
             return 2;
         }
     }
-
 }

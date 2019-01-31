@@ -7,7 +7,6 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
-
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.fragments.DataFragment;
 import uk.ac.cam.cl.juliet.fragments.InfoFragment;
