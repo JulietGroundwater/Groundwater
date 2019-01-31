@@ -3,7 +3,7 @@ package uk.ac.cam.cl.juliet.computationengine;
 import java.util.List;
 
 /**
- * Interface for representing the configuration of the radar, requires getters and setters for all
+ * Class for representing the configuration of the radar, requires getters and setters for all
  * values int the {@code Config.ini} file.
  *
  * <p>Descriptions of values and functions are adapted from the comments in the {@code Config.ini}
