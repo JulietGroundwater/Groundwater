@@ -1,7 +1,5 @@
 package uk.ac.cam.cl.juliet.computationengine;
 
-import com.sun.org.apache.xml.internal.serializer.ToTextSAXHandler;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -9,20 +7,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.List;
-
 import jdk.nashorn.internal.parser.DateParser;
 
 public class Vdat {
     public Vdat(String FileName, int burst, int SamplesPerChirp) {
         /*
-            function vdat = LoadBurstRMB3(Filename, Burst, SamplesPerChirp)
+           function vdat = LoadBurstRMB3(Filename, Burst, SamplesPerChirp)
 
-            % vdat = LoadBurstRMB3(Filename, Burst, SamplesPerChirp)
-            %
-            % Read FMCW data file from RMB-A? (Data from Jan 2013)
+           % vdat = LoadBurstRMB3(Filename, Burst, SamplesPerChirp)
+           %
+           % Read FMCW data file from RMB-A? (Data from Jan 2013)
 
-         */
+        */
 
         try {
             LoadBurstRMB3(FileName, burst, SamplesPerChirp);
@@ -40,17 +36,16 @@ public class Vdat {
                     bti2 = find(vdat.Temperature_2>300); % bad temperature indices
             vdat.Temperature_2(bti2) = vdat.Temperature_2(bti2)-512;
         */
-        if (temperature1 > 300)
-        {
+        if (temperature1 > 300) {
             temperature1 -= 512;
         }
-        if (temperature2 > 300)
-        {
+        if (temperature2 > 300) {
             temperature2 -= 512;
         }
     }
 
-    public void LoadBurstRMB3(String FileName, int totalNumberOfBursts, int SamplesPerChirp) throws IOException {
+    public void LoadBurstRMB3(String FileName, int totalNumberOfBursts, int SamplesPerChirp)
+            throws IOException {
         /*
         WperChirpHdr = 0;
         MaxHeaderLen = 1024;
@@ -82,22 +77,22 @@ public class Vdat {
             return;
         }
 
-            /*
-                BurstCount = 1;
-            */
+        /*
+            BurstCount = 1;
+        */
         int burstCount = 1;
-            /*
-                while BurstCount <= Burst && burstpointer <= filelength - MaxHeaderLen
-            */
+        /*
+            while BurstCount <= Burst && burstpointer <= filelength - MaxHeaderLen
+        */
         long current_stream_pos = 0;
         String A = "";
         int wordsPerBurst = 0;
         int WperChirpCycle = 0;
 
         while ((burstCount <= totalNumberOfBursts) && (burstpointer <= fileLength - MaxHeaderLen)) {
-                /*
-                    fseek(fid,burstpointer,'bof');
-                */
+            /*
+                fseek(fid,burstpointer,'bof');
+            */
             if (burstpointer < current_stream_pos) {
                 f.reset();
                 current_stream_pos = 0;
@@ -115,16 +110,15 @@ public class Vdat {
             byte b[] = new byte[MaxHeaderLen];
             f.read(b);
             char c[] = new char[MaxHeaderLen];
-            for (int i = 0; i < MaxHeaderLen; i++)
-            {
-                c[i] = (char)b[i];
+            for (int i = 0; i < MaxHeaderLen; i++) {
+                c[i] = (char) b[i];
             }
             A = new String(c);
 
             /*
-                searchind = strfind(A, 'Samples:');
-                // This returns an array of all of the matches.
-             */
+               searchind = strfind(A, 'Samples:');
+               // This returns an array of all of the matches.
+            */
             int[] searchind = strFind(A, "Samples:");
 
             /*
@@ -132,8 +126,8 @@ public class Vdat {
             */
             if (searchind.length != 0) {
                 /*
-                    try
-                 */
+                   try
+                */
                 try {
                     /*
                         searchCR = strfind(A(searchind(1):end),[char(13),char(10)]);
@@ -148,18 +142,20 @@ public class Vdat {
                         burstpointer = burstpointer + searchind(1) + 20;
                     */
                     int[] searchCR = strFind(A.substring(searchind[0]), "\13\10");
-                    nSamples = Integer.getInteger(A.substring(searchind[0]+8, searchCR[0] + searchind[0]));
+                    nSamples =
+                            Integer.getInteger(
+                                    A.substring(searchind[0] + 8, searchCR[0] + searchind[0]));
                     WperChirpCycle = nSamples + WperChirpHdr;
                     searchind = strFind(A, "Chirps in burst:");
                     searchCR = strFind(A.substring(searchind[0]), "\13\10");
-                    chirpsInBurst = Integer.getInteger(A.substring(searchind[0] + 16, searchCR[0] + searchind[0]));
+                    chirpsInBurst =
+                            Integer.getInteger(
+                                    A.substring(searchind[0] + 16, searchCR[0] + searchind[0]));
 
                     searchind = strFind(A, "*** End Header ***");
                     burstpointer += searchind[0] + 20;
 
-                }
-                catch(Exception e)
-                {
+                } catch (Exception e) {
                     /*
                     catch
                         vdat.Code = -2;
@@ -179,8 +175,7 @@ public class Vdat {
                 end
             */
             wordsPerBurst = chirpsInBurst * WperChirpCycle;
-            if (burstCount < totalNumberOfBursts && burstpointer <= fileLength - MaxHeaderLen)
-            {
+            if (burstCount < totalNumberOfBursts && burstpointer <= fileLength - MaxHeaderLen) {
                 burstpointer += (chirpsInBurst * WperChirpCycle * 2);
             }
             burstCount++;
@@ -203,12 +198,12 @@ public class Vdat {
 
         try {
 
-            DateParser dp = new DateParser(A.substring(searchind[0] + 11, searchCR[0] + searchind[0]));
+            DateParser dp =
+                    new DateParser(A.substring(searchind[0] + 11, searchCR[0] + searchind[0]));
             Integer[] dt = dp.getDateFields();
             dateTime = LocalDateTime.of(dt[0], dt[1], dt[2], dt[3], dt[4], dt[5]);
 
-        } catch (Exception e)
-        {
+        } catch (Exception e) {
             code = 1;
         }
 
@@ -224,10 +219,9 @@ public class Vdat {
         searchind = strFind(A, "Temperature 1:");
         searchCR = strFind(A.substring(searchind[0]), "\13\10");
         try {
-            temperature1 = Double.parseDouble(A.substring(searchind[0] + 14, searchCR[0] + searchind[0]));
-        }
-        catch (Exception e)
-        {
+            temperature1 =
+                    Double.parseDouble(A.substring(searchind[0] + 14, searchCR[0] + searchind[0]));
+        } catch (Exception e) {
             code = 1;
         }
 
@@ -243,10 +237,9 @@ public class Vdat {
         searchind = strFind(A, "Temperature 2:");
         searchCR = strFind(A.substring(searchind[0]), "\13\10");
         try {
-            temperature2 = Double.parseDouble(A.substring(searchind[0] + 14, searchCR[0] + searchind[0]));
-        }
-        catch (Exception e)
-        {
+            temperature2 =
+                    Double.parseDouble(A.substring(searchind[0] + 14, searchCR[0] + searchind[0]));
+        } catch (Exception e) {
             code = 1;
         }
 
@@ -262,10 +255,9 @@ public class Vdat {
         searchind = strFind(A, "Battery voltage:");
         searchCR = strFind(A.substring(searchind[0]), "\13\10");
         try {
-            batteryVoltage = Double.parseDouble(A.substring(searchind[0] + 14, searchCR[0] + searchind[0]));
-        }
-        catch (Exception e)
-        {
+            batteryVoltage =
+                    Double.parseDouble(A.substring(searchind[0] + 14, searchCR[0] + searchind[0]));
+        } catch (Exception e) {
             code = 1;
         }
 
@@ -282,16 +274,14 @@ public class Vdat {
         searchind = strFind(A, "Attenuator 1:");
         searchCR = strFind(A.substring(searchind[0]), "\13\10");
         try {
-            String[] a_split = A.substring(searchind[0] + 14, searchCR[0] + searchind[0]).split(",");
+            String[] a_split =
+                    A.substring(searchind[0] + 14, searchCR[0] + searchind[0]).split(",");
             attenuator1 = new double[a_split.length];
-            for (int i = 0; i < a_split.length; i++)
-            {
+            for (int i = 0; i < a_split.length; i++) {
                 attenuator1[i] = Double.parseDouble(a_split[i]);
             }
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             code = 1;
         }
 
@@ -306,16 +296,14 @@ public class Vdat {
         searchind = strFind(A, "Attenuator 2:");
         searchCR = strFind(A.substring(searchind[0]), "\13\10");
         try {
-            String[] a_split = A.substring(searchind[0] + 14, searchCR[0] + searchind[0]).split(",");
+            String[] a_split =
+                    A.substring(searchind[0] + 14, searchCR[0] + searchind[0]).split(",");
             attenuator2 = new double[a_split.length];
-            for (int i = 0; i < a_split.length; i++)
-            {
+            for (int i = 0; i < a_split.length; i++) {
                 attenuator2[i] = Double.parseDouble(a_split[i]);
             }
 
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             code = 1;
         }
 
@@ -329,10 +317,9 @@ public class Vdat {
         current_stream_pos += f.skip(burstpointer - 1 - current_stream_pos);
 
         /*
-            if BurstCount == Burst+1
-         */
-        if (burstCount == totalNumberOfBursts + 1)
-        {
+           if BurstCount == Burst+1
+        */
+        if (burstCount == totalNumberOfBursts + 1) {
             /*
                 [vdat.v count] = fread(fid,WordsPerBurst,'*int16','ieee-le');
                 vdat.v = double(vdat.v);
@@ -344,22 +331,19 @@ public class Vdat {
             count /= 2; // Measures bytes not int16s;
             v = new double[count];
 
-            for (int i = 0; i < count; i++)
-            {
+            for (int i = 0; i < count; i++) {
                 // Little Endian.
                 int x = b[2 * i] + (256 * b[2 * i + 1]);
                 double d = x;
                 v[i] = d * (2.5 / Math.pow(2, 16)) + 1.25;
             }
 
-
             /*
                 if count < WordsPerBurst
                     vdat.Code = 2;
                 end
             */
-            if (count < wordsPerBurst)
-            {
+            if (count < wordsPerBurst) {
                 code = 2;
             }
 
@@ -368,8 +352,9 @@ public class Vdat {
                 vdat.Endind = vdat.Startind + SamplesPerChirp - 1;
             */
             ArrayList<Integer> startIndList = new ArrayList<Integer>();
-            for (int i = WperChirpHdr + 1; i <= WperChirpCycle * chirpsInBurst; i += WperChirpCycle)
-            {
+            for (int i = WperChirpHdr + 1;
+                    i <= WperChirpCycle * chirpsInBurst;
+                    i += WperChirpCycle) {
                 startIndList.add(i);
             }
             startInd = new int[startIndList.size()];
@@ -382,9 +367,7 @@ public class Vdat {
                 vdat.Burst = Burst;
             */
             burst = totalNumberOfBursts;
-        }
-        else
-        {
+        } else {
             /*
             % Too few bursts in file
                 vdat.Burst = BurstCount - 1;
@@ -403,17 +386,16 @@ public class Vdat {
         } catch (IOException e) {
             // Do nothing.
         }
-
     }
 
     public int[] strFind(String original, String substring) {
         ArrayList<Integer> list = new ArrayList<Integer>();
         int lastIndex = 0;
-        while(lastIndex != -1) {
+        while (lastIndex != -1) {
 
-            lastIndex = original.indexOf("Samples:",lastIndex);
+            lastIndex = original.indexOf("Samples:", lastIndex);
 
-            if(lastIndex != -1){
+            if (lastIndex != -1) {
                 list.add(lastIndex);
                 lastIndex += 1;
             }
