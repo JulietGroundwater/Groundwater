@@ -23,22 +23,6 @@ public class DataFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
-        AuthenticationManager authManager = AuthenticationManager.getInstance();
-        authManager.createAuthenticator(getActivity().getApplication());
-        IAuthenticationAdapter authAdaptor = authManager.getAuthAdapter();
-
-        authAdaptor.login(getActivity(), new ICallback<Void>() {
-            @Override
-            public void success(Void aVoid) {
-                System.out.println("SUCCESS");
-            }
-
-            @Override
-            public void failure(ClientException ex) {
-                System.out.println("FAILURE");
-            }
-        });
 
         Intent intent = new Intent(getActivity(), ConnectActivity.class);
         startActivity(intent);

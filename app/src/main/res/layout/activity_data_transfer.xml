@@ -3,22 +3,14 @@
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:gravity="center"
-                tools:context=".data.ConnectActivity">
+                tools:context=".data.DataTransferActivity">
 
     <Button
-            android:id="@+id/connect_button"
+            android:id="@+id/send_data"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:text="@string/connect_btn" />
-
-    <ProgressBar
-            android:id="@+id/connect_progress"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true"
-            android:visibility="gone" />
+            android:text="@string/send_btn" />
 
 </RelativeLayout>

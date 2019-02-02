@@ -7,21 +7,18 @@ import android.util.Log;
 import com.microsoft.graph.authentication.IAuthenticationAdapter;
 import com.microsoft.graph.authentication.MSAAuthAndroidAdapter;
 import com.microsoft.identity.client.*;
-
 import java.io.IOException;
 
 public class AuthenticationManager extends Application {
-    public static final String[] SCOPES = {"User.ReadWrite"};
-    public static final String CLIENT_ID = "117be11e-d371-4bd2-9ff5-0909380530c9";
+    public static final String[] SCOPES = {"openid","Files.ReadWrite","User.ReadBasic.All"};
     private final String TAG = "AuthenticationManager";
     private static AuthenticationManager INSTANCE;
     private static PublicClientApplication PUBLIC_CLIENT;
 
-    private IAuthenticationAdapter authAdapter;
     private AuthenticationResult authResult;
     private IAuthenticationCallback activityCallback;
 
-    private AuthenticationManager() { }
+    private AuthenticationManager() {}
 
     public static AuthenticationManager getInstance() {
         if (INSTANCE == null) {
@@ -37,23 +34,6 @@ public class AuthenticationManager extends Application {
         INSTANCE = null;
     }
 
-    public void createAuthenticator(Application app) {
-        this.authAdapter = new MSAAuthAndroidAdapter(app) {
-            @Override
-            public String getClientId() {
-                return CLIENT_ID;
-            }
-
-            @Override
-            public String[] getScopes() {
-                return new String[] {
-                        "User.ReadWrite",
-                        "offline_access",
-                };
-            }
-        };
-    }
-
     /**
      * Get the access token from the private authentication result
      *
@@ -62,7 +42,8 @@ public class AuthenticationManager extends Application {
      * @throws IOException
      * @throws OperationCanceledException
      */
-    public String getAccessToken() throws AuthenticatorException, IOException, OperationCanceledException {
+    public String getAccessToken()
+            throws AuthenticatorException, IOException, OperationCanceledException {
         return authResult.getAccessToken();
     }
 
@@ -74,7 +55,6 @@ public class AuthenticationManager extends Application {
     }
 
     /**
-     *
      * @param activity
      * @param callback
      */
@@ -93,16 +73,18 @@ public class AuthenticationManager extends Application {
      * @param activity
      * @param callback
      */
-    public void acquireTokenSilently(User user, Boolean forceRefresh, Activity activity, IAuthenticationCallback callback) {
+    public void acquireTokenSilently(
+            User user, Boolean forceRefresh, Activity activity, IAuthenticationCallback callback) {
         // Set the activity callback
         activityCallback = callback;
         // Make call to acquire token using the public client
-        PUBLIC_CLIENT.acquireTokenSilentAsync(SCOPES, user, null, forceRefresh, getAuthSilentCallback());
+        PUBLIC_CLIENT.acquireTokenSilentAsync(
+                SCOPES, user, null, forceRefresh, getAuthSilentCallback());
     }
 
     /**
-     * The callback used for interactive requests - no checking of cache and we use the token
-     * with MS Graph API for calls
+     * The callback used for interactive requests - no checking of cache and we use the token with
+     * MS Graph API for calls
      *
      * @return <code>AuthenticationCallback</code>
      */
@@ -150,8 +132,14 @@ public class AuthenticationManager extends Application {
             @Override
             public void onSuccess(AuthenticationResult authenticationResult) {
                 Log.d(TAG, "Successful Authentication");
-
+                Log.d(TAG, authenticationResult.getUser().getName());
+                Log.d(TAG, authenticationResult.getAccessToken());
                 authResult = authenticationResult;
+
+                // Pass on the callback to the result (Data Transfer)
+                if (activityCallback != null) {
+                    activityCallback.onSuccess(authResult);
+                }
             }
 
             @Override
@@ -176,10 +164,6 @@ public class AuthenticationManager extends Application {
                 }
             }
         };
-    }
-
-    public IAuthenticationAdapter getAuthAdapter() {
-        return authAdapter;
     }
 
     public PublicClientApplication getPublicClient() {

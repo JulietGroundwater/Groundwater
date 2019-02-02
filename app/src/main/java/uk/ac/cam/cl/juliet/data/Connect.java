@@ -1,11 +1,8 @@
 package uk.ac.cam.cl.juliet.data;
 
-import android.app.Activity;
 import android.app.Application;
 
-/**
- * For passing the contexts around
- */
+/** For passing the contexts around */
 public class Connect extends Application {
     private static Connect CONNECT_INSTANCE;
     private static ConnectActivity CONNECT_ACTIVITY_INSTANCE;

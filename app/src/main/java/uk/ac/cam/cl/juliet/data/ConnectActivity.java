@@ -10,11 +10,10 @@ import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.microsoft.identity.client.*;
+import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 
-import java.util.List;
-
-public class ConnectActivity extends AppCompatActivity implements IAuthenticationCallback{
+public class ConnectActivity extends AppCompatActivity implements IAuthenticationCallback {
     private User user;
     private Handler handler;
     private Button connectButton;
@@ -35,26 +34,27 @@ public class ConnectActivity extends AppCompatActivity implements IAuthenticatio
         Connect.getInstance().setConnectActivityInstanceInstance(this);
 
         // Set up action onClick
-        connectButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showProgress();
-                connect();
-            }
-        });
+        connectButton.setOnClickListener(
+                new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        showProgress();
+                        connect();
+                    }
+                });
     }
 
-    private void showProgress() {
-
-    }
+    private void showProgress() {}
 
     private void showMessage(final String msg) {
-        getHandler().post(new Runnable() {
-            @Override
-            public void run() {
-                Toast.makeText(ConnectActivity.this, msg, Toast.LENGTH_LONG).show();
-            }
-        });
+        getHandler()
+                .post(
+                        new Runnable() {
+                            @Override
+                            public void run() {
+                                Toast.makeText(ConnectActivity.this, msg, Toast.LENGTH_LONG).show();
+                            }
+                        });
     }
 
     private Handler getHandler() {
@@ -102,7 +102,10 @@ public class ConnectActivity extends AppCompatActivity implements IAuthenticatio
     public void onSuccess(AuthenticationResult res) {
         user = res.getUser();
         String name = user.getName();
-        System.out.println(name);
+        System.out.println(res.getUser());
+        // Prepare for Data Transfer Activity
+        Intent dataTransferActivity = new Intent(ConnectActivity.this, DataTransferActivity.class);
+        startActivity(dataTransferActivity);
     }
 
     @Override

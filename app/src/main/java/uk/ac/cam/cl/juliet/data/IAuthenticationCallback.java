@@ -5,6 +5,8 @@ import com.microsoft.identity.client.MsalException;
 
 public interface IAuthenticationCallback {
     void onSuccess(AuthenticationResult res);
+
     void onError(MsalException msalException);
+
     void onCancel();
 }
