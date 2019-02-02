@@ -213,7 +213,7 @@ public class ComplexVector {
         Complex avgSquareSum = new Complex(0.0);
 
         for (int i = 0; i < values.size(); i++) {
-            avgSquareSum.add(values.get(i).multiply(values.get(i)).divide(1.0 / (double)(size())));
+            avgSquareSum = avgSquareSum.add(values.get(i).multiply(values.get(i)).divide((double)(size())));
         }
 
         return avgSquareSum.sqrt();
