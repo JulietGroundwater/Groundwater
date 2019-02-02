@@ -9,6 +9,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import uk.ac.cam.cl.juliet.R;
 
+/**
+ * Displays more detail about the currently open data file.
+ *
+ * @author Ben Cole
+ */
 public class InfoMoreDetailFragment extends Fragment {
 
     @Nullable
