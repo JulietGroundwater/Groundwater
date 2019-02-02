@@ -1,15 +1,182 @@
 package uk.ac.cam.cl.juliet.computationengine;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Class for header of {@code .DAT} file from the radar, adapted from the Auto-pRES Manual page 12
+ *
+ * <p>Some variables were not mentioned in the manual and so they have been commented as such, and
+ * their types have been inferred from their name
  */
 public class Header {
 
-    public Header(String filename) {
-        // TODO
+    private int average,
+            maxDataFileLength,
+            maxDepthToGraph,
+            nADCSamples,
+            nAttenuators,
+            nData,
+            nSubBursts,
+            repSecs,
+            settleCycles,
+            watchdogTaskSecs,
+            maxSafFileLength, // NOT DEFINED IN MANUAL
+            interChirpDelay, // NOT DEFINED IN MANUAL
+            samplingFreqMode, // NOT DEFINED IN MANUAL
+            ramp, // NOT DEFINED IN MANUAL
+            noDwell, // NOT DEFINED IN MANUAL
+            startFreq, // NOT DEFINED IN MANUAL
+            stopFreq, // NOT DEFINED IN MANUAL
+            freqStepUp, // NOT DEFINED IN MANUAL
+            freqStepDn, // NOT DEFINED IN MANUAL
+            burstNo, // NOT DEFINED IN MANUAL
+            upTell; // NOT DEFINED IN MANUAL
+    private boolean alwaysAttended,
+            antennaSelect,
+            checkEthernet,
+            gpsOn,
+            housekeeping,
+            intervalMode,
+            iridium,
+            logOn,
+            sleepMode,
+            syncGPS,
+            battSleep, // NOT DEFINED IN MANUAL
+            isEthOn, // NOT DEFINED IN MANUAL
+            isWebServerOn, // NOT DEFINED IN MANUAL
+            isFTPServerOn; // NOT DEFINED IN MANUAL
+    private double batteryVoltage,
+            gpsTime,
+            latitude,
+            longitude,
+            temp1,
+            temp2,
+            vm2Time,
+            tStepUp, // NOT DEFINED IN MANUAL
+            tStepDn; // NOT DEFINED IN MANUAL
+    private Date timeStamp;
+    private String reg00,
+            reg01,
+            reg02,
+            reg0B,
+            reg0C,
+            reg0D,
+            reg0E,
+            rmbIssue,
+            swIssue,
+            vabIssue,
+            venomIssue;
+    private List<Integer> afGain = new ArrayList<>(),
+            attenuator1 = new ArrayList<>(),
+            rxAnt = new ArrayList<>(),
+            triples = new ArrayList<>(),
+            txAnt = new ArrayList<>(),
+            batteryCheck = new ArrayList<>(); // NOT DEFINED IN MANUAL
+
+    private List<String> headerLines = new ArrayList<>();
+
+    public Header(String filename) throws IOException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource(filename).getFile());
+
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            headerLines.add(line);
+
+            if (line.contains("*** End Header ***")) break;
+
+            if (!line.contains("=")) continue;
+
+            String lhs = line.split("=")[0]; // left hand side
+            String rhs = line.split("=")[1]; // right hand side
+
+            // would use a switch statement here, but for Strings it requires java 7
+            if (lhs.equals("Time stamp")) {
+                DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);
+                try {
+                    timeStamp = format.parse(rhs);
+                } catch (ParseException e) {
+                    e.printStackTrace();
+                }
+            } else if (lhs.equals("RMB_Issue")) rmbIssue = rhs;
+            else if (lhs.equals("VAB_Issue")) vabIssue = rhs;
+            else if (lhs.equals("SW_Issue")) swIssue = rhs;
+            else if (lhs.equals("Venom_Issue")) venomIssue = rhs;
+            else if (lhs.equals("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
+            else if (lhs.equals("NData")) nData = Integer.parseInt(rhs);
+            else if (lhs.equals("Triples"))
+                for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
+            else if (lhs.equals("Average")) average = Integer.parseInt(rhs);
+            else if (lhs.equals("RepSecs")) repSecs = Integer.parseInt(rhs);
+            else if (lhs.equals("CheckEthernet")) checkEthernet = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
+            else if (lhs.equals("MAX_DATA_FILE_LENGTH")) maxDataFileLength = Integer.parseInt(rhs);
+            else if (lhs.equals("MAX_SAF_FILE_LENGTH")) maxSafFileLength = Integer.parseInt(rhs);
+            else if (lhs.equals("ANTENNA_SELECT")) antennaSelect = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
+            else if (lhs.equals("Housekeeping")) housekeeping = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("GPSon")) gpsOn = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("WATCHDOG_TASK_SECS")) watchdogTaskSecs = Integer.parseInt(rhs);
+            else if (lhs.equals("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
+            else if (lhs.equals("Attenuator1"))
+                for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
+            else if (lhs.equals("AFGain"))
+                for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
+            else if (lhs.equals("TxAnt"))
+                for (String s : rhs.split(",")) txAnt.add(Integer.parseInt(s));
+            else if (lhs.equals("RxAnt"))
+                for (String s : rhs.split(",")) rxAnt.add(Integer.parseInt(s));
+            else if (lhs.equals("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
+            else if (lhs.equals("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("LogOn")) logOn = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("Reg00")) reg00 = rhs;
+            else if (lhs.equals("Reg01")) reg01 = rhs;
+            else if (lhs.equals("Reg02")) reg02 = rhs;
+            else if (lhs.equals("Reg0B")) reg0B = rhs;
+            else if (lhs.equals("Reg0C")) reg0C = rhs;
+            else if (lhs.equals("Reg0D")) reg0D = rhs;
+            else if (lhs.equals("Reg0E")) reg0E = rhs;
+            else if (lhs.equals("SamplingFreqMode")) samplingFreqMode = Integer.parseInt(rhs);
+            else if (lhs.equals("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
+            else if (lhs.equals("BatteryCheck"))
+                for (String s : rhs.split(",")) batteryCheck.add(Integer.parseInt(s));
+            else if (lhs.equals("Latitude")) latitude = Double.parseDouble(rhs);
+            else if (lhs.equals("Longitude")) longitude = Double.parseDouble(rhs);
+            else if (lhs.equals("GPS_Time")) gpsTime = Double.parseDouble(rhs);
+            else if (lhs.equals("VM2_Time")) vm2Time = Double.parseDouble(rhs);
+            else if (lhs.equals("Temp1")) temp1 = Double.parseDouble(rhs);
+            else if (lhs.equals("Temp2")) temp2 = Double.parseDouble(rhs);
+            else if (lhs.equals("BatteryVoltage")) batteryVoltage = Double.parseDouble(rhs);
+            else if (lhs.equals("Ramp")) ramp = Integer.parseInt(rhs);
+            else if (lhs.equals("NoDwell")) noDwell = Integer.parseInt(rhs);
+            else if (lhs.equals("StartFreq")) startFreq = Integer.parseInt(rhs);
+            else if (lhs.equals("StopFreq")) stopFreq = Integer.parseInt(rhs);
+            else if (lhs.equals("FreqStepUp")) freqStepUp = Integer.parseInt(rhs);
+            else if (lhs.equals("FreqStepDn")) freqStepDn = Integer.parseInt(rhs);
+            else if (lhs.equals("TStepUp")) tStepUp = Double.parseDouble(rhs);
+            else if (lhs.equals("TStepDn")) tStepDn = Double.parseDouble(rhs);
+            else if (lhs.equals("BattSleep")) battSleep = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("BurstNo")) burstNo = Integer.parseInt(rhs);
+            else if (lhs.equals("IsEthOn")) isEthOn = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("UpTell")) upTell = Integer.parseInt(rhs);
+            else if (lhs.equals("IsWebServerOn")) isWebServerOn = (Integer.parseInt(rhs) != 0);
+            else if (lhs.equals("IsFTPServerOn")) isFTPServerOn = (Integer.parseInt(rhs) != 0);
+        }
     }
 
     /**
@@ -19,8 +186,12 @@ public class Header {
      * @return ASCII string of the entire header
      */
     public String getASCII() {
-        // TODO
-        return null;
+        StringBuilder sb = new StringBuilder();
+        for (String line : headerLines) {
+            sb.append(line);
+            sb.append('\n');
+        }
+        return sb.toString();
     }
 
     /**
@@ -29,8 +200,7 @@ public class Header {
      * @return timestamp
      */
     public Date getTimestamp() {
-        // TODO
-        return null;
+        return timeStamp;
     }
 
     /**
@@ -39,8 +209,7 @@ public class Header {
      * @return rmbIssue
      */
     public String getRMBIssue() {
-        // TODO
-        return null;
+        return rmbIssue;
     }
 
     /**
@@ -49,8 +218,7 @@ public class Header {
      * @return vabIssue
      */
     public String getVABIssue() {
-        // TODO
-        return null;
+        return vabIssue;
     }
 
     /**
@@ -59,8 +227,7 @@ public class Header {
      * @return swIssue
      */
     public String getSWIssue() {
-        // TODO
-        return null;
+        return swIssue;
     }
 
     /**
@@ -69,8 +236,7 @@ public class Header {
      * @return venomIssue
      */
     public String getVenomIssue() {
-        // TODO
-        return null;
+        return venomIssue;
     }
 
     /**
@@ -85,8 +251,7 @@ public class Header {
      * @return alwaysAttended
      */
     public boolean getAlwaysAttended() {
-        // TODO
-        return false;
+        return alwaysAttended;
     }
 
     /**
@@ -95,8 +260,7 @@ public class Header {
      * @return nSubBursts
      */
     public int getNSubBursts() {
-        // TODO
-        return 0;
+        return nSubBursts;
     }
 
     /**
@@ -111,8 +275,7 @@ public class Header {
      * @return nData
      */
     public int getNData() {
-        // TODO
-        return 0;
+        return nData;
     }
 
     /**
@@ -129,11 +292,11 @@ public class Header {
      * is 64. The example would report on 28 intervals in total. See section on data uptells for
      * further details, and for the content of the data messages
      *
-     * @return triples
+     * @return copy of triples
      */
     public List<Integer> getTriples() {
-        // TODO
-        return null;
+        // Returns a shallow clone of the list
+        return new ArrayList<>(triples);
     }
 
     /**
@@ -143,18 +306,17 @@ public class Header {
      *
      * <p>Meanings from the manual page 10:
      *
-     * <p>0 -> All chirps as 2-byte unsigned numbers (default value).
+     * <p>0 -{@literal >} All chirps as 2-byte unsigned numbers (default value).
      *
-     * <p>1 -> All chirps from the same burst are averaged and stored in the same format.
+     * <p>1 -{@literal >} All chirps from the same burst are averaged and stored in the same format.
      *
-     * <p>2 -> All chirps from each burst are stacked (summed) and stored as a 4-byte unsigned
-     * integer.
+     * <p>2 -{@literal >} All chirps from each burst are stacked (summed) and stored as a 4-byte
+     * unsigned integer.
      *
      * @return average
      */
     public int getAverage() {
-        // TODO
-        return 0;
+        return average;
     }
 
     /**
@@ -177,8 +339,7 @@ public class Header {
      * @return repSecs
      */
     public int getRepSecs() {
-        // TODO
-        return 0;
+        return repSecs;
     }
 
     /**
@@ -192,8 +353,7 @@ public class Header {
      * @return checkEthernet
      */
     public boolean getCheckEthernet() {
-        // TODO
-        return false;
+        return checkEthernet;
     }
 
     /**
@@ -211,8 +371,7 @@ public class Header {
      * @return nADCSamples
      */
     public int getNADCSamples() {
-        // TODO
-        return 0;
+        return nADCSamples;
     }
 
     /**
@@ -231,8 +390,7 @@ public class Header {
      * @return maxDataFileLength
      */
     public int getMaxDataFileLength() {
-        // TODO
-        return 0;
+        return maxDataFileLength;
     }
 
     /**
@@ -241,8 +399,7 @@ public class Header {
      * @return antennaSelect
      */
     public boolean getAntennaSelect() {
-        // TODO
-        return false;
+        return antennaSelect;
     }
 
     /**
@@ -258,8 +415,7 @@ public class Header {
      * @return nAttenuators
      */
     public int getNAttenuators() {
-        // TODO
-        return 0;
+        return nAttenuators;
     }
 
     /**
@@ -275,8 +431,7 @@ public class Header {
      * @return housekeeping
      */
     public boolean getHousekeeping() {
-        // TODO
-        return false;
+        return housekeeping;
     }
 
     /**
@@ -298,8 +453,7 @@ public class Header {
      * @return gpsOn
      */
     public boolean getGPSon() {
-        // TODO
-        return false;
+        return gpsOn;
     }
 
     /**
@@ -313,8 +467,7 @@ public class Header {
      * @return syncGPS
      */
     public boolean getSyncGPS() {
-        // TODO
-        return false;
+        return syncGPS;
     }
 
     /**
@@ -328,8 +481,7 @@ public class Header {
      * @return iridium
      */
     public boolean getIridium() {
-        // TODO
-        return false;
+        return iridium;
     }
 
     /**
@@ -338,8 +490,7 @@ public class Header {
      * @return watchDogTaskSecs
      */
     public int getWatchdogTaskSecs() {
-        // TODO
-        return 0;
+        return watchdogTaskSecs;
     }
 
     /**
@@ -348,8 +499,7 @@ public class Header {
      * @return intervalMode
      */
     public boolean getIntervalMode() {
-        // TODO
-        return false;
+        return intervalMode;
     }
 
     /**
@@ -360,11 +510,11 @@ public class Header {
      * <p>The values, in dB, for each of up to four settings for the attenuator. Only the first
      * nAttenuators values will be used.
      *
-     * @return attenuator1
+     * @return copy of attenuator1
      */
     public List<Integer> getAttenuator1() {
-        // TODO
-        return null;
+        // returns a shallow copy
+        return new ArrayList<>(attenuator1);
     }
 
     /**
@@ -377,31 +527,31 @@ public class Header {
      * negative value less than -4, it will be coerced to -14 dB, if greater than -4 but negative,
      * -4 will be used. If zero or positive, it will be coerced to +6 dB.
      *
-     * @return afGain
+     * @return copy of afGain
      */
     public List<Integer> getAFGain() {
-        // TODO
-        return null;
+        // returns a shallow copy
+        return new ArrayList<>(afGain);
     }
 
     /**
      * Returns TxAnt as {@code List<Integer>}
      *
-     * @return TxAnt
+     * @return copy of txAnt
      */
     public List<Integer> getTxAnt() {
-        // TODO
-        return null;
+        // returns a shallow copy
+        return new ArrayList<>(txAnt);
     }
 
     /**
      * Returns RxAnt as {@code List<Integer>}
      *
-     * @return RxAnt
+     * @return copy of rxAnt
      */
     public List<Integer> getRxAnt() {
-        // TODO
-        return null;
+        // returns a shallow copy
+        return new ArrayList<>(rxAnt);
     }
 
     /**
@@ -410,8 +560,7 @@ public class Header {
      * @return maxDepthToGraph
      */
     public int getMaxDepthToGraph() {
-        // TODO
-        return 0;
+        return maxDepthToGraph;
     }
 
     /**
@@ -429,8 +578,7 @@ public class Header {
      * @return sleepMode
      */
     public boolean getSleepMode() {
-        // TODO
-        return false;
+        return sleepMode;
     }
 
     /**
@@ -444,8 +592,7 @@ public class Header {
      * @return logOn
      */
     public boolean getLogOn() {
-        // TODO
-        return false;
+        return logOn;
     }
 
     /**
@@ -462,8 +609,7 @@ public class Header {
      * @return settleCycles
      */
     public int getSettleCycles() {
-        // TODO
-        return 0;
+        return settleCycles;
     }
 
     /**
@@ -479,8 +625,7 @@ public class Header {
      * @return reg00
      */
     public String getReg00() {
-        // TODO
-        return null;
+        return reg00;
     }
 
     /**
@@ -496,8 +641,7 @@ public class Header {
      * @return reg01
      */
     public String getReg01() {
-        // TODO
-        return null;
+        return reg01;
     }
 
     /**
@@ -513,8 +657,7 @@ public class Header {
      * @return reg02
      */
     public String getReg02() {
-        // TODO
-        return null;
+        return reg02;
     }
 
     /**
@@ -530,8 +673,7 @@ public class Header {
      * @return reg0B
      */
     public String getReg0B() {
-        // TODO
-        return null;
+        return reg0B;
     }
 
     /**
@@ -547,8 +689,7 @@ public class Header {
      * @return reg0C
      */
     public String getReg0C() {
-        // TODO
-        return null;
+        return reg0C;
     }
 
     /**
@@ -564,8 +705,7 @@ public class Header {
      * @return reg0D
      */
     public String getReg0D() {
-        // TODO
-        return null;
+        return reg0D;
     }
 
     /**
@@ -581,8 +721,7 @@ public class Header {
      * @return reg0E
      */
     public String getReg0E() {
-        // TODO
-        return null;
+        return reg0E;
     }
 
     /**
@@ -591,8 +730,7 @@ public class Header {
      * @return latitude
      */
     public double getLatitude() {
-        // TODO
-        return 0;
+        return latitude;
     }
 
     /**
@@ -601,8 +739,7 @@ public class Header {
      * @return longitude
      */
     public double getLongitude() {
-        // TODO
-        return 0;
+        return longitude;
     }
 
     /**
@@ -612,8 +749,7 @@ public class Header {
      * @return gpsTime
      */
     public double getGPSTime() {
-        // TODO
-        return 0;
+        return gpsTime;
     }
 
     /**
@@ -623,8 +759,7 @@ public class Header {
      * @return vm2Time
      */
     public double getVM2Time() {
-        // TODO
-        return 0;
+        return vm2Time;
     }
 
     /**
@@ -633,8 +768,7 @@ public class Header {
      * @return temp1
      */
     public double getTemp1() {
-        // TODO
-        return 0;
+        return temp1;
     }
 
     /**
@@ -643,8 +777,7 @@ public class Header {
      * @return temp2
      */
     public double getTemp2() {
-        // TODO
-        return 0;
+        return temp2;
     }
 
     /**
@@ -653,7 +786,205 @@ public class Header {
      * @return batteryVoltage
      */
     public double getBatteryVoltage() {
-        // TODO
-        return 0;
+        return batteryVoltage;
+    }
+
+    /**
+     * Returns MAX_SAF_FILE_LENGTH
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return maxSafFileLength
+     */
+    public int getMaxSafFileLength() {
+        return maxSafFileLength;
+    }
+
+    /**
+     * Returns InterChirpDelay
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return interChirpDelay
+     */
+    public int getInterChirpDelay() {
+        return interChirpDelay;
+    }
+
+    /**
+     * Returns SamplingFreqMode
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return samplingFreqMode
+     */
+    public int getSamplingFreqMode() {
+        return samplingFreqMode;
+    }
+
+    /**
+     * Returns Ramp
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return ramp
+     */
+    public int getRamp() {
+        return ramp;
+    }
+
+    /**
+     * Returns NoDwell
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return noDwell
+     */
+    public int getNoDwell() {
+        return noDwell;
+    }
+
+    /**
+     * Returns StartFreq
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return startFreq
+     */
+    public int getStartFreq() {
+        return startFreq;
+    }
+
+    /**
+     * Returns StopFreq
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return stopFreq
+     */
+    public int getStopFreq() {
+        return stopFreq;
+    }
+
+    /**
+     * Returns FreqStepUp
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return freqStepDn
+     */
+    public int getFreqStepUp() {
+        return freqStepUp;
+    }
+
+    /**
+     * Returns FreqStepDn
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return freqStepDn
+     */
+    public int getFreqStepDn() {
+        return freqStepDn;
+    }
+
+    /**
+     * Returns BurstNo
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return burstNo
+     */
+    public int getBurstNo() {
+        return burstNo;
+    }
+
+    /**
+     * Returns UpTell
+     *
+     * <p>Not mentioned in manual - so type is inferred as int
+     *
+     * @return upTell
+     */
+    public int getUpTell() {
+        return upTell;
+    }
+
+    /**
+     * Returns BattSleep
+     *
+     * <p>Not mentioned in manual - so type is inferred as boolean
+     *
+     * @return battSleep
+     */
+    public boolean getBattSleep() {
+        return battSleep;
+    }
+
+    /**
+     * Returns IsEthOn
+     *
+     * <p>Not mentioned in manual - so type is inferred as boolean
+     *
+     * @return isEthOn
+     */
+    public boolean getIsEthOn() {
+        return isEthOn;
+    }
+
+    /**
+     * Returns IsWebServerOn
+     *
+     * <p>Not mentioned in manual - so type is inferred as boolean
+     *
+     * @return isWebServerOn
+     */
+    public boolean getIsWebServerOn() {
+        return isWebServerOn;
+    }
+
+    /**
+     * Returns IsFTPServerOn
+     *
+     * <p>Not mentioned in manual - so type is inferred as boolean
+     *
+     * @return isFTPServerOn
+     */
+    public boolean getIsFTPServerOn() {
+        return isFTPServerOn;
+    }
+
+    /**
+     * Returns TStepUp
+     *
+     * <p>Not mentioned in manual - so type is inferred as double
+     *
+     * @return tStepUp
+     */
+    public double getTStepUp() {
+        return tStepUp;
+    }
+
+    /**
+     * Returns TStepDn
+     *
+     * <p>Not mentioned in manual - so type is inferred as double
+     *
+     * @return tStepDn
+     */
+    public double getTStepDn() {
+        return tStepDn;
+    }
+
+    /**
+     * Returns BatteryCheck
+     *
+     * <p>Not mentioned in manual - so type is inferred as {@code List<Integer>}
+     *
+     * @return copy of batteryCheck
+     */
+    public List<Integer> getBatteryCheck() {
+        // returns a shallow copy
+        return new ArrayList<>(batteryCheck);
     }
 }
