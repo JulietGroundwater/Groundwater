@@ -61,15 +61,16 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
+        // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
-                switchToFragment(infoFragment);
+                switchToFragment(new InfoFragment());
                 return true;
             case R.id.action_data:
-                switchToFragment(dataFragment);
+                switchToFragment(new DataFragment());
                 return true;
             case R.id.action_settings:
-                switchToFragment(settingsFragment);
+                switchToFragment(new SettingsFragment());
                 return true;
         }
         return false;
