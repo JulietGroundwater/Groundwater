@@ -585,8 +585,8 @@ public class Vdat {
                     try {
                         String[] a_split =
                                 A.substring(
-                                        searchind[0] + searchString.length(),
-                                        searchCR[0] + searchind[0])
+                                                searchind[0] + searchString.length(),
+                                                searchCR[0] + searchind[0])
                                         .split(",");
                         attenuator1 = new double[a_split.length];
                         for (int i = 0; i < a_split.length; i++) {
@@ -607,8 +607,8 @@ public class Vdat {
                     try {
                         String[] a_split =
                                 A.substring(
-                                        searchind[0] + searchString.length(),
-                                        searchCR[0] + searchind[0])
+                                                searchind[0] + searchString.length(),
+                                                searchCR[0] + searchind[0])
                                         .split(",");
                         attenuator2 = new double[a_split.length];
                         for (int i = 0; i < a_split.length; i++) {
@@ -629,8 +629,8 @@ public class Vdat {
                     try {
                         String[] a_split =
                                 A.substring(
-                                        searchind[0] + searchString.length(),
-                                        searchCR[0] + searchind[0])
+                                                searchind[0] + searchString.length(),
+                                                searchCR[0] + searchind[0])
                                         .split(",");
                         if (a_split.length != 8) {
                             throw new AssertionError("TxAnt has wrong number of values");
@@ -654,8 +654,8 @@ public class Vdat {
                     try {
                         String[] a_split =
                                 A.substring(
-                                        searchind[0] + searchString.length(),
-                                        searchCR[0] + searchind[0])
+                                                searchind[0] + searchString.length(),
+                                                searchCR[0] + searchind[0])
                                         .split(",");
                         if (a_split.length != 8) {
                             throw new AssertionError("RxAnt has wrong number of values");
