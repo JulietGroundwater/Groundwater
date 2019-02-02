@@ -1,7 +1,7 @@
 package uk.ac.cam.cl.juliet.computationengine.range;
 
-import java.util.List;
+import java.util.ArrayList;
 
 public interface WindowFunction {
-    List<Double> generateWindow();
+    ArrayList<Double> generateWindow(int n);
 }
