@@ -1,10 +1,11 @@
 package uk.ac.cam.cl.juliet.computationengine.range;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 
-// TODO : Unit testing of everything
+import java.util.ArrayList;
+import java.util.List;
+
+//TODO : Unit testing of everything
 
 /**
  * A class representing a complex vector. The elements of the vector are of type {@link Complex}.
@@ -13,7 +14,9 @@ import org.apache.commons.math3.complex.Complex;
 public class ComplexVector {
     private List<Complex> values;
 
-    /** Creates an empty {@link ComplexVector}. */
+    /**
+     * Creates an empty {@link ComplexVector}.
+     */
     public ComplexVector() {
         values = new ArrayList<>();
     }
@@ -164,10 +167,11 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new vector that is the equal to the element-wise multiplication of {@code this} and
-     * {@code vector2}.
+     * Creates a new vector that is the equal to the element-wise multiplication
+     * of {@code this} and {@code vector2}.
      *
-     * @param vector2 A {@link ComplexVector} vector to be element-wise multiplied with {@code this}
+     * @param vector2 A {@link ComplexVector} vector to be element-wise multiplied
+     *                with {@code this}
      * @return The new resulting {@link ComplexVector}
      */
     public ComplexVector multiplyElements(ComplexVector vector2) {
@@ -207,8 +211,8 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new vector that is the equal to the element-wise division of {@code this} and
-     * {@code vector2}.
+     * Creates a new vector that is the equal to the element-wise division
+     * of {@code this} and {@code vector2}.
      *
      * @param vector2 A {@link ComplexVector} vector to element-wise divide {@code this}
      * @return The new resulting {@link ComplexVector}
@@ -280,8 +284,8 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new vector that is equal to {@code this} with each value replaced with its
-     * exponential.
+     * Creates a new vector that is equal to {@code this} with each value replaced with
+     * its exponential.
      *
      * @return The new resulting {@link ComplexVector}
      */
@@ -296,9 +300,9 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new vector that is equal to {@code this} with each value replaced with its absolute
-     * value. Since the elements of the vector are of type {@link Complex} the absolute value
-     * represents the complex magnitude.
+     * Creates a new vector that is equal to {@code this} with each value replaced with
+     * its absolute value. Since the elements of the vector are of type {@link Complex}
+     * the absolute value represents the complex magnitude.
      *
      * @return The new resulting {@link ComplexVector}
      */
@@ -313,8 +317,8 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new {@link ComplexVector} containing the slice of values of {@code this} between
-     * indices {@code l} and {@code r}.
+     * Creates a new {@link ComplexVector} containing the slice of values of {@code this}
+     * between indices {@code l} and {@code r}.
      *
      * @param l The left end of the slice (inclusive)
      * @param r The right end of the slice (exclusive)
@@ -331,27 +335,31 @@ public class ComplexVector {
     }
 
     /**
-     * @return A primitive array of type {@link Complex} containing all values of {@code this}. The
-     *     primitive array is a copy.
+     * @return A primitive array of type {@link Complex} containing all values of
+     * {@code this}. The primitive array is a copy.
      */
     public Complex[] toArray() {
         return values.toArray(new Complex[0]);
     }
 
     /**
-     * @return A {@link List} of type {@link Complex} containing all values of {@code this}. The
-     *     list is a copy.
+     * @return A {@link List} of type {@link Complex} containing all values of
+     * {@code this}. The list is a copy.
      */
     public List<Complex> toList() {
         return new ArrayList<>(values);
     }
 
-    /** @return The size of the vector. */
+    /**
+     * @return The size of the vector.
+     */
     public int size() {
         return values.size();
     }
 
-    /** @return The sum of all values in the vector. */
+    /**
+     * @return The sum of all values in the vector.
+     */
     public Complex sum() {
         Complex sum = new Complex(0.0);
 
@@ -362,19 +370,21 @@ public class ComplexVector {
         return sum;
     }
 
-    /** @return The mean of all values in the vector. */
+    /**
+     * @return The mean of all values in the vector.
+     */
     public Complex mean() {
         return sum().divide(new Complex((double) (size())));
     }
 
-    /** @return The root-mean-square level of the values in the vector. */
+    /**
+     * @return The root-mean-square level of the values in the vector.
+     */
     public Complex rms() {
         Complex avgSquareSum = new Complex(0.0);
 
         for (int i = 0; i < values.size(); i++) {
-            avgSquareSum =
-                    avgSquareSum.add(
-                            values.get(i).multiply(values.get(i)).divide((double) (size())));
+            avgSquareSum = avgSquareSum.add(values.get(i).multiply(values.get(i)).divide((double) (size())));
         }
 
         return avgSquareSum.sqrt();

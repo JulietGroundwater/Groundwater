@@ -1,16 +1,19 @@
 package uk.ac.cam.cl.juliet.computationengine.range;
 
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import org.jtransforms.fft.DoubleFFT_1D;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 
-/** A class corresponding to {@code fmcw_range} */
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A class corresponding to {@code fmcw_range}
+ */
 public class Range {
     /**
-     * Computes the Discrete Fourier Transform of {@code arr} using Fast Fourier Transform library
-     * JTransforms.
+     * Computes the Discrete Fourier Transform of {@code arr} using Fast Fourier Transform
+     * library JTransforms.
      *
      * @param arr The {@link ComplexVector} to be transformed
      * @return A new {@link ComplexVector} containing the DFT values
@@ -35,13 +38,12 @@ public class Range {
     }
 
     /**
-     * Java implementation of {@code fmcw_range}. The function parameters correspond to the MATLAB
-     * parameters.
+     * Java implementation of {@code fmcw_range}. The function parameters correspond to the
+     * MATLAB parameters.
      *
      * @return A {@link RangeResult} containing the results.
      */
-    public static RangeResult computeRange(
-            Burst burst, int padding, double maxrange, WindowFunction window) {
+    public static RangeResult computeRange(Burst burst, int padding, double maxrange, WindowFunction window) {
         double B = burst.getB();
         double K = burst.getK();
         double ci = burst.getCi();
@@ -72,15 +74,10 @@ public class Range {
 
         ComplexVector phiref;
 
-        phiref =
-                rangeToN.multiplyByConstant(2.0 * Math.PI * fc)
-                        .divideByConstant(B * (double) (padding));
-        phiref =
-                phiref.subtractElements(
-                        xvals.squareElements()
-                                .multiplyByConstant(K)
-                                .divideByConstant(
-                                        2.0 * B * B * (double) (padding) * (double) padding));
+        phiref = rangeToN.multiplyByConstant(2.0 * Math.PI * fc).divideByConstant(B * (double) (padding));
+        phiref = phiref.subtractElements(xvals.squareElements()
+                .multiplyByConstant(K)
+                .divideByConstant(2.0 * B * B * (double) (padding) * (double) padding));
 
         List<List<Complex>> spec = new ArrayList<>();
         List<List<Complex>> specCor = new ArrayList<>();
@@ -109,19 +106,17 @@ public class Range {
 
             fftVif = complexFFT(fftVif);
 
-            fftVif =
-                    fftVif.multiplyByConstant(
-                            Math.sqrt((double) (2 * padding)) / (double) (fftVif.size()));
+            fftVif = fftVif.multiplyByConstant(Math.sqrt((double) (2 * padding)) / (double) (fftVif.size()));
 
             fftVif = fftVif.divideByConstant(win.rms());
 
             spec.add(fftVif.slice(0, rangeCut + 1).toList());
-            specCor.add(
-                    phiref.multiplyByConstant(new Complex(0, -1))
-                            .expElements()
-                            .multiplyElements(fftVif.slice(0, nf))
-                            .slice(0, rangeCut + 1)
-                            .toList());
+            specCor.add(phiref
+                    .multiplyByConstant(new Complex(0, -1))
+                    .expElements()
+                    .multiplyElements(fftVif.slice(0, nf))
+                    .slice(0, rangeCut + 1)
+                    .toList());
         }
 
         List<Double> Rcoarse = new ArrayList<>();
@@ -136,8 +131,7 @@ public class Range {
             Rfine.add(new ArrayList<Double>());
 
             for (int j = 0; j < specCor.get(0).size(); j++) {
-                Double divConstant =
-                        ((4.0 * Math.PI) / lambdac) - (4.0 * Rcoarse.get(j) * K / (ci * ci));
+                Double divConstant = ((4.0 * Math.PI) / lambdac) - (4.0 * Rcoarse.get(j) * K / (ci * ci));
                 Double specAngle = specCor.get(i).get(j).log().getImaginary() / divConstant;
                 Rfine.get(i).add(specAngle);
             }
