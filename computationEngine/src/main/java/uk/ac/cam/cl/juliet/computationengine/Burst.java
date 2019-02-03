@@ -8,13 +8,6 @@ import java.util.List;
  */
 public class Burst {
 
-    public double B;
-    public double K;
-    public double ci;
-    public double fc;
-    public double lambdac;
-    public List<List<Double>> vif;
-
     public Burst(String filename, int burstNum) {
         // TODO
     }
@@ -228,7 +221,7 @@ public class Burst {
      */
     public List<List<Double>> getVif() {
         // TODO
-        return vif;
+        return null;
     }
 
     /**
@@ -304,7 +297,7 @@ public class Burst {
      */
     public double getK() {
         // TODO
-        return K;
+        return 0;
     }
 
     /**
@@ -351,7 +344,7 @@ public class Burst {
      */
     public double getB() {
         // TODO
-        return B;
+        return 0;
     }
 
     /**
@@ -361,7 +354,7 @@ public class Burst {
      */
     public double getFc() {
         // TODO
-        return fc;
+        return 0;
     }
 
     /**
@@ -391,7 +384,7 @@ public class Burst {
      */
     public double getCi() {
         // TODO
-        return ci;
+        return 0;
     }
 
     /**
@@ -401,7 +394,7 @@ public class Burst {
      */
     public double getLambdac() {
         // TODO
-        return lambdac;
+        return 0;
     }
 
     /**
