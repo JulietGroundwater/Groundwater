@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+    <item
+        android:id="@+id/action_info"
+        android:icon="@drawable/baseline_show_chart_black_24"
+        android:title="@string/menu_display" />
+    <item
+        android:id="@+id/action_data"
+        android:icon="@drawable/baseline_folder_black_24"
+        android:title="@string/menu_data" />
+    <item
+        android:id="@+id/action_settings"
+        android:icon="@drawable/baseline_settings_black_24"
+        android:title="@string/menu_settings" />
+</menu>

@@ -70,11 +70,10 @@ public class AuthenticationManager extends Application {
      *
      * @param user The cached user information
      * @param forceRefresh
-     * @param activity
      * @param callback
      */
     public void acquireTokenSilently(
-            User user, Boolean forceRefresh, Activity activity, IAuthenticationCallback callback) {
+            User user, Boolean forceRefresh, IAuthenticationCallback callback) {
         // Set the activity callback
         activityCallback = callback;
         // Make call to acquire token using the public client
@@ -98,6 +97,7 @@ public class AuthenticationManager extends Application {
 
                 // Store the authentication result
                 authResult = authenticationResult;
+
                 if (activityCallback != null) {
                     activityCallback.onSuccess(authResult);
                 }
@@ -132,7 +132,6 @@ public class AuthenticationManager extends Application {
             @Override
             public void onSuccess(AuthenticationResult authenticationResult) {
                 Log.d(TAG, "Successful Authentication");
-                Log.d(TAG, authenticationResult.getUser().getName());
                 Log.d(TAG, authenticationResult.getAccessToken());
                 authResult = authenticationResult;
 
@@ -151,6 +150,10 @@ public class AuthenticationManager extends Application {
                 if (activityCallback != null) {
                     activityCallback.onError(exception);
                 }
+            }
+
+            public void onError(Exception exc) {
+                System.out.println(exc.getMessage());
             }
 
             @Override

@@ -22,8 +22,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".data.ConnectActivity"></activity>
-        <activity android:name=".data.DataTransferActivity"></activity>
         <activity
                 android:name="com.microsoft.identity.client.BrowserTabActivity">
             <intent-filter>
