@@ -17,6 +17,9 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.Toast;
+
 import java.util.ArrayList;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
@@ -80,6 +83,10 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
             case R.id.sync_button:
                 showSyncDialog();
                 return true;
+            case R.id.sign_in_button:
+                // TODO: Show a sign in dialog
+                Toast.makeText(getContext(), "Handle signing in...", Toast.LENGTH_LONG).show();
+                return true;
         }
         return false;
     }
@@ -104,33 +111,33 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         if (context == null) return;
         final Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.dialog_file_selected);
-        Button deleteButton = dialog.findViewById(R.id.deleteButton);
-        Button syncButton = dialog.findViewById(R.id.syncButton);
-        Button displayButton = dialog.findViewById(R.id.displayButton);
-        deleteButton.setOnClickListener(
-                new Button.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        dialog.cancel();
-                    }
-                });
-        syncButton.setOnClickListener(
-                new Button.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // TODO: sync the file to the server
-                        uploadFile(file, viewHolder);
-                        dialog.cancel();
-                    }
-                });
-        displayButton.setOnClickListener(
-                new Button.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        // TODO: display the file's data
-                        dialog.cancel();
-                    }
-                });
+        dialog.findViewById(R.id.deleteButton)
+                .setOnClickListener(
+                        new Button.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dialog.cancel();
+                            }
+                        });
+        dialog.findViewById(R.id.syncButton)
+                .setOnClickListener(
+                        new Button.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // TODO: sync the file to the server
+                                uploadFile(file, viewHolder);
+                                dialog.cancel();
+                            }
+                        });
+        dialog.findViewById(R.id.displayButton)
+                .setOnClickListener(
+                        new Button.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                // TODO: display the file's data
+                                dialog.cancel();
+                            }
+                        });
         dialog.show();
     }
 
@@ -153,7 +160,26 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         Context context = getContext();
         if (context == null) return;
         final Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.dialog_sync_with_server);
+        dialog.setContentView(R.layout.dialog_upload_files);
+        final CheckBox deleteAfterUploadingCheckbox =
+                dialog.findViewById(R.id.deleteAfterUploadingCheckbox);
+        dialog.findViewById(R.id.uploadButton)
+                .setOnClickListener(
+                        new Button.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                uploadAllUnsyncedFiles(deleteAfterUploadingCheckbox.isChecked());
+                                dialog.cancel();
+                            }
+                        });
+        dialog.findViewById(R.id.cancelButton)
+                .setOnClickListener(
+                        new Button.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                dialog.cancel();
+                            }
+                        });
         dialog.show();
     }
 
@@ -178,6 +204,16 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     private void uploadFile(
             TemporaryDataFileType file, FilesListAdapter.FilesListViewHolder viewHolder) {
         new UploadFileTask(this, viewHolder).execute(file);
+    }
+
+    /**
+     * Uploads all unsynced files to OneDrive.
+     *
+     * @param deleteAfterUploading true if files should be deleted after uploading; false to keep
+     *     files on device after uploading
+     */
+    private void uploadAllUnsyncedFiles(boolean deleteAfterUploading) {
+        // TODO: implement
     }
 
     /** Asynchronously uploads a file to OneDrive. */
