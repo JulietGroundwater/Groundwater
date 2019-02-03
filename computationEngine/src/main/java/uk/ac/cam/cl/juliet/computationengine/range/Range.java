@@ -11,12 +11,6 @@ import java.util.List;
  * A class corresponding to {@code fmcw_range}
  */
 public class Range {
-    public static void main(String[] args) {
-        System.out.println("Cat");
-
-        computeRange(MockBurst.buildMockBurst(), 2, 100, new BlackmanWindow());
-    }
-
     /**
      * Computes the Discrete Fourier Transform of {@code arr} using Fast Fourier Transform
      * library JTransforms.
