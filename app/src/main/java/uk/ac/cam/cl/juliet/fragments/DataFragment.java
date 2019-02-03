@@ -19,7 +19,6 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
-
 import java.util.ArrayList;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
