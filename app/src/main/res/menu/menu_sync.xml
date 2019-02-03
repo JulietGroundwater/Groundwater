@@ -2,8 +2,12 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/sign_in_button"
+        android:title="Sign in"
+        app:showAsAction="always" />
+    <item
         android:id="@+id/sync_button"
         android:title="@string/sync"
-        android:icon="@drawable/baseline_sync_black_24"
+        android:icon="@drawable/baseline_cloud_upload_white_24"
         app:showAsAction="always"/>
 </menu>

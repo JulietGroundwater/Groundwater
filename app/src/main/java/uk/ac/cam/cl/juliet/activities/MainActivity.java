@@ -9,7 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.fragments.DataFragment;
-import uk.ac.cam.cl.juliet.fragments.InfoFragment;
+import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
 
 /**
@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity
         implements BottomNavigationView.OnNavigationItemSelectedListener {
 
     BottomNavigationView bottomNavigation;
-    InfoFragment infoFragment;
+    DisplayFragment displayFragment;
     DataFragment dataFragment;
     SettingsFragment settingsFragment;
 
@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity
         setContentView(R.layout.activity_main);
 
         // Create an instance of each fragment
-        infoFragment = new InfoFragment();
+        displayFragment = new DisplayFragment();
         dataFragment = new DataFragment();
         settingsFragment = new SettingsFragment();
 
@@ -39,7 +39,7 @@ public class MainActivity extends AppCompatActivity
         bottomNavigation = findViewById(R.id.bottomNavigation);
         bottomNavigation.setOnNavigationItemSelectedListener(this);
         bottomNavigation.setSelectedItemId(R.id.action_info);
-        switchToFragment(infoFragment);
+        switchToFragment(displayFragment);
     }
 
     /**
@@ -64,7 +64,7 @@ public class MainActivity extends AppCompatActivity
         // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
-                switchToFragment(new InfoFragment());
+                switchToFragment(new DisplayFragment());
                 return true;
             case R.id.action_data:
                 switchToFragment(new DataFragment());

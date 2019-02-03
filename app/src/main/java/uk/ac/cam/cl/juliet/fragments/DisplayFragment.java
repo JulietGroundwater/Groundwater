@@ -17,7 +17,7 @@ import uk.ac.cam.cl.juliet.R;
  *
  * @author Ben Cole
  */
-public class InfoFragment extends Fragment {
+public class DisplayFragment extends Fragment {
 
     private InfoOverviewFragment infoOverviewFragment;
     private InfoMoreDetailFragment infoMoreDetailFragment;
@@ -25,7 +25,7 @@ public class InfoFragment extends Fragment {
     @Override
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_info, container, false);
+        View view = inflater.inflate(R.layout.fragment_display, container, false);
 
         // Create instances of the inner fragments
         infoOverviewFragment = new InfoOverviewFragment();
@@ -44,7 +44,7 @@ public class InfoFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().setTitle(R.string.title_info);
+        getActivity().setTitle(R.string.title_display);
     }
 
     /**
