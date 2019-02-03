@@ -44,20 +44,16 @@ public class Range {
      * @return A {@link RangeResult} containing the results.
      */
     public static RangeResult computeRange(Burst burst, int padding, double maxrange, WindowFunction window) {
-        //Extraction
         double B = burst.getB();
         double K = burst.getK();
         double ci = burst.getCi();
         double fc = burst.getFc();
         double lambdac = burst.getLambdac();
-
-        //Processing
         List<List<Double>> vif = burst.getVif();
         int N = vif.get(0).size();
         int xn = (N + 1) / 2;
         int nchirps = vif.size();
         int nf = (padding * N) / 2;
-
         ComplexVector win = new ComplexVector(window.generateWindow(N));
         ComplexVector xvals;
         ComplexVector rangeToN = new ComplexVector();
