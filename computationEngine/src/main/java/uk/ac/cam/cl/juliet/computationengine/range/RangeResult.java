@@ -1,10 +1,14 @@
 package uk.ac.cam.cl.juliet.computationengine.range;
 
 import org.apache.commons.math3.complex.Complex;
+import uk.ac.cam.cl.juliet.computationengine.Burst;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A class representing the result of {@link Range#computeRange(Burst, int, double, WindowFunction)}
+ */
 public class RangeResult {
     private List<Double> Rcoarse;
     private List<List<Double>> Rfine;
