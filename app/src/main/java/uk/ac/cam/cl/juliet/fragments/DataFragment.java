@@ -3,10 +3,12 @@ package uk.ac.cam.cl.juliet.fragments;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -116,6 +118,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                             @Override
                             public void onClick(View v) {
                                 dialog.cancel();
+                                showConfirmDeleteDialog();
                             }
                         });
         dialog.findViewById(R.id.syncButton)
@@ -180,6 +183,33 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                             }
                         });
         dialog.show();
+    }
+
+    /** Shows a dialog message to confirm whether a file or folder should be deleted. */
+    private void showConfirmDeleteDialog() {
+        Context context = getContext();
+        if (context == null) return;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(R.string.confirm_delete);
+        builder.setMessage(R.string.are_you_sure_delete);
+        builder.setPositiveButton(
+                R.string.delete,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        // TODO: delete the file
+                        dialog.cancel();
+                    }
+                });
+        builder.setNegativeButton(
+                R.string.cancel,
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                });
+        builder.create().show();
     }
 
     /**

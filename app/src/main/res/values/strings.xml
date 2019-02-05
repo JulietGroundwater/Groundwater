@@ -15,4 +15,7 @@
     <string name="delete">Delete</string>
     <string name="overview">Overview</string>
     <string name="detail">Detail</string>
+    <string name="cancel">Cancel</string>
+    <string name="confirm_delete">Confirm deletion</string>
+    <string name="are_you_sure_delete">Are you sure you want to delete the file?</string>
 </resources>
