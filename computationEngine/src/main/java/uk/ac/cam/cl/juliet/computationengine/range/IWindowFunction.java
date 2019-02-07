@@ -3,7 +3,7 @@ package uk.ac.cam.cl.juliet.computationengine.range;
 import java.util.ArrayList;
 
 /** An interface defining a Window Function */
-public interface WindowFunction {
+public interface IWindowFunction {
     /**
      * Computes the corresponding window function in all integer values from {@code 0} to {@code
      * n-1}.
