@@ -50,7 +50,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:srcCompat="@drawable/baseline_sync_black_48" />
+        app:srcCompat="@drawable/baseline_cloud_done_black_18" />
 
     <ProgressBar
         android:id="@+id/uploadingSpinner"

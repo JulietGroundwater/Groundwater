@@ -27,7 +27,24 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
      * displayed when a file is selected.
      */
     public interface OnDataFileSelectedListener {
+
+        /**
+         * Invoked when a file or folder in the list is clicked.
+         *
+         * @param file The file that was clicked
+         * @param viewHolder The ViewHolder containing all UI elements in that row
+         */
         void onDataFileClicked(
+                DataFragment.TemporaryDataFileType file, FilesListViewHolder viewHolder);
+
+        /**
+         * Invoked when a file or folder in the list is long clicked.
+         *
+         * @param file The file that was long clicked
+         * @param viewHolder The ViewHolder containing all UI elements in that row
+         * @return true if the long click was consumed; false otherwise
+         */
+        boolean onDataFileLongClicked(
                 DataFragment.TemporaryDataFileType file, FilesListViewHolder viewHolder);
     }
 
@@ -72,11 +89,11 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         if (file.syncStatus) {
             filesListViewHolder
                     .getSyncStatusImageView()
-                    .setImageResource(R.drawable.baseline_cloud_done_black_24);
+                    .setImageResource(R.drawable.baseline_cloud_done_black_18);
         } else {
             filesListViewHolder
                     .getSyncStatusImageView()
-                    .setImageResource(R.drawable.baseline_cloud_off_black_24);
+                    .setImageResource(R.drawable.baseline_cloud_off_black_18);
         }
         filesListViewHolder.setSpinnerVisibility(false);
         filesListViewHolder
@@ -86,6 +103,15 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
                             @Override
                             public void onClick(View v) {
                                 listener.onDataFileClicked(file, filesListViewHolder);
+                            }
+                        });
+        filesListViewHolder
+                .getContainer()
+                .setOnLongClickListener(
+                        new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View v) {
+                                return listener.onDataFileLongClicked(file, filesListViewHolder);
                             }
                         });
     }

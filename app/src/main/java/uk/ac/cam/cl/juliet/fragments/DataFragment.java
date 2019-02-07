@@ -112,37 +112,52 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
             final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return;
-        final Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.dialog_file_selected);
-        dialog.findViewById(R.id.deleteButton)
-                .setOnClickListener(
-                        new Button.OnClickListener() {
+        if (file.isIndividualFile) {
+            Toast.makeText(context, "Display the file.", Toast.LENGTH_SHORT).show();
+        } else {
+            Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    @Override
+    public boolean onDataFileLongClicked(
+            final TemporaryDataFileType file,
+            final FilesListAdapter.FilesListViewHolder viewHolder) {
+        Context context = getContext();
+        if (context == null) return false;
+        int titleRes = (file.isIndividualFile) ? R.string.file_selected : R.string.folder_selected;
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle(titleRes)
+                .setMessage(R.string.what_do_with_file)
+                .setPositiveButton(
+                        "Sync",
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(View v) {
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
-                                showConfirmDeleteDialog();
-                            }
-                        });
-        dialog.findViewById(R.id.syncButton)
-                .setOnClickListener(
-                        new Button.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                // TODO: sync the file to the server
                                 uploadFile(file, viewHolder);
-                                dialog.cancel();
                             }
-                        });
-        dialog.findViewById(R.id.displayButton)
-                .setOnClickListener(
-                        new Button.OnClickListener() {
+                        })
+                .setNeutralButton(
+                        "Delete",
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(View v) {
-                                // TODO: display the file's data
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.cancel();
+                                showConfirmDeleteDialog(file);
+                            }
+                        })
+                .setNegativeButton(
+                        "Cancel",
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
-                        });
-        dialog.show();
+                        })
+                .create()
+                .show();
+        return true;
     }
 
     /**
@@ -188,7 +203,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     }
 
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
-    private void showConfirmDeleteDialog() {
+    private void showConfirmDeleteDialog(TemporaryDataFileType file) {
         Context context = getContext();
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
