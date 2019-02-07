@@ -127,7 +127,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         builder.setTitle(titleRes)
                 .setMessage(R.string.what_do_with_file)
                 .setPositiveButton(
-                        "Sync",
+                        R.string.sync,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -136,7 +136,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                             }
                         })
                 .setNeutralButton(
-                        "Delete",
+                        R.string.delete,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -145,7 +145,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                             }
                         })
                 .setNegativeButton(
-                        "Cancel",
+                        R.string.cancel,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
