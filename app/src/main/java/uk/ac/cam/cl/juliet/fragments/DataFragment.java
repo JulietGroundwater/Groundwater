@@ -63,9 +63,6 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         View view = inflater.inflate(R.layout.fragment_data, container, false);
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        //        DividerItemDecoration divider =
-        //                new DividerItemDecoration(context, DividerItemDecoration.VERTICAL);
-        //        filesList.addItemDecoration(divider);
         ArrayList<TemporaryDataFileType> files = getDataFiles();
         adapter = new FilesListAdapter(files);
         adapter.setOnDataFileSelectedListener(this);
