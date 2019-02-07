@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.DividerItemDecoration;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -43,11 +42,14 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         public String timestamp;
         public String gps;
         public boolean syncStatus;
+        public boolean isIndividualFile;
 
-        public TemporaryDataFileType(String timestamp, String gps, boolean syncStatus) {
+        public TemporaryDataFileType(
+                String timestamp, String gps, boolean syncStatus, boolean isIndividualFile) {
             this.timestamp = timestamp;
             this.gps = gps;
             this.syncStatus = syncStatus;
+            this.isIndividualFile = isIndividualFile;
         }
     }
 
@@ -61,9 +63,9 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         View view = inflater.inflate(R.layout.fragment_data, container, false);
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        DividerItemDecoration divider =
-                new DividerItemDecoration(context, DividerItemDecoration.VERTICAL);
-        filesList.addItemDecoration(divider);
+        //        DividerItemDecoration divider =
+        //                new DividerItemDecoration(context, DividerItemDecoration.VERTICAL);
+        //        filesList.addItemDecoration(divider);
         ArrayList<TemporaryDataFileType> files = getDataFiles();
         adapter = new FilesListAdapter(files);
         adapter.setOnDataFileSelectedListener(this);
@@ -151,9 +153,9 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     private ArrayList<TemporaryDataFileType> getDataFiles() {
         // TODO: Actually load data files!
         ArrayList<TemporaryDataFileType> files = new ArrayList<>();
-        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false));
-        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true));
-        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true));
+        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false, true));
+        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true, false));
+        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true, true));
         return files;
     }
 

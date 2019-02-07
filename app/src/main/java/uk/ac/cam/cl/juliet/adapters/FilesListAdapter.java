@@ -60,6 +60,15 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         filesListViewHolder.getTimestampTextView().setText(file.timestamp);
         filesListViewHolder.getGpsTextView().setText(file.gps);
         filesListViewHolder.getUploadingSpinner().setVisibility(View.INVISIBLE);
+        if (file.isIndividualFile) {
+            filesListViewHolder
+                    .getTypeImageView()
+                    .setImageResource(R.drawable.baseline_show_chart_black_36);
+        } else {
+            filesListViewHolder
+                    .getTypeImageView()
+                    .setImageResource(R.drawable.baseline_folder_black_36);
+        }
         if (file.syncStatus) {
             filesListViewHolder
                     .getSyncStatusImageView()
@@ -94,6 +103,7 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         private View container;
         private TextView timestampTextView;
         private TextView gpsTextView;
+        private ImageView typeImageView;
         private ImageView syncStatusImageView;
         private ProgressBar uploadingSpinner;
 
@@ -102,6 +112,7 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
             container = itemView;
             timestampTextView = itemView.findViewById(R.id.timestampTextView);
             gpsTextView = itemView.findViewById(R.id.gpsTextView);
+            typeImageView = itemView.findViewById(R.id.typeIcon);
             syncStatusImageView = itemView.findViewById(R.id.syncStatusImageView);
             uploadingSpinner = itemView.findViewById(R.id.uploadingSpinner);
         }
@@ -134,6 +145,10 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
 
         public TextView getGpsTextView() {
             return gpsTextView;
+        }
+
+        public ImageView getTypeImageView() {
+            return typeImageView;
         }
 
         public ImageView getSyncStatusImageView() {
