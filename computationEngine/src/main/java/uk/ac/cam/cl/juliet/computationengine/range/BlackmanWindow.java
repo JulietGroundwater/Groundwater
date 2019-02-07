@@ -2,8 +2,8 @@ package uk.ac.cam.cl.juliet.computationengine.range;
 
 import java.util.ArrayList;
 
-/** An implementation of {@link WindowFunction} that represents the Blackman Window Function. */
-public class BlackmanWindow implements WindowFunction {
+/** An implementation of {@link IWindowFunction} that represents the Blackman Window Function. */
+public class BlackmanWindow implements IWindowFunction {
     /**
      * Evaluate {@code W(k)} for Blackman Window Function {@code W} of size {@code n}. Uses the
      * default Blackman Window Function parameter values
@@ -34,6 +34,7 @@ public class BlackmanWindow implements WindowFunction {
             window.add(evaluateFunction(n, i));
         }
 
+        //Second half of the function mirrors the first. In case of odd length the middle element is not repeated.
         for (int i = m - 1 - (n % 2); i >= 0; i--) {
             window.add(evaluateFunction(n, i));
         }
