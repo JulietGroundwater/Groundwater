@@ -84,9 +84,6 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         adapter = new FilesListAdapter(files);
         adapter.setOnDataFileSelectedListener(this);
         filesList.setAdapter(adapter);
-        // Init the menu items
-        signIn = view.findViewById(R.id.sign_in_button);
-        signOut = view.findViewById(R.id.sign_out_button);
         return view;
     }
 
@@ -111,17 +108,36 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                 return true;
             case R.id.sign_out_button:
                 // Disconnect
-                AuthenticationManager.getInstance().disconnect();
+                try {
+                    AuthenticationManager.getInstance().disconnect();
+                } catch (MsalClientException msal) {
+                    msal.printStackTrace();
+                }
                 signOut.setVisible(false);
                 signIn.setVisible(true);
         }
         return false;
     }
 
+    /**
+     * A method that is called on tab selection - checking for a user still logged in
+     * @param isVisibleToUser
+     */
+    @Override
+    public void setUserVisibleHint(boolean isVisibleToUser) {
+        super.setUserVisibleHint(isVisibleToUser);
+        // Handle viewing the correct menu buttons
+        displayCorrectAuthButtons();
+    }
+
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         menu.clear();
         inflater.inflate(R.menu.menu_sync, menu);
+        // Init the menu items
+        signIn = menu.getItem(0);
+        signOut = menu.getItem(1);
+        displayCorrectAuthButtons();
         super.onCreateOptionsMenu(menu, inflater);
     }
 
@@ -224,6 +240,22 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                             }
                         });
         dialog.show();
+    }
+
+    /** A method for checking the current authentication status and setting the correct sign in or out buttons */
+    private void displayCorrectAuthButtons() {
+        try {
+            if (AuthenticationManager.getInstance().getPublicClient().getUsers().size() == 0) {
+                signIn.setVisible(true);
+                signOut.setVisible(false);
+            } else {
+                signIn.setVisible(false);
+                signOut.setVisible(true);
+            }
+            System.out.println(AuthenticationManager.getInstance().getPublicClient().getUsers().size());
+        } catch (MsalClientException msal) {
+            msal.printStackTrace();
+        }
     }
 
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */

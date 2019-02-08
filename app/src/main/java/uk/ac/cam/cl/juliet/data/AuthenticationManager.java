@@ -47,9 +47,9 @@ public class AuthenticationManager extends Application {
         return authResult.getAccessToken();
     }
 
-    public void disconnect() {
+    public void disconnect() throws MsalClientException{
         // Remove the current user from the client
-        PUBLIC_CLIENT.remove(authResult.getUser());
+        PUBLIC_CLIENT.remove(PUBLIC_CLIENT.getUsers().get(0));
         // Reset the authentication manager
         AuthenticationManager.reset();
     }
