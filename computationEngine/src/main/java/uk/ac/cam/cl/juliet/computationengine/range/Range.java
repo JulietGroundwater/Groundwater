@@ -41,7 +41,7 @@ public class Range {
      * @return A {@link RangeResult} containing the results.
      */
     public static RangeResult computeRange(
-            Burst burst, int padding, double maxrange, WindowFunction window) {
+            Burst burst, int padding, double maxrange, IWindowFunction window) {
         double B = burst.getB();
         double K = burst.getK();
         double ci = burst.getCi();
