@@ -14,8 +14,8 @@ public class BlackmanWindow implements IWindowFunction {
      */
     private double evaluateFunction(int n, int k) {
         return 0.42
-                - 0.5 * (Math.cos((2.0 * Math.PI * (double) (k)) / (double) (n - 1)))
-                + 0.08 * (Math.cos((4.0 * Math.PI * (double) (k)) / (double) (n - 1)));
+                - 0.5 * (Math.cos((2.0 * Math.PI * (double)(k)) / (double) (n - 1)))
+                + 0.08 * (Math.cos((4.0 * Math.PI * (double)(k)) / (double) (n - 1)));
     }
 
     /**
