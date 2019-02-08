@@ -1,6 +1,15 @@
 package uk.ac.cam.cl.juliet.computationengine;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Date;
+import java.util.TimeZone;
 
 /**
  * Class to represent a Burst from the radar, this is a java representation of the vdat struct from
@@ -8,8 +17,21 @@ import java.util.List;
  */
 public class Burst {
 
-    public Burst(String filename, int burstNum) {
-        // TODO
+    public Burst(String filename, int burstNum) throws InvalidBurstException {
+        this.filename = filename;
+        LoadBurstRMB5(burstNum);
+
+        if (temperature1 > 300) {
+            temperature1 -= 512;
+        }
+        if (temperature2 > 300) {
+            temperature2 -= 512;
+        }
+
+        if (code != 0)
+        {
+            throw new InvalidBurstException("Unable to correctly create burst");
+        }
     }
 
     /**
@@ -18,8 +40,7 @@ public class Burst {
      * @return Code parameter
      */
     public int getCode() {
-        // TODO
-        return 0;
+        return code;
     }
 
     /**
@@ -28,8 +49,7 @@ public class Burst {
      * @return NSamples parameter
      */
     public int getNSamples() {
-        // TODO
-        return 0;
+        return nSamples;
     }
 
     /**
@@ -38,8 +58,7 @@ public class Burst {
      * @return SubBurstsInBurst parameter
      */
     public int getSubBurstsInBurst() {
-        // TODO
-        return 0;
+        return subBurstsInBurst;
     }
 
     /**
@@ -48,8 +67,7 @@ public class Burst {
      * @return Average parameter
      */
     public int getAverage() {
-        // TODO
-        return 0;
+        return average;
     }
 
     /**
@@ -58,8 +76,7 @@ public class Burst {
      * @return NAttenuators parameter
      */
     public int getNAttenuators() {
-        // TODO
-        return 0;
+        return nAttenuators;
     }
 
     /**
@@ -67,9 +84,8 @@ public class Burst {
      *
      * @return Attenuator1 parameter
      */
-    public int getAttenuator1() {
-        // TODO
-        return 0;
+    public ArrayList<Double> getAttenuator1() {
+        return attenuator1;
     }
 
     /**
@@ -77,9 +93,8 @@ public class Burst {
      *
      * @return Attenuator2 parameter
      */
-    public int getAttenuator2() {
-        // TODO
-        return 0;
+    public  ArrayList<Double> getAttenuator2() {
+        return attenuator2;
     }
 
     /**
@@ -87,9 +102,8 @@ public class Burst {
      *
      * @return TxAnt parameter
      */
-    public int getTxAnt() {
-        // TODO
-        return 0;
+    public ArrayList<Integer> getTxAnt() {
+        return TxAnt;
     }
 
     /**
@@ -97,9 +111,8 @@ public class Burst {
      *
      * @return RxAnt parameter
      */
-    public int RxAnt() {
-        // TODO
-        return 0;
+    public ArrayList<Integer> getRxAnt() {
+        return RxAnt;
     }
 
     /**
@@ -108,8 +121,7 @@ public class Burst {
      * @return ChirpsInBurst parameter
      */
     public int getChirpsInBurst() {
-        // TODO
-        return 0;
+        return chirpsInBurst;
     }
 
     /**
@@ -117,9 +129,8 @@ public class Burst {
      *
      * @return TimeStamp parameter
      */
-    public double getTimeStamp() {
-        // TODO
-        return 0;
+    public Date getTimeStamp() {
+        return dateTime;
     }
 
     /**
@@ -128,8 +139,7 @@ public class Burst {
      * @return Temperature1 parameter
      */
     public double getTemperature1() {
-        // TODO
-        return 0;
+        return temperature1;
     }
 
     /**
@@ -138,8 +148,7 @@ public class Burst {
      * @return Temperature1 parameter
      */
     public double getTemperature2() {
-        // TODO
-        return 0;
+        return temperature2;
     }
 
     /**
@@ -148,8 +157,7 @@ public class Burst {
      * @return BatteryVoltage parameter
      */
     public double getBatteryVoltage() {
-        // TODO
-        return 0;
+        return batteryVoltage;
     }
 
     /**
@@ -161,34 +169,31 @@ public class Burst {
      * @return V parameter
      */
     public List<Double> getV() {
-        // TODO
-        return null;
+        return v;
     }
 
     /**
      * Returns StartInd parameter
      *
-     * <p>implemented as {@code List<Double>} since in the original MATLAB it was a matrix with a *
+     * <p>implemented as {@code List<Integer>} since in the original MATLAB it was a matrix with a *
      * height of 1
      *
      * @return StartInd parameter
      */
-    public List<Double> getStartInd() {
-        // TODO
-        return null;
+    public List<Integer> getStartInd() {
+        return startInd;
     }
 
     /**
      * Returns EndInd parameter
      *
-     * <p>implemented as {@code List<Double>} since in the original MATLAB it was a matrix with a *
+     * <p>implemented as {@code List<Integer>} since in the original MATLAB it was a matrix with a *
      * height of 1
      *
      * @return EndInd parameter
      */
-    public List<Double> getEndInd() {
-        // TODO
-        return null;
+    public List<Integer> getEndInd() {
+        return endInd;
     }
 
     /**
@@ -197,8 +202,7 @@ public class Burst {
      * @return Burst parameter
      */
     public int getBurst() {
-        // TODO
-        return 0;
+        return burst;
     }
 
     /**
@@ -256,8 +260,7 @@ public class Burst {
      * @return filename parameter
      */
     public String getFilename() {
-        // TODO
-        return null;
+        return filename;
     }
 
     /**
@@ -423,4 +426,271 @@ public class Burst {
         // TODO
         return null;
     }
+
+    private void LoadBurstRMB5(int totalNumberOfBursts)
+            throws InvalidBurstException {
+        int MaxHeaderLen = 1500;
+        int burstpointer = 0;
+        code = 0;
+
+        long fileLength;
+        File file;
+        file = new File(filename);
+        fileLength = file.length();
+
+        try(FileInputStream f = new FileInputStream(new File(filename)))
+        {
+            FileChannel fc = f.getChannel();
+            int burstCount = 1;
+            long current_stream_pos = 0;
+            int wordsPerBurst = 0;
+            int WperChirpCycle;
+
+            fc.position(burstpointer);
+            byte headerBytes[] = new byte[MaxHeaderLen];
+            while (current_stream_pos != MaxHeaderLen) {
+                current_stream_pos += f.read(headerBytes, (int) current_stream_pos, (int) (MaxHeaderLen - current_stream_pos));
+            }
+            String A = new String(headerBytes);
+
+            nSamples = parseInt(A, "N_ADC_SAMPLES=");
+            WperChirpCycle = nSamples;
+            subBurstsInBurst = parseInt(A, "NSubBursts=");
+
+            int[] searchind = strFind(A, "Average=");
+            if (searchind.length == 0) {
+                average = 0;
+            } else {
+                average = parseInt(A, "Average=");
+            }
+
+            nAttenuators = parseInt(A, "nAttenuators=");
+            attenuator1 = parseDoubleArray(A, "Attenuator1=");
+            attenuator2 = parseDoubleArray(A, "AFGain=");
+            TxAnt = parseIntArray(A, "TxAnt=");
+            RxAnt = parseIntArray(A, "RxAnt=");
+
+            if (TxAnt.size() != 8) {
+                throw new InvalidBurstException("TxAnt has wrong number of values");
+            }
+
+            if (RxAnt.size() != 8) {
+                throw new InvalidBurstException("RxAnt has wrong number of values");
+            }
+
+            while (TxAnt.contains(0)) {
+                    TxAnt.remove(TxAnt.indexOf(0));
+            }
+
+            while (RxAnt.contains(0)) {
+                RxAnt.remove(RxAnt.indexOf(0));
+            }
+
+            if (average != 0) {
+                chirpsInBurst = 1;
+            } else {
+                chirpsInBurst =
+                        subBurstsInBurst * TxAnt.size() * RxAnt.size() * nAttenuators;
+            }
+
+            String searchString = "*** End Header ***";
+            searchind = strFind(A, searchString);
+
+            burstpointer += searchind[0] + searchString.length();
+
+            // Extract remaining information from header
+            SimpleDateFormat ft = new SimpleDateFormat ("yyyy-MM-dd hh:mm:ss");
+            ft.setTimeZone(TimeZone.getTimeZone("GMT"));
+            dateTime = ft.parse(parseString(A, "Time stamp="));
+
+            temperature1 = parseDouble(A, "Temp1=");
+            temperature2 = parseDouble(A, "Temp2=");
+            batteryVoltage = parseDouble(A, "BatteryVoltage=");
+
+            while ((burstCount <= totalNumberOfBursts) && (burstpointer <= fileLength - MaxHeaderLen)) {
+                wordsPerBurst = chirpsInBurst * WperChirpCycle;
+                if (burstCount < totalNumberOfBursts && burstpointer <= fileLength - MaxHeaderLen) {
+                    if (average != 0) {
+                        burstpointer += (chirpsInBurst * WperChirpCycle * 4);
+                    } else {
+                        burstpointer += (chirpsInBurst * WperChirpCycle * 2);
+                    }
+                }
+                burstCount++;
+            }
+
+            if (burstpointer != 0) {
+                fc.position(burstpointer - 1);
+            }
+
+            if (burstCount == totalNumberOfBursts + 1) {
+                int count = 0;
+                if (average == 2) {
+                    int readTotal = wordsPerBurst * 4;
+                    byte b[] = new byte[readTotal];
+                    while (count < readTotal) {
+                        count = f.read(b, count, readTotal - count);
+                    }
+
+                    v = new ArrayList<>();
+
+                    for (int i = 0; i < wordsPerBurst; i++) {
+                        // Little Endian.
+                        int x =
+                                b[4 * i]
+                                        + (256 * b[4 * i + 1])
+                                        + (256 * 256 * b[4 * i + 2])
+                                        + (256 * 256 * 256 * b[4 * i + 3]);
+                        v.add((double)x);
+                    }
+                } else if (average == 1) {
+                    fc.position(burstpointer + 1);
+
+                    int readTotal = wordsPerBurst * 4;
+                    byte b[] = new byte[readTotal];
+                    while (count < readTotal) {
+                        count = f.read(b, count, readTotal - count);
+                    }
+
+                    v = new ArrayList<>();
+
+                    for (int i = 0; i < wordsPerBurst; i++) {
+                        // Little Endian.
+                        float x =
+                                ByteBuffer.wrap(b, 4 * i, 4).order(ByteOrder.LITTLE_ENDIAN).getFloat();
+                        v.add((double)x);
+                    }
+                } else {
+                    int readTotal = wordsPerBurst * 2;
+                    byte b[] = new byte[readTotal];
+                    while (count < readTotal) {
+                        count = f.read(b, count, readTotal - count);
+                    }
+
+                    v = new ArrayList<>();
+
+                    for (int i = 0; i < wordsPerBurst; i++) {
+                        // Little Endian.
+                        int x = b[2 * i] + (256 * b[2 * i + 1]);
+                        v.add((double)x);
+                    }
+                }
+
+                for (int i = 0; i < v.size(); i++) {
+                    if (v.get(i) < 0) {
+                        v.set(i,v.get(i) + Math.pow(2, 16));
+                    }
+                    v.set(i, v.get(i) * 2.5 / Math.pow(2, 16));
+                }
+
+                if (average == 2) {
+                    for (int i = 0; i < v.size(); i++) {
+                        v.set(i, v.get(i) / (subBurstsInBurst * nAttenuators));
+                    }
+                }
+
+                startInd = new ArrayList<>();
+                endInd = new ArrayList<>();
+                for (int i = 1; i <= WperChirpCycle * chirpsInBurst; i += WperChirpCycle) {
+                    startInd.add(i);
+                    endInd.add(i + WperChirpCycle - 1);
+                }
+
+                burst = totalNumberOfBursts;
+            } else {
+                // Too few bursts in file
+                burst = burstCount - 1;
+                code = -4;
+            }
+        }
+        catch (InvalidBurstException e)
+        {
+            throw e;
+        }
+        catch (Exception e)
+        {
+            if (code == 0)
+                code = 1;
+            throw new InvalidBurstException(String.format("Failed to parse file, code %d", code));
+        }
+    }
+
+    private int[] strFind(String original, String substring) {
+        ArrayList<Integer> list = new ArrayList<>();
+        int lastIndex = 0;
+        while (lastIndex != -1) {
+
+            lastIndex = original.indexOf(substring, lastIndex);
+
+            if (lastIndex != -1) {
+                list.add(lastIndex);
+                lastIndex += 1;
+            }
+        }
+
+        int[] ret = new int[list.size()];
+        for (int i = 0; i < list.size(); i++) {
+            ret[i] = list.get(i);
+        }
+
+        return ret;
+    }
+
+    private String parseString(String mainString, String searchString)
+    {
+        int[] searchInd = strFind(mainString, searchString);
+        int[] searchCR = strFind(mainString.substring(searchInd[0]), "\r\n");
+        return mainString.substring(
+                searchInd[0] + searchString.length(),
+                searchCR[0] + searchInd[0]);
+    }
+
+    private int parseInt(String mainString, String searchString)
+    {
+        return Integer.parseInt(parseString(mainString, searchString));
+    }
+
+    private double parseDouble(String mainString, String searchString)
+    {
+        return Double.parseDouble(parseString(mainString, searchString));
+    }
+
+    private ArrayList<Integer> parseIntArray(String mainString, String searchString) {
+        ArrayList<Integer> ret = new ArrayList<>();
+        String[] a_split = parseString(mainString, searchString).split(",");
+        for (String s : a_split) {
+            ret.add(Integer.parseInt(s));
+        }
+        return ret;
+    }
+
+    private ArrayList<Double> parseDoubleArray(String mainString, String searchString)
+    {
+        ArrayList<Double> ret = new ArrayList<>();
+        String[] a_split = parseString(mainString, searchString).split(",");
+        for (String s : a_split) {
+            ret.add(Double.parseDouble(s));
+        }
+        return ret;
+    }
+
+    private String filename;
+    private int subBurstsInBurst;
+    private int average;
+    private int nAttenuators;
+    private int code = 0;
+    private int nSamples = 0;
+    private int chirpsInBurst = 0;
+    private int burst = 0;
+    private Date dateTime;
+    private double temperature1;
+    private double temperature2;
+    private double batteryVoltage;
+    private ArrayList<Double> attenuator1;
+    private ArrayList<Double> attenuator2;
+    private ArrayList<Double> v;
+    private ArrayList<Integer> startInd;
+    private ArrayList<Integer> endInd;
+    private ArrayList<Integer> TxAnt;
+    private ArrayList<Integer> RxAnt;
 }
