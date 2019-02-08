@@ -34,7 +34,8 @@ public class BlackmanWindow implements IWindowFunction {
             window.add(evaluateFunction(n, i));
         }
 
-        //Second half of the function mirrors the first. In case of odd length the middle element is not repeated.
+        // Second half of the function mirrors the first. In case of odd length the middle element
+        // is not repeated.
         for (int i = m - 1 - (n % 2); i >= 0; i--) {
             window.add(evaluateFunction(n, i));
         }
