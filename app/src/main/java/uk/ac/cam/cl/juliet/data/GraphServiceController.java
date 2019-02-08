@@ -24,7 +24,8 @@ public class GraphServiceController {
      * @param data
      * @param callback
      */
-    public void uploadDatafile(String filename, String fileExtension, byte[] data, ICallback<DriveItem> callback) {
+    public void uploadDatafile(
+            String filename, String fileExtension, byte[] data, ICallback<DriveItem> callback) {
         graphServiceClient
                 .getMe()
                 .getDrive()

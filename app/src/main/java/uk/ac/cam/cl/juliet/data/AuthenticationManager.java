@@ -4,13 +4,11 @@ import android.app.Activity;
 import android.app.Application;
 import android.os.OperationCanceledException;
 import android.util.Log;
-import com.microsoft.graph.authentication.IAuthenticationAdapter;
-import com.microsoft.graph.authentication.MSAAuthAndroidAdapter;
 import com.microsoft.identity.client.*;
 import java.io.IOException;
 
 public class AuthenticationManager extends Application {
-    public static final String[] SCOPES = {"openid","Files.ReadWrite","User.ReadBasic.All"};
+    public static final String[] SCOPES = {"openid", "Files.ReadWrite", "User.ReadBasic.All"};
     private final String TAG = "AuthenticationManager";
     private static AuthenticationManager INSTANCE;
     private static PublicClientApplication PUBLIC_CLIENT;
@@ -47,7 +45,7 @@ public class AuthenticationManager extends Application {
         return authResult.getAccessToken();
     }
 
-    public void disconnect() throws MsalClientException{
+    public void disconnect() throws MsalClientException {
         // Remove the current user from the client
         PUBLIC_CLIENT.remove(PUBLIC_CLIENT.getUsers().get(0));
         // Reset the authentication manager

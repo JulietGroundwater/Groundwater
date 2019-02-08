@@ -58,7 +58,8 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * MSAL requires the calling app to pass an Activity which MUST call this method to get the auth code passed back correctly
+     * MSAL requires the calling app to pass an Activity which MUST call this method to get the auth
+     * code passed back correctly
      *
      * @param requestCode
      * @param resultCode

@@ -21,10 +21,9 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
+import com.microsoft.identity.client.*;
 import java.util.ArrayList;
 import java.util.List;
-
-import com.microsoft.identity.client.*;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
@@ -37,7 +36,8 @@ import uk.ac.cam.cl.juliet.data.IAuthenticationCallback;
  *
  * @author Ben Cole
  */
-public class DataFragment extends Fragment implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
+public class DataFragment extends Fragment
+        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
     private RecyclerView filesList;
     private FilesListAdapter adapter;
@@ -121,6 +121,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
 
     /**
      * A method that is called on tab selection - checking for a user still logged in
+     *
      * @param isVisibleToUser
      */
     @Override
@@ -242,7 +243,10 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         dialog.show();
     }
 
-    /** A method for checking the current authentication status and setting the correct sign in or out buttons */
+    /**
+     * A method for checking the current authentication status and setting the correct sign in or
+     * out buttons
+     */
     private void displayCorrectAuthButtons() {
         try {
             if (AuthenticationManager.getInstance().getPublicClient().getUsers().size() == 0) {
@@ -252,7 +256,8 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                 signIn.setVisible(false);
                 signOut.setVisible(true);
             }
-            System.out.println(AuthenticationManager.getInstance().getPublicClient().getUsers().size());
+            System.out.println(
+                    AuthenticationManager.getInstance().getPublicClient().getUsers().size());
         } catch (MsalClientException msal) {
             msal.printStackTrace();
         }
@@ -318,9 +323,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         // TODO: implement
     }
 
-    /**
-     * Begins the authentication process with Microsoft
-     */
+    /** Begins the authentication process with Microsoft */
     private void connect() {
         // Get the Authentication Manager Instance
         AuthenticationManager authManager = AuthenticationManager.getInstance();
@@ -339,18 +342,6 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
             } else {
                 // There are no cached users so interactively login
                 authManager.acquireToken(getActivity(), this);
-            }
-        } catch (MsalClientException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void configureMenu() {
-        try {
-            List<User> users = AuthenticationManager.getInstance().getPublicClient().getUsers();
-            if (users.size() != 1) {
-                signIn.setVisible(true);
-                signOut.setVisible(false);
             }
         } catch (MsalClientException e) {
             e.printStackTrace();
@@ -377,12 +368,11 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
      */
     @Override
     public void onError(MsalException msalException) {
-        Toast.makeText(getContext(), "An error occurred whilst logging you in", Toast.LENGTH_LONG).show();
+        Toast.makeText(getContext(), "An error occurred whilst logging you in", Toast.LENGTH_LONG)
+                .show();
     }
 
-    /**
-     * Notify if the user cancels
-     */
+    /** Notify if the user cancels */
     @Override
     public void onCancel() {
         Toast.makeText(getContext(), "The user cancelled logging in", Toast.LENGTH_LONG).show();
@@ -418,7 +408,8 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                 file = temporaryDataFileTypes[0];
                 // TODO: Send it to the server!
                 // Send the data using the graph service controller
-                // gsc.uploadDatafile(file.timestamp + "@" + file.gps, "dat", file.data.getBytes(), callback);
+                // gsc.uploadDatafile(file.timestamp + "@" + file.gps, "dat", file.data.getBytes(),
+                // callback);
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
                 e.printStackTrace();
