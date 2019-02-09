@@ -28,7 +28,7 @@
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="@string/msal_prefix"
+                <data android:scheme="@string/MSAL"
                       android:host="auth" />
             </intent-filter>
         </activity>
@@ -37,7 +37,7 @@
                 android:value="authority string"/>
         <meta-data
                 android:name="com.microsoft.identity.client.ClientId"
-                android:value="@string/client_id"/>
+                android:value="@string/CLIENT_ID"/>
     </application>
 
 </manifest>

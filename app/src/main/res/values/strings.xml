@@ -24,7 +24,4 @@
     <string name="send_btn">Send</string>
     <string name="sign_in">Sign in</string>
     <string name="sign_out">Sign out</string>
-    <!--Other Strings-->
-    <string name="client_id">c0c07fef-3899-451f-8a2c-0b7aaa8e9b49</string>
-    <string name="msal_prefix">msalc0c07fef-3899-451f-8a2c-0b7aaa8e9b49</string>
 </resources>

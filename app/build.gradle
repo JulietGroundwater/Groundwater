@@ -16,6 +16,11 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
+        buildTypes.each {
+            it.resValue 'string', 'CLIENT_ID',  System.getenv('CLIENT_ID')
+            it.resValue 's' +
+                    'tring', 'MSAL',  System.getenv('MSAL')
+        }
     }
     testOptions.unitTests.all {
         testLogging {
