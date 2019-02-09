@@ -85,6 +85,13 @@ public class Header {
 
     private List<String> headerLines = new ArrayList<>();
 
+    /**
+     * Creates a {@code Header} object and initialises the values from the specified function
+     *
+     * <p>Getters are supplied for all of the fields
+     *
+     * @param filename name of the {@code .DAT} file to load
+     */
     public Header(String filename) throws IOException {
         ClassLoader classLoader = getClass().getClassLoader();
         File file = new File(classLoader.getResource(filename).getFile());

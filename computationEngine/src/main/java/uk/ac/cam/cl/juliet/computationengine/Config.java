@@ -1,5 +1,10 @@
 package uk.ac.cam.cl.juliet.computationengine;
 
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -11,8 +16,89 @@ import java.util.List;
  */
 public class Config {
 
-    public Config(String filename) {
-        // TODO
+    private boolean alwaysAttended = false,
+            checkEthernet = true,
+            samplingFrequencyMode,
+            intervalMode = false,
+            logOn = false,
+            sleepMode = false,
+            gpsOn = false,
+            housekeeping,
+            syncGPS,
+            iridium = false;
+    private int maxDepthToGraph,
+            nADCSamples,
+            nData,
+            watchDogTaskSecs = 3600,
+            interChirpDelay,
+            settleCycles,
+            nSubBursts = 10,
+            average,
+            repSecs,
+            maxDataFileLength = 10000000,
+            nAttenuators;
+    private List<Integer> triples = new ArrayList<>(),
+            attenuator1 = new ArrayList<>(),
+            afGain = new ArrayList<>();
+    private String reg00, reg01, reg02, reg0B, reg0C, reg0D, reg0E;
+
+    /**
+     * Creates a {@code Config} object and initialises the values from the specified function
+     *
+     * <p>Getters and Setters are supplied for all of the fields in the example {@code Config.ini}
+     *
+     * @param filename name of the {@code Config.ini} file to load
+     */
+    public Config(String filename) throws IOException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        File file = new File(classLoader.getResource(filename).getFile());
+
+        BufferedReader reader = new BufferedReader(new FileReader(file));
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.length() == 0) continue;
+            if (line.charAt(0) == ';') continue;
+
+            if (!line.contains("=")) continue;
+
+            // split on ';' as well as '=' to ensure only taking the relevant information
+            String lhs = line.split(";")[0].split("=")[0]; // left hand side
+            String rhs = line.split(";")[0].split("=")[1]; // right hand side
+
+            if (lhs.contains("AlwaysAttended")) alwaysAttended = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("CheckEthernet")) checkEthernet = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
+            else if (lhs.contains("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
+            else if (lhs.contains("SamplingFreqMode"))
+                samplingFrequencyMode = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("NData")) nData = Integer.parseInt(rhs);
+            else if (lhs.contains("Triples"))
+                for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
+            else if (lhs.contains("WATCHDOG_TASK_SECS")) watchDogTaskSecs = Integer.parseInt(rhs);
+            else if (lhs.contains("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
+            else if (lhs.contains("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
+            else if (lhs.contains("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
+            else if (lhs.contains("Average")) average = Integer.parseInt(rhs);
+            else if (lhs.contains("RepSecs")) repSecs = Integer.parseInt(rhs);
+            else if (lhs.contains("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("MAX_DATA_FILE_LENGTH")) maxDepthToGraph = Integer.parseInt(rhs);
+            else if (lhs.contains("LOGON")) logOn = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
+            else if (lhs.contains("Attenuator1"))
+                for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
+            else if (lhs.contains("AFGain"))
+                for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
+            else if (lhs.contains("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
+            else if (lhs.contains("Reg00")) reg00 = rhs;
+            else if (lhs.contains("Reg01")) reg01 = rhs;
+            else if (lhs.contains("Reg02")) reg02 = rhs;
+            else if (lhs.contains("Reg0B")) reg0B = rhs;
+            else if (lhs.contains("Reg0C")) reg0C = rhs;
+            else if (lhs.contains("Reg0D")) reg0D = rhs;
+        }
     }
 
     /**
@@ -26,8 +112,7 @@ public class Config {
      * @return alwaysAttended
      */
     public boolean getAlwaysAttended() {
-        // TODO
-        return false;
+        return alwaysAttended;
     }
 
     /**
@@ -41,7 +126,7 @@ public class Config {
      * @param attended the value to be set
      */
     public void setAlwaysAttended(boolean attended) {
-        // TODO
+        alwaysAttended = attended;
     }
 
     /**
@@ -54,12 +139,11 @@ public class Config {
      * @return checkEthernet
      */
     public boolean getCheckEthernet() {
-        // TODO
-        return false;
+        return checkEthernet;
     }
 
     /**
-     * sets AlwaysAttended
+     * sets CheckEthernet
      *
      * <p>Check for an Ethernet connection on power-up. Default=true.
      *
@@ -68,7 +152,7 @@ public class Config {
      * @param ethernet the value to be set
      */
     public void setCheckEthernet(boolean ethernet) {
-        // TODO
+        checkEthernet = ethernet;
     }
 
     /**
@@ -82,8 +166,7 @@ public class Config {
      * @return maxDepthToGraph
      */
     public int getMaxDepthToGraph() {
-        // TODO
-        return 0;
+        return maxDepthToGraph;
     }
 
     /**
@@ -99,7 +182,9 @@ public class Config {
      * @param depth depth to be set
      */
     public void setMaxDepthToGraph(int depth) {
-        // TODO
+        if (depth >= 0) maxDepthToGraph = depth;
+
+        // throw an exception ?
     }
 
     /**
@@ -112,8 +197,7 @@ public class Config {
      * @return N_ADC_SAMPLES
      */
     public int getNADCSamples() {
-        // TODO
-        return 0;
+        return nADCSamples;
     }
 
     /**
@@ -126,7 +210,7 @@ public class Config {
      * @param n number of samples to be set
      */
     public void setNADCSamples(int n) {
-        // TODO
+        if (n >= 10) nADCSamples = n;
     }
 
     /**
@@ -141,8 +225,7 @@ public class Config {
      * @return samplingFreqMode
      */
     public boolean getSamplingFrequencyMode() {
-        // TODO
-        return false;
+        return samplingFrequencyMode;
     }
 
     /**
@@ -157,7 +240,7 @@ public class Config {
      * @param mode mode to be set
      */
     public void setSamplingFrequencyMode(boolean mode) {
-        // TODO
+        samplingFrequencyMode = mode;
     }
 
     /**
@@ -171,8 +254,7 @@ public class Config {
      * @return nData
      */
     public int getNData() {
-        // TODO
-        return 0;
+        return nData;
     }
 
     /**
@@ -186,7 +268,8 @@ public class Config {
      * @param n value to be set
      */
     public void setNData(int n) {
-        // TODO
+        // check for positive values
+        nData = n;
     }
 
     /**
@@ -201,23 +284,28 @@ public class Config {
      * @return triples
      */
     public List<Integer> getTriples() {
-        // TODO
-        return null;
+        // returns a clone of the list
+        return new ArrayList<>(triples);
     }
 
     /**
      * Sets Triples as a {@code java.util.List<Integer>} object.
      *
-     * <p>Triples define depth intervals to search for maxima to report on. Up to a max of four *
+     * <p>Triples define depth intervals to search for maxima to report on. Up to a max of four
      * triples allowed. Each Triple is used in a Matlab sense to define intervals (A,B,C interpreted
-     * * as A:B:C). Maximum of 64 intervals allowed.
+     * as A:B:C). Maximum of 64 intervals allowed.
      *
      * <p>Relevant for both Attended and Unattended modes
      *
-     * @param triples values to be used
+     * @param values values to be used
      */
-    public void setTriples(List<Integer> triples) {
-        // TODO
+    public void setTriples(List<Integer> values) throws InvalidConfigException {
+        // ensure that only lists which a size of a multiple of 3, and max 4 triples so 12 values
+        if (values.size() % 3 == 0 && values.size() <= 12)
+            triples = new ArrayList<>(values); // performs a clone of the data
+        else
+            throw new InvalidConfigException(
+                    "Expecting a list with a size which is a multiple of 3, and a size <= 12");
     }
 
     /**
@@ -233,8 +321,7 @@ public class Config {
      * @return watchDogTaskSecs
      */
     public int getWatchdogTaskSecs() {
-        // TODO
-        return 0;
+        return watchDogTaskSecs;
     }
 
     /**
@@ -249,8 +336,13 @@ public class Config {
      *
      * @param secs the value to be set
      */
-    public void setWatchdogTaskSecs(int secs) {
-        // TODO
+    public void setWatchdogTaskSecs(int secs) throws InvalidConfigException {
+        if (secs == 0) watchDogTaskSecs = 3600;
+        else if (secs == -1) watchDogTaskSecs = -1; // "disables" Watchdog task
+        else if (secs > 0) watchDogTaskSecs = secs;
+        else
+            throw new InvalidConfigException(
+                    "Unexpected value for for WATCHDOG_TASK_SECS, value should be >= -1");
     }
 
     /**
@@ -263,8 +355,7 @@ public class Config {
      * @return interChirpDelay
      */
     public int getInterChirpDelay() {
-        // TODO
-        return 0;
+        return interChirpDelay;
     }
 
     /**
@@ -276,8 +367,9 @@ public class Config {
      *
      * @param delay delay value to be set
      */
-    public void setInterChirpDelay(int delay) {
-        // TODO
+    public void setInterChirpDelay(int delay) throws InvalidConfigException {
+        if (delay > 0) interChirpDelay = delay;
+        else throw new InvalidConfigException("New InterChirpDelay value must be > 0");
     }
 
     /**
@@ -290,8 +382,7 @@ public class Config {
      * @return settleCycles
      */
     public int getSettleCycles() {
-        // TODO
-        return 0;
+        return settleCycles;
     }
 
     /**
@@ -303,8 +394,9 @@ public class Config {
      *
      * @param cycles amount of cycles
      */
-    public void setSettleCycles(int cycles) {
-        // TODO
+    public void setSettleCycles(int cycles) throws InvalidConfigException {
+        if (cycles > 0) settleCycles = cycles;
+        else throw new InvalidConfigException("New Settle_Cycles must be > 0");
     }
 
     /**
@@ -319,8 +411,7 @@ public class Config {
      * @return nSubBursts
      */
     public int getNSubBursts() {
-        // TODO
-        return 0;
+        return nSubBursts;
     }
 
     /**
@@ -334,8 +425,9 @@ public class Config {
      *
      * @param bursts amount of bursts to be set
      */
-    public void setNSubBursts(int bursts) {
-        // TODO
+    public void setNSubBursts(int bursts) throws InvalidConfigException {
+        if (bursts >= 0) nSubBursts = bursts;
+        else throw new InvalidConfigException("New NSubBursts value must be >= 0");
     }
 
     /**
@@ -354,8 +446,7 @@ public class Config {
      * @return average
      */
     public int getAverage() {
-        // TODO
-        return 0;
+        return average;
     }
 
     /**
@@ -371,10 +462,12 @@ public class Config {
      *
      * <p>Relevant for both Attended and Unattended modes
      *
-     * @param average - average mode to be set
+     * @param ave - average mode to be set
      */
-    public void setAverage(int average) {
-        // TODO
+    public void setAverage(int ave) throws InvalidConfigException {
+        // ensure that average is between 0 and 2 inclusive
+        if (ave >= 0 && ave <= 2) average = ave;
+        else throw new InvalidConfigException("Average value must be 0, 1 or 2");
     }
 
     /**
@@ -389,8 +482,7 @@ public class Config {
      * @return repSecs
      */
     public int getRepSecs() {
-        // TODO
-        return 0;
+        return repSecs;
     }
 
     /**
@@ -404,8 +496,9 @@ public class Config {
      *
      * @param secs number of seconds
      */
-    public void setRepSecs(int secs) {
-        // TODO
+    public void setRepSecs(int secs) throws InvalidConfigException {
+        if (secs > 0) repSecs = secs;
+        else throw new InvalidConfigException("New value must be > 0");
     }
 
     /**
@@ -420,8 +513,7 @@ public class Config {
      * @return intervalMode
      */
     public boolean getIntervalMode() {
-        // TODO
-        return false;
+        return intervalMode;
     }
 
     /**
@@ -436,7 +528,7 @@ public class Config {
      * @param mode mode to use
      */
     public void setIntervalMode(boolean mode) {
-        // TODO
+        intervalMode = mode;
     }
 
     /**
@@ -451,8 +543,7 @@ public class Config {
      * @return maxDataFileLength
      */
     public int getMaxDataFileLength() {
-        // TODO
-        return 0;
+        return maxDataFileLength;
     }
 
     /**
@@ -466,8 +557,13 @@ public class Config {
      *
      * @param fileLength max data file length to use
      */
-    public void setMaxDataFileLength(int fileLength) {
-        // TODO
+    public void setMaxDataFileLength(int fileLength) throws InvalidConfigException {
+
+        // in the supplied Config.ini the value is 100,000 which is less than the specified minimum
+        // of 1,000,000
+
+        if (fileLength >= 1000000) maxDataFileLength = fileLength;
+        else throw new InvalidConfigException("value must be >= 1,000,000");
     }
 
     /**
@@ -480,8 +576,7 @@ public class Config {
      * @return logOn
      */
     public boolean getLogOn() {
-        // TODO
-        return false;
+        return logOn;
     }
 
     /**
@@ -491,10 +586,10 @@ public class Config {
      *
      * <p>Relevant for both Attended and Unattended modes
      *
-     * @param logOn value for logOn
+     * @param log value for logOn
      */
-    public void setLogOn(boolean logOn) {
-        // TODO
+    public void setLogOn(boolean log) {
+        logOn = log;
     }
 
     /**
@@ -507,8 +602,7 @@ public class Config {
      * @return nAttenuators
      */
     public int getNAttenuators() {
-        // TODO
-        return 0;
+        return nAttenuators;
     }
 
     /**
@@ -521,7 +615,8 @@ public class Config {
      * @param attenuators value to be set
      */
     public void setNAttenuators(int attenuators) {
-        // TODO
+        // check for positive value?
+        nAttenuators = attenuators;
     }
 
     /**
@@ -536,8 +631,8 @@ public class Config {
      * @return attenuator1
      */
     public List<Integer> getAttenuator1() {
-        // TODO
-        return null;
+        // return a copy of the list
+        return new ArrayList<>(attenuator1);
     }
 
     /**
@@ -551,8 +646,12 @@ public class Config {
      *
      * @param values values for attenuator1
      */
-    public void setAttenuator1(List<Integer> values) {
-        // TODO
+    public void setAttenuator1(List<Integer> values) throws InvalidConfigException {
+        // should this be a double, the max value is 31.5?
+        boolean flag = true;
+        for (int i : values) if (!(i > 0 && i <= 31.5)) flag = false;
+        if (flag) attenuator1 = new ArrayList<>(values);
+        else throw new InvalidConfigException("values for Attenuator1 must be >0 and <= 31.5");
     }
 
     /**
@@ -567,8 +666,7 @@ public class Config {
      * @return afGain
      */
     public List<Integer> getAFGain() {
-        // TODO
-        return null;
+        return new ArrayList<>(afGain);
     }
 
     /**
@@ -582,8 +680,12 @@ public class Config {
      *
      * @param values values for afGain
      */
-    public void setAFGain(List<Integer> values) {
-        // TODO
+    public void setAFGain(List<Integer> values) throws InvalidConfigException {
+        // should this be a double, the max value is 31.5?
+        boolean flag = true;
+        for (int i : values) if (!(i > 0 && i <= 31.5)) flag = false;
+        if (flag) afGain = new ArrayList<>(values);
+        else throw new InvalidConfigException("values for Attenuator1 must be >0 and <= 31.5");
     }
 
     /**
@@ -598,8 +700,7 @@ public class Config {
      * @return sleepMode
      */
     public boolean getSleepMode() {
-        // TODO
-        return false;
+        return sleepMode;
     }
 
     /**
@@ -614,7 +715,7 @@ public class Config {
      * @param mode mode to be set
      */
     public void setSleepMode(boolean mode) {
-        // TODO
+        sleepMode = mode;
     }
 
     /**
@@ -628,8 +729,7 @@ public class Config {
      * @return gpsOn
      */
     public boolean getGPSOn() {
-        // TODO
-        return false;
+        return gpsOn;
     }
 
     /**
@@ -643,7 +743,7 @@ public class Config {
      * @param gps mode to be set
      */
     public void setGPSOn(boolean gps) {
-        // TODO
+        gpsOn = gps;
     }
 
     /**
@@ -657,8 +757,7 @@ public class Config {
      * @return housekeeping
      */
     public boolean getHousekeeping() {
-        // TODO
-        return false;
+        return housekeeping;
     }
 
     /**
@@ -669,10 +768,10 @@ public class Config {
      *
      * <p>Relevant for both Attended and Unattended modes
      *
-     * @param housekeeping housekeeping mode to use
+     * @param keeping housekeeping mode to use
      */
-    public void setHousekeeping(boolean housekeeping) {
-        // TODO
+    public void setHousekeeping(boolean keeping) {
+        housekeeping = keeping;
     }
 
     /**
@@ -686,8 +785,7 @@ public class Config {
      * @return syncGPS
      */
     public boolean getSyncGPS() {
-        // TODO
-        return false;
+        return syncGPS;
     }
 
     /**
@@ -701,7 +799,7 @@ public class Config {
      * @param gps syncGPS mode to use
      */
     public void setSyncGPS(boolean gps) {
-        // TODO
+        syncGPS = gps;
     }
 
     /**
@@ -716,8 +814,7 @@ public class Config {
      * @return iridium
      */
     public boolean getIridium() {
-        // TODO
-        return false;
+        return iridium;
     }
 
     /**
@@ -732,7 +829,7 @@ public class Config {
      * @param iridium Iridium mode to use
      */
     public void setIridium(boolean iridium) {
-        // TODO
+        iridium = iridium;
     }
 
     /**
@@ -745,8 +842,7 @@ public class Config {
      * @return reg
      */
     public String getReg00() {
-        // TODO
-        return null;
+        return reg00;
     }
 
     /**
@@ -759,7 +855,8 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg00(String reg) {
-        // TODO
+        // should check for correct format
+        reg00 = reg;
     }
 
     /**
@@ -772,8 +869,7 @@ public class Config {
      * @return reg
      */
     public String getReg01() {
-        // TODO
-        return null;
+        return reg01;
     }
 
     /**
@@ -786,7 +882,8 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg01(String reg) {
-        // TODO
+        // should check for correct format
+        reg01 = reg;
     }
 
     /**
@@ -799,8 +896,7 @@ public class Config {
      * @return reg
      */
     public String getReg02() {
-        // TODO
-        return null;
+        return reg02;
     }
 
     /**
@@ -813,7 +909,8 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg02(String reg) {
-        // TODO
+        // should check for correct format
+        reg02 = reg;
     }
 
     /**
@@ -826,8 +923,7 @@ public class Config {
      * @return reg
      */
     public String getReg0B() {
-        // TODO
-        return null;
+        return reg0B;
     }
 
     /**
@@ -840,7 +936,8 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg0B(String reg) {
-        // TODO
+        // should check for correct format
+        reg0B = reg;
     }
 
     /**
@@ -853,8 +950,7 @@ public class Config {
      * @return reg
      */
     public String getReg0C() {
-        // TODO
-        return null;
+        return reg0C;
     }
 
     /**
@@ -867,7 +963,8 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg0C(String reg) {
-        // TODO
+        // should check for correct format
+        reg0C = reg;
     }
 
     /**
@@ -880,8 +977,7 @@ public class Config {
      * @return reg
      */
     public String getReg0D() {
-        // TODO
-        return null;
+        return reg0D;
     }
 
     /**
@@ -894,7 +990,8 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg0D(String reg) {
-        // TODO
+        // should check for correct format
+        reg0D = reg;
     }
 
     /**
@@ -907,8 +1004,7 @@ public class Config {
      * @return reg
      */
     public String getReg0E() {
-        // TODO
-        return null;
+        return reg0E;
     }
 
     /**
@@ -921,6 +1017,7 @@ public class Config {
      * @param reg - register value to be set
      */
     public void setReg0E(String reg) {
-        // TODO
+        // should check for correct format
+        reg0E = reg;
     }
 }
