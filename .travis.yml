@@ -18,10 +18,11 @@ android:
 
   # Android SDK Version
   - android-$ANDROID_SDK_VERISON
+  - android-22
 
   # System Images for running emulation
   - sys-img-x86-android-26
-  - sys-img-armeabi-v7a-android-17
+  - sys-img-armeabi-v7a-android-22
 
 # Caching for better build times
 before_cache:
