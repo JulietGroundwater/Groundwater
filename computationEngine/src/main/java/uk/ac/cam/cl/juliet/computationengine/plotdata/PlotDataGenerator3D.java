@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.computationengine.plotdata;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.range.Range;
@@ -8,11 +10,9 @@ import uk.ac.cam.cl.juliet.computationengine.utility.BlackmanWindow;
 import uk.ac.cam.cl.juliet.computationengine.utility.ComplexVector;
 import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * A class responsible for generating {@link PlotData3D} for various plots from a list of {@link Burst} objects.
+ * A class responsible for generating {@link PlotData3D} for various plots from a list of {@link
+ * Burst} objects.
  */
 public class PlotDataGenerator3D {
     private static final double SCALE_CONSTANT_1 = 1.7833;
@@ -31,9 +31,7 @@ public class PlotDataGenerator3D {
     private PlotData3D powerPlotData;
     private PlotData3D phaseDiffPlotData;
 
-    /**
-     * Computes data for power and phase difference plots.
-     */
+    /** Computes data for power and phase difference plots. */
     private void computePlotData() {
         List<Double> xValues = new ArrayList<>();
         List<Double> yValues = new ArrayList<>();
@@ -43,7 +41,12 @@ public class PlotDataGenerator3D {
         RangeResult lastResult = null;
 
         for (Burst burst : bursts) {
-            rangeResult = Range.computeRange(burst, padding, (maxDepth * nCoef / SCALE_CONSTANT_1) + SCALE_CONSTANT_2, win);
+            rangeResult =
+                    Range.computeRange(
+                            burst,
+                            padding,
+                            (maxDepth * nCoef / SCALE_CONSTANT_1) + SCALE_CONSTANT_2,
+                            win);
             ComplexVector specCor = new ComplexVector();
 
             for (Complex c : rangeResult.getSpecCor().get(0)) {
@@ -52,8 +55,12 @@ public class PlotDataGenerator3D {
 
             List<Double> zValues = new ArrayList<>();
 
-            //Compute power
-            ComplexVector powerVector = specCor.absElements().logElements().divideByConstant(Math.log(10.0)).multiplyByConstant(20.0);
+            // Compute power
+            ComplexVector powerVector =
+                    specCor.absElements()
+                            .logElements()
+                            .divideByConstant(Math.log(10.0))
+                            .multiplyByConstant(20.0);
 
             for (int i = 0; i < powerVector.size(); i++) {
                 zValues.add(powerVector.getReal(i));
@@ -61,15 +68,14 @@ public class PlotDataGenerator3D {
 
             powerValues.add(zValues);
 
-            //Compute phase difference
+            // Compute phase difference
             zValues = new ArrayList<>();
 
             if (lastResult == null) {
                 for (int i = 0; i < rangeResult.getSpecCor().get(0).size(); i++) {
                     zValues.add(0.0);
                 }
-            }
-            else {
+            } else {
                 for (int i = 0; i < rangeResult.getSpecCor().get(0).size(); i++) {
                     Complex curPhase = rangeResult.getSpecCor().get(0).get(i);
                     Complex lastPhase = lastResult.getSpecCor().get(0).get(i);
@@ -93,10 +99,11 @@ public class PlotDataGenerator3D {
     }
 
     /**
-     * Creates a generator using the parameters.
-     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     * Creates a generator using the parameters. The parameters correspond to values used in
+     * fmcw_range and SidiElAidiApp
      */
-    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth, double nCoef, int padding, IWindowFunction win) {
+    public PlotDataGenerator3D(
+            List<Burst> bursts, double maxDepth, double nCoef, int padding, IWindowFunction win) {
         this.bursts = new ArrayList<>(bursts);
         this.maxDepth = maxDepth;
         this.nCoef = nCoef;
@@ -107,8 +114,8 @@ public class PlotDataGenerator3D {
     }
 
     /**
-     * Creates a generator using the parameters. Uses default padding and window function.
-     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     * Creates a generator using the parameters. Uses default padding and window function. The
+     * parameters correspond to values used in fmcw_range and SidiElAidiApp
      */
     public PlotDataGenerator3D(List<Burst> bursts, double maxDepth, double nCoef) {
         this.bursts = new ArrayList<>(bursts);
@@ -121,8 +128,8 @@ public class PlotDataGenerator3D {
     }
 
     /**
-     * Creates a generator using the parameters. Uses default refraction index, padding and window function.
-     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     * Creates a generator using the parameters. Uses default refraction index, padding and window
+     * function. The parameters correspond to values used in fmcw_range and SidiElAidiApp
      */
     public PlotDataGenerator3D(List<Burst> bursts, double maxDepth) {
         this.bursts = new ArrayList<>(bursts);
@@ -135,8 +142,8 @@ public class PlotDataGenerator3D {
     }
 
     /**
-     * Creates a generator using the parameters. Uses default max depth, refraction index, padding and window function.
-     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     * Creates a generator using the parameters. Uses default max depth, refraction index, padding
+     * and window function. The parameters correspond to values used in fmcw_range and SidiElAidiApp
      */
     public PlotDataGenerator3D(List<Burst> bursts) {
         this.bursts = new ArrayList<>(bursts);
@@ -150,7 +157,9 @@ public class PlotDataGenerator3D {
 
     /**
      * Returns the power plot data associated with this generator
-     * @return A {@link PlotData3D} object containing the power plot data associated with this generator.
+     *
+     * @return A {@link PlotData3D} object containing the power plot data associated with this
+     *     generator.
      */
     public PlotData3D getPowerPlotData() {
         return powerPlotData;
@@ -158,7 +167,9 @@ public class PlotDataGenerator3D {
 
     /**
      * Returns the phase difference plot data associated with this generator
-     * @return A {@link PlotData3D} object containing the phase difference plot data associated with this generator.
+     *
+     * @return A {@link PlotData3D} object containing the phase difference plot data associated with
+     *     this generator.
      */
     public PlotData3D getPhaseDiffPlotData() {
         return phaseDiffPlotData;

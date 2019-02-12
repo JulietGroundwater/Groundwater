@@ -296,8 +296,8 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new vector that is equal to {@code this} with each value replaced with its
-     * natural logarithm.
+     * Creates a new vector that is equal to {@code this} with each value replaced with its natural
+     * logarithm.
      *
      * @return The new resulting {@link ComplexVector}
      */
@@ -312,8 +312,8 @@ public class ComplexVector {
     }
 
     /**
-     * Creates a new vector that is equal to {@code this} with each value replaced with its
-     * phase angle.
+     * Creates a new vector that is equal to {@code this} with each value replaced with its phase
+     * angle.
      *
      * @return The new resulting {@link ComplexVector}
      */

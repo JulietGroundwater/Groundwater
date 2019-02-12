@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.computationengine.plotdata;
 
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.range.Range;
@@ -8,11 +10,9 @@ import uk.ac.cam.cl.juliet.computationengine.utility.BlackmanWindow;
 import uk.ac.cam.cl.juliet.computationengine.utility.ComplexVector;
 import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 
-import java.util.ArrayList;
-import java.util.List;
-
 /**
- * A class responsible for generating {@link PlotData2D} for various plots from a single {@link Burst}.
+ * A class responsible for generating {@link PlotData2D} for various plots from a single {@link
+ * Burst}.
  */
 public class PlotDataGenerator2D {
     private static final int DEFAULT_PADDING = 2;
@@ -28,21 +28,19 @@ public class PlotDataGenerator2D {
     private PlotData2D amplitudePlotData;
     private PlotData2D phasePlotData;
 
-    /**
-     * Computes data for time, amplitude and phase plots.
-     */
+    /** Computes data for time, amplitude and phase plots. */
     private void computePlotData() {
         RangeResult rangeResult = Range.computeRange(burst, padding, maxrange, win);
         List<Double> xValues;
         List<Double> yValues;
 
-        //Compute time plot data
+        // Compute time plot data
         xValues = burst.getTList();
         yValues = burst.getVif().get(0);
 
         timePlotData = new PlotData2D(xValues, yValues);
 
-        //Compute amplitude and phase plot data
+        // Compute amplitude and phase plot data
         xValues = rangeResult.getRcoarse();
 
         ComplexVector spec = new ComplexVector();
@@ -51,7 +49,7 @@ public class PlotDataGenerator2D {
             spec.add(c);
         }
 
-        //Amplitude
+        // Amplitude
         ComplexVector yAmp = spec.angleElements();
 
         yValues = new ArrayList<>();
@@ -61,8 +59,12 @@ public class PlotDataGenerator2D {
 
         amplitudePlotData = new PlotData2D(xValues, yValues);
 
-        //Phase
-        ComplexVector yPhase = spec.absElements().logElements().divideByConstant(Math.log(10.0)).multiplyByConstant(20.0);
+        // Phase
+        ComplexVector yPhase =
+                spec.absElements()
+                        .logElements()
+                        .divideByConstant(Math.log(10.0))
+                        .multiplyByConstant(20.0);
 
         yValues = new ArrayList<>();
         for (int i = 0; i < yPhase.size(); i++) {
@@ -73,8 +75,8 @@ public class PlotDataGenerator2D {
     }
 
     /**
-     * Creates a generator using the parameters.
-     * The parameters correspond to values used in fmcw_range.
+     * Creates a generator using the parameters. The parameters correspond to values used in
+     * fmcw_range.
      */
     public PlotDataGenerator2D(Burst burst, double maxrange, int padding, IWindowFunction win) {
         this.burst = burst;
@@ -86,8 +88,8 @@ public class PlotDataGenerator2D {
     }
 
     /**
-     * Creates a generator using the parameters. Uses default padding and window function.
-     * The parameters correspond to values used in fmcw_range.
+     * Creates a generator using the parameters. Uses default padding and window function. The
+     * parameters correspond to values used in fmcw_range.
      */
     public PlotDataGenerator2D(Burst burst, double maxrange) {
         this.burst = burst;
@@ -113,7 +115,9 @@ public class PlotDataGenerator2D {
 
     /**
      * Returns the time plot data associated with this generator
-     * @return A {@link PlotData2D} object containing the time plot data associated with this generator.
+     *
+     * @return A {@link PlotData2D} object containing the time plot data associated with this
+     *     generator.
      */
     public PlotData2D getTimePlotData() {
         return timePlotData;
@@ -121,7 +125,9 @@ public class PlotDataGenerator2D {
 
     /**
      * Returns the amplitude plot data associated with this generator
-     * @return A {@link PlotData2D} object containing the amplitude plot data associated with this generator.
+     *
+     * @return A {@link PlotData2D} object containing the amplitude plot data associated with this
+     *     generator.
      */
     public PlotData2D getAmpPlotData() {
         return amplitudePlotData;
@@ -129,7 +135,9 @@ public class PlotDataGenerator2D {
 
     /**
      * Returns the phase plot data associated with this generator
-     * @return A {@link PlotData2D} object containing the phase plot data associated with this generator.
+     *
+     * @return A {@link PlotData2D} object containing the phase plot data associated with this
+     *     generator.
      */
     public PlotData2D getPhasePlotData() {
         return phasePlotData;

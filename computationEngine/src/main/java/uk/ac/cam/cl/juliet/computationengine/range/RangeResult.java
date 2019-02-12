@@ -7,7 +7,8 @@ import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 
 /**
- * A class representing the result of {@link Range#computeRange(Burst, int, double, IWindowFunction)}
+ * A class representing the result of {@link Range#computeRange(Burst, int, double,
+ * IWindowFunction)}
  */
 public class RangeResult {
     private List<Double> Rcoarse;

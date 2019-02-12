@@ -3,9 +3,7 @@ package uk.ac.cam.cl.juliet.computationengine.plotdata;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A class encapsulating 3D/Heatmap plot data.
- */
+/** A class encapsulating 3D/Heatmap plot data. */
 public class PlotData3D {
     private List<Double> xValues;
     private List<Double> yValues;
