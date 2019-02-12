@@ -28,6 +28,45 @@ public class PlotDataGenerator2D {
     private PlotData2D amplitudePlotData;
     private PlotData2D phasePlotData;
 
+    /**
+     * Creates a generator using the parameters. The parameters correspond to values used in
+     * fmcw_range.
+     */
+    public PlotDataGenerator2D(Burst burst, double maxrange, int padding, IWindowFunction win) {
+        this.burst = burst;
+        this.maxrange = maxrange;
+        this.padding = padding;
+        this.win = win;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default padding and window function. The
+     * parameters correspond to values used in fmcw_range.
+     */
+    public PlotDataGenerator2D(Burst burst, double maxrange) {
+        this.burst = burst;
+        this.maxrange = maxrange;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default padding, maxrange and window function.
+     * The parameters correspond to values used in fmcw_range.
+     */
+    public PlotDataGenerator2D(Burst burst) {
+        this.burst = burst;
+        this.maxrange = DEFAULT_MAXRANGE;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
     /** Computes data for time, amplitude and phase plots. */
     private void computePlotData() {
         RangeResult rangeResult = Range.computeRange(burst, padding, maxrange, win);
@@ -72,45 +111,6 @@ public class PlotDataGenerator2D {
         }
 
         phasePlotData = new PlotData2D(xValues, yValues);
-    }
-
-    /**
-     * Creates a generator using the parameters. The parameters correspond to values used in
-     * fmcw_range.
-     */
-    public PlotDataGenerator2D(Burst burst, double maxrange, int padding, IWindowFunction win) {
-        this.burst = burst;
-        this.maxrange = maxrange;
-        this.padding = padding;
-        this.win = win;
-
-        computePlotData();
-    }
-
-    /**
-     * Creates a generator using the parameters. Uses default padding and window function. The
-     * parameters correspond to values used in fmcw_range.
-     */
-    public PlotDataGenerator2D(Burst burst, double maxrange) {
-        this.burst = burst;
-        this.maxrange = maxrange;
-        this.padding = DEFAULT_PADDING;
-        this.win = DEFAULT_WINDOW;
-
-        computePlotData();
-    }
-
-    /**
-     * Creates a generator using the parameters. Uses default padding, maxrange and window function.
-     * The parameters correspond to values used in fmcw_range.
-     */
-    public PlotDataGenerator2D(Burst burst) {
-        this.burst = burst;
-        this.maxrange = DEFAULT_MAXRANGE;
-        this.padding = DEFAULT_PADDING;
-        this.win = DEFAULT_WINDOW;
-
-        computePlotData();
     }
 
     /**

@@ -31,6 +31,63 @@ public class PlotDataGenerator3D {
     private PlotData3D powerPlotData;
     private PlotData3D phaseDiffPlotData;
 
+    /**
+     * Creates a generator using the parameters. The parameters correspond to values used in
+     * fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(
+            List<Burst> bursts, double maxDepth, double nCoef, int padding, IWindowFunction win) {
+        this.bursts = new ArrayList<>(bursts);
+        this.maxDepth = maxDepth;
+        this.nCoef = nCoef;
+        this.padding = padding;
+        this.win = win;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default padding and window function. The
+     * parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth, double nCoef) {
+        this.bursts = new ArrayList<>(bursts);
+        this.maxDepth = maxDepth;
+        this.nCoef = nCoef;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default refraction index, padding and window
+     * function. The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth) {
+        this.bursts = new ArrayList<>(bursts);
+        this.maxDepth = maxDepth;
+        this.nCoef = DEFAULT_N_COEF;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default max depth, refraction index, padding
+     * and window function. The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(List<Burst> bursts) {
+        this.bursts = new ArrayList<>(bursts);
+        this.maxDepth = DEFAULT_MAX_DEPTH;
+        this.nCoef = DEFAULT_N_COEF;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
     /** Computes data for power and phase difference plots. */
     private void computePlotData() {
         List<Double> xValues = new ArrayList<>();
@@ -96,63 +153,6 @@ public class PlotDataGenerator3D {
 
         powerPlotData = new PlotData3D(xValues, yValues, powerValues);
         phaseDiffPlotData = new PlotData3D(xValues, yValues, phaseValues);
-    }
-
-    /**
-     * Creates a generator using the parameters. The parameters correspond to values used in
-     * fmcw_range and SidiElAidiApp
-     */
-    public PlotDataGenerator3D(
-            List<Burst> bursts, double maxDepth, double nCoef, int padding, IWindowFunction win) {
-        this.bursts = new ArrayList<>(bursts);
-        this.maxDepth = maxDepth;
-        this.nCoef = nCoef;
-        this.padding = padding;
-        this.win = win;
-
-        computePlotData();
-    }
-
-    /**
-     * Creates a generator using the parameters. Uses default padding and window function. The
-     * parameters correspond to values used in fmcw_range and SidiElAidiApp
-     */
-    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth, double nCoef) {
-        this.bursts = new ArrayList<>(bursts);
-        this.maxDepth = maxDepth;
-        this.nCoef = nCoef;
-        this.padding = DEFAULT_PADDING;
-        this.win = DEFAULT_WINDOW;
-
-        computePlotData();
-    }
-
-    /**
-     * Creates a generator using the parameters. Uses default refraction index, padding and window
-     * function. The parameters correspond to values used in fmcw_range and SidiElAidiApp
-     */
-    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth) {
-        this.bursts = new ArrayList<>(bursts);
-        this.maxDepth = maxDepth;
-        this.nCoef = DEFAULT_N_COEF;
-        this.padding = DEFAULT_PADDING;
-        this.win = DEFAULT_WINDOW;
-
-        computePlotData();
-    }
-
-    /**
-     * Creates a generator using the parameters. Uses default max depth, refraction index, padding
-     * and window function. The parameters correspond to values used in fmcw_range and SidiElAidiApp
-     */
-    public PlotDataGenerator3D(List<Burst> bursts) {
-        this.bursts = new ArrayList<>(bursts);
-        this.maxDepth = DEFAULT_MAX_DEPTH;
-        this.nCoef = DEFAULT_N_COEF;
-        this.padding = DEFAULT_PADDING;
-        this.win = DEFAULT_WINDOW;
-
-        computePlotData();
     }
 
     /**
