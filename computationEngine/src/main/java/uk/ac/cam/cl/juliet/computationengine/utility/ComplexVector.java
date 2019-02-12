@@ -1,4 +1,4 @@
-package uk.ac.cam.cl.juliet.computationengine.range;
+package uk.ac.cam.cl.juliet.computationengine.utility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -290,6 +290,38 @@ public class ComplexVector {
 
         for (int i = 0; i < values.size(); i++) {
             result.add(values.get(i).exp());
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates a new vector that is equal to {@code this} with each value replaced with its natural
+     * logarithm.
+     *
+     * @return The new resulting {@link ComplexVector}
+     */
+    public ComplexVector logElements() {
+        ComplexVector result = new ComplexVector();
+
+        for (int i = 0; i < values.size(); i++) {
+            result.add(values.get(i).log());
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates a new vector that is equal to {@code this} with each value replaced with its phase
+     * angle.
+     *
+     * @return The new resulting {@link ComplexVector}
+     */
+    public ComplexVector angleElements() {
+        ComplexVector result = new ComplexVector();
+
+        for (int i = 0; i < values.size(); i++) {
+            result.add(values.get(i).log().getImaginary());
         }
 
         return result;
