@@ -21,8 +21,12 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
 import java.util.ArrayList;
+import java.util.List;
+
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
+import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
  * Fragment for the 'data' screen.
@@ -34,25 +38,6 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     private RecyclerView filesList;
     private FilesListAdapter adapter;
 
-    /**
-     * A temporary type to be used so I can test the UI for displaying files before the actual file
-     * handling code is written. This class should eventually be deleted!
-     */
-    public static class TemporaryDataFileType {
-        public String timestamp;
-        public String gps;
-        public boolean syncStatus;
-        public boolean isIndividualFile;
-
-        public TemporaryDataFileType(
-                String timestamp, String gps, boolean syncStatus, boolean isIndividualFile) {
-            this.timestamp = timestamp;
-            this.gps = gps;
-            this.syncStatus = syncStatus;
-            this.isIndividualFile = isIndividualFile;
-        }
-    }
-
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -63,7 +48,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         View view = inflater.inflate(R.layout.fragment_data, container, false);
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        ArrayList<TemporaryDataFileType> files = getDataFiles();
+        List<SingleOrManyBursts> files = getDataFiles();
         adapter = new FilesListAdapter(files);
         adapter.setOnDataFileSelectedListener(this);
         filesList.setAdapter(adapter);
@@ -105,11 +90,11 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
      */
     @Override
     public void onDataFileClicked(
-            final TemporaryDataFileType file,
+            final SingleOrManyBursts file,
             final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return;
-        if (file.isIndividualFile) {
+        if (file.getIsSingleBurst()) {
             Toast.makeText(context, "Display the file.", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
@@ -118,11 +103,11 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
 
     @Override
     public boolean onDataFileLongClicked(
-            final TemporaryDataFileType file,
+            final SingleOrManyBursts file,
             final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return false;
-        int titleRes = (file.isIndividualFile) ? R.string.file_selected : R.string.folder_selected;
+        int titleRes = (file.getIsSingleBurst()) ? R.string.file_selected : R.string.folder_selected;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(titleRes)
                 .setMessage(R.string.what_do_with_file)
@@ -162,12 +147,21 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
      *
      * @return an ArrayList of data files stored on the device
      */
-    private ArrayList<TemporaryDataFileType> getDataFiles() {
+    private ArrayList<SingleOrManyBursts> getDataFiles() {
         // TODO: Actually load data files!
-        ArrayList<TemporaryDataFileType> files = new ArrayList<>();
-        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false, true));
-        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true, false));
-        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true, true));
+        ArrayList<SingleOrManyBursts> files = new ArrayList<>();
+//        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false, true));
+//        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true, false));
+//        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true, true));
+
+        SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
+        files.add(x);
+        List<SingleOrManyBursts> x2 = new ArrayList<>();
+        x2.add(new SingleOrManyBursts(new Burst("Test 2a", 1), true));
+        x2.add(new SingleOrManyBursts(new Burst("Test 2b", 2), true));
+        files.add(new SingleOrManyBursts(x2, true));
+        SingleOrManyBursts x3 = new SingleOrManyBursts(new Burst("Test 3", 1), true);
+        files.add(x3);
         return files;
     }
 
@@ -200,7 +194,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     }
 
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
-    private void showConfirmDeleteDialog(TemporaryDataFileType file) {
+    private void showConfirmDeleteDialog(SingleOrManyBursts file) {
         Context context = getContext();
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -245,7 +239,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
      * @param viewHolder The ViewHolder of the row that was selected
      */
     private void uploadFile(
-            TemporaryDataFileType file, FilesListAdapter.FilesListViewHolder viewHolder) {
+            SingleOrManyBursts file, FilesListAdapter.FilesListViewHolder viewHolder) {
         new UploadFileTask(this, viewHolder).execute(file);
     }
 
@@ -260,9 +254,9 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     }
 
     /** Asynchronously uploads a file to OneDrive. */
-    private static class UploadFileTask extends AsyncTask<TemporaryDataFileType, Void, Boolean> {
+    private static class UploadFileTask extends AsyncTask<SingleOrManyBursts, Void, Boolean> {
 
-        private TemporaryDataFileType file;
+        private SingleOrManyBursts file;
         private DataFragment parent;
         private FilesListAdapter.FilesListViewHolder viewHolder;
 
@@ -281,10 +275,10 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         }
 
         @Override
-        protected Boolean doInBackground(TemporaryDataFileType... temporaryDataFileTypes) {
-            if (temporaryDataFileTypes.length < 1) return false;
+        protected Boolean doInBackground(SingleOrManyBursts... files) {
+            if (files.length < 1) return false;
             try {
-                file = temporaryDataFileTypes[0];
+                file = files[0];
                 // TODO: Send it to the server!
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
@@ -296,7 +290,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         @Override
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
-            file.syncStatus = success;
+            file.setSyncStatus(success);
             viewHolder.setSpinnerVisibility(false);
             viewHolder.setSyncStatusVisibility(true);
             parent.notifyFilesChanged();
