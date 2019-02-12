@@ -296,6 +296,38 @@ public class ComplexVector {
     }
 
     /**
+     * Creates a new vector that is equal to {@code this} with each value replaced with its
+     * natural logarithm.
+     *
+     * @return The new resulting {@link ComplexVector}
+     */
+    public ComplexVector logElements() {
+        ComplexVector result = new ComplexVector();
+
+        for (int i = 0; i < values.size(); i++) {
+            result.add(values.get(i).log());
+        }
+
+        return result;
+    }
+
+    /**
+     * Creates a new vector that is equal to {@code this} with each value replaced with its
+     * phase angle.
+     *
+     * @return The new resulting {@link ComplexVector}
+     */
+    public ComplexVector angleElements() {
+        ComplexVector result = new ComplexVector();
+
+        for (int i = 0; i < values.size(); i++) {
+            result.add(values.get(i).log().getImaginary());
+        }
+
+        return result;
+    }
+
+    /**
      * Creates a new vector that is equal to {@code this} with each value replaced with its absolute
      * value. Since the elements of the vector are of type {@link Complex} the absolute value
      * represents the complex magnitude.

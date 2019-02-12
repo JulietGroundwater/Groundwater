@@ -4,9 +4,10 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 
 /**
- * A class representing the result of {@link Range#computeRange(Burst, int, double, WindowFunction)}
+ * A class representing the result of {@link Range#computeRange(Burst, int, double, IWindowFunction)}
  */
 public class RangeResult {
     private List<Double> Rcoarse;
