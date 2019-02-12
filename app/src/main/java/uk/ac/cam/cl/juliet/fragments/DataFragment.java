@@ -22,7 +22,6 @@ import android.widget.CheckBox;
 import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.List;
-
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
@@ -90,8 +89,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
      */
     @Override
     public void onDataFileClicked(
-            final SingleOrManyBursts file,
-            final FilesListAdapter.FilesListViewHolder viewHolder) {
+            final SingleOrManyBursts file, final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return;
         if (file.getIsSingleBurst()) {
@@ -103,11 +101,11 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
 
     @Override
     public boolean onDataFileLongClicked(
-            final SingleOrManyBursts file,
-            final FilesListAdapter.FilesListViewHolder viewHolder) {
+            final SingleOrManyBursts file, final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return false;
-        int titleRes = (file.getIsSingleBurst()) ? R.string.file_selected : R.string.folder_selected;
+        int titleRes =
+                (file.getIsSingleBurst()) ? R.string.file_selected : R.string.folder_selected;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(titleRes)
                 .setMessage(R.string.what_do_with_file)
@@ -150,9 +148,12 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
     private ArrayList<SingleOrManyBursts> getDataFiles() {
         // TODO: Actually load data files!
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
-//        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false, true));
-//        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true, false));
-//        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true, true));
+        //        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false,
+        // true));
+        //        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true,
+        // false));
+        //        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true,
+        // true));
 
         SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
         files.add(x);

@@ -11,9 +11,7 @@ import uk.ac.cam.cl.juliet.computationengine.Burst;
  */
 public class SingleOrManyBursts {
 
-    /**
-     * Internally used to specify which type an instance contains.
-     */
+    /** Internally used to specify which type an instance contains. */
     private enum Type {
         SINGLE,
         MANY;
