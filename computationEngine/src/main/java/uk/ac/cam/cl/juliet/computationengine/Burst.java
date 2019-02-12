@@ -83,8 +83,8 @@ public class Burst {
      *
      * @return Attenuator1 parameter
      */
-    public ArrayList<Double> getAttenuator1() {
-        return attenuator1;
+    public List<Double> getAttenuator1() {
+        return new ArrayList<>(attenuator1);
     }
 
     /**
@@ -92,8 +92,8 @@ public class Burst {
      *
      * @return Attenuator2 parameter
      */
-    public ArrayList<Double> getAttenuator2() {
-        return attenuator2;
+    public List<Double> getAttenuator2() {
+        return new ArrayList<>(attenuator2);
     }
 
     /**
@@ -101,8 +101,8 @@ public class Burst {
      *
      * @return TxAnt parameter
      */
-    public ArrayList<Integer> getTxAnt() {
-        return TxAnt;
+    public List<Integer> getTxAnt() {
+        return new ArrayList<>(TxAnt);
     }
 
     /**
@@ -110,8 +110,8 @@ public class Burst {
      *
      * @return RxAnt parameter
      */
-    public ArrayList<Integer> getRxAnt() {
-        return RxAnt;
+    public List<Integer> getRxAnt() {
+        return new ArrayList<>(RxAnt);
     }
 
     /**
@@ -168,7 +168,7 @@ public class Burst {
      * @return V parameter
      */
     public List<Double> getV() {
-        return v;
+        return new ArrayList<>(v);
     }
 
     /**
@@ -180,7 +180,7 @@ public class Burst {
      * @return StartInd parameter
      */
     public List<Integer> getStartInd() {
-        return startInd;
+        return new ArrayList<>(startInd);
     }
 
     /**
@@ -192,7 +192,7 @@ public class Burst {
      * @return EndInd parameter
      */
     public List<Integer> getEndInd() {
-        return endInd;
+        return new ArrayList<>(endInd);
     }
 
     /**
@@ -480,11 +480,11 @@ public class Burst {
             }
 
             while (TxAnt.contains(0)) {
-                TxAnt.remove(TxAnt.indexOf(0));
+                TxAnt.remove((Integer) 0);
             }
 
             while (RxAnt.contains(0)) {
-                RxAnt.remove(RxAnt.indexOf(0));
+                RxAnt.remove((Integer) 0);
             }
 
             if (average != 0) {
