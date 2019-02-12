@@ -11,6 +11,9 @@ import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A class responsible for generating {@link PlotData3D} for various plots from a list of {@link Burst} objects.
+ */
 public class PlotDataGenerator3D {
     private static final double SCALE_CONSTANT_1 = 1.7833;
     private static final double SCALE_CONSTANT_2 = 5.486;
@@ -28,6 +31,9 @@ public class PlotDataGenerator3D {
     private PlotData3D powerPlotData;
     private PlotData3D phaseDiffPlotData;
 
+    /**
+     * Computes data for power and phase difference plots.
+     */
     private void computePlotData() {
         List<Double> xValues = new ArrayList<>();
         List<Double> yValues = new ArrayList<>();
@@ -86,40 +92,74 @@ public class PlotDataGenerator3D {
         phaseDiffPlotData = new PlotData3D(xValues, yValues, phaseValues);
     }
 
-    public PlotDataGenerator3D(List<Burst> bursts, int padding, double maxDepth, IWindowFunction win, double nCoef) {
+    /**
+     * Creates a generator using the parameters.
+     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth, double nCoef, int padding, IWindowFunction win) {
         this.bursts = new ArrayList<>(bursts);
-        this.padding = padding;
         this.maxDepth = maxDepth;
-        this.win = win;
         this.nCoef = nCoef;
-
-        computePlotData();
-    }
-
-    public PlotDataGenerator3D(List<Burst> bursts, int padding, double maxDepth, IWindowFunction win) {
-        this.bursts = new ArrayList<>(bursts);
         this.padding = padding;
-        this.maxDepth = maxDepth;
         this.win = win;
-        this.nCoef = DEFAULT_N_COEF;
 
         computePlotData();
     }
 
+    /**
+     * Creates a generator using the parameters. Uses default padding and window function.
+     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth, double nCoef) {
+        this.bursts = new ArrayList<>(bursts);
+        this.maxDepth = maxDepth;
+        this.nCoef = nCoef;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default refraction index, padding and window function.
+     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
+    public PlotDataGenerator3D(List<Burst> bursts, double maxDepth) {
+        this.bursts = new ArrayList<>(bursts);
+        this.maxDepth = maxDepth;
+        this.nCoef = DEFAULT_N_COEF;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
+
+        computePlotData();
+    }
+
+    /**
+     * Creates a generator using the parameters. Uses default max depth, refraction index, padding and window function.
+     * The parameters correspond to values used in fmcw_range and SidiElAidiApp
+     */
     public PlotDataGenerator3D(List<Burst> bursts) {
         this.bursts = new ArrayList<>(bursts);
-        this.padding = DEFAULT_PADDING;
         this.maxDepth = DEFAULT_MAX_DEPTH;
-        this.win = DEFAULT_WINDOW;
         this.nCoef = DEFAULT_N_COEF;
+        this.padding = DEFAULT_PADDING;
+        this.win = DEFAULT_WINDOW;
 
         computePlotData();
     }
 
+    /**
+     * Returns the power plot data associated with this generator
+     * @return A {@link PlotData3D} object containing the power plot data associated with this generator.
+     */
     public PlotData3D getPowerPlotData() {
         return powerPlotData;
     }
 
+    /**
+     * Returns the phase difference plot data associated with this generator
+     * @return A {@link PlotData3D} object containing the phase difference plot data associated with this generator.
+     */
     public PlotData3D getPhaseDiffPlotData() {
         return phaseDiffPlotData;
     }
