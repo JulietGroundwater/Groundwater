@@ -591,7 +591,7 @@ public class Burst {
             }
 
             if (burstpointer != 0) {
-                fc.position(burstpointer - 1);
+                fc.position(burstpointer);
             }
 
             if (burstCount == totalNumberOfBursts + 1) {
@@ -608,10 +608,10 @@ public class Burst {
                     for (int i = 0; i < wordsPerBurst; i++) {
                         // Little Endian.
                         int x =
-                                b[4 * i]
-                                        + (256 * b[4 * i + 1])
-                                        + (256 * 256 * b[4 * i + 2])
-                                        + (256 * 256 * 256 * b[4 * i + 3]);
+                                (b[4 * i] & 0xFF)
+                                        | ((b[4 * i + 1] & 0xFF) << 8)
+                                        | ((b[4 * i + 2] & 0xFF) << 16)
+                                        | ((b[4 * i + 3] & 0xFF) << 24);
                         v.add((double) x);
                     }
                 } else if (average == 1) {
@@ -644,7 +644,7 @@ public class Burst {
 
                     for (int i = 0; i < wordsPerBurst; i++) {
                         // Little Endian.
-                        int x = (b[2 * i + 1] & 0xFF) | ((b[2 * i] & 0xFF) << 8);
+                        int x = (b[2 * i] & 0xFF) | ((b[2 * i + 1] & 0xFF) << 8);
                         v.add((double) x);
                     }
                 }
@@ -664,7 +664,7 @@ public class Burst {
 
                 startInd = new ArrayList<>();
                 endInd = new ArrayList<>();
-                for (int i = 1; i <= WperChirpCycle * chirpsInBurst; i += WperChirpCycle) {
+                for (int i = 0; i < WperChirpCycle * chirpsInBurst; i += WperChirpCycle) {
                     startInd.add(i);
                     endInd.add(i + WperChirpCycle - 1);
                 }
