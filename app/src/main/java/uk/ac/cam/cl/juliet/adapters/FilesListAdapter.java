@@ -27,7 +27,24 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
      * displayed when a file is selected.
      */
     public interface OnDataFileSelectedListener {
+
+        /**
+         * Invoked when a file or folder in the list is clicked.
+         *
+         * @param file The file that was clicked
+         * @param viewHolder The ViewHolder containing all UI elements in that row
+         */
         void onDataFileClicked(
+                DataFragment.TemporaryDataFileType file, FilesListViewHolder viewHolder);
+
+        /**
+         * Invoked when a file or folder in the list is long clicked.
+         *
+         * @param file The file that was long clicked
+         * @param viewHolder The ViewHolder containing all UI elements in that row
+         * @return true if the long click was consumed; false otherwise
+         */
+        boolean onDataFileLongClicked(
                 DataFragment.TemporaryDataFileType file, FilesListViewHolder viewHolder);
     }
 
@@ -60,14 +77,23 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         filesListViewHolder.getTimestampTextView().setText(file.timestamp);
         filesListViewHolder.getGpsTextView().setText(file.gps);
         filesListViewHolder.getUploadingSpinner().setVisibility(View.INVISIBLE);
+        if (file.isIndividualFile) {
+            filesListViewHolder
+                    .getTypeImageView()
+                    .setImageResource(R.drawable.baseline_show_chart_black_36);
+        } else {
+            filesListViewHolder
+                    .getTypeImageView()
+                    .setImageResource(R.drawable.baseline_folder_black_36);
+        }
         if (file.syncStatus) {
             filesListViewHolder
                     .getSyncStatusImageView()
-                    .setImageResource(R.drawable.baseline_cloud_done_black_24);
+                    .setImageResource(R.drawable.baseline_cloud_done_black_18);
         } else {
             filesListViewHolder
                     .getSyncStatusImageView()
-                    .setImageResource(R.drawable.baseline_cloud_off_black_24);
+                    .setImageResource(R.drawable.baseline_cloud_off_black_18);
         }
         filesListViewHolder.setSpinnerVisibility(false);
         filesListViewHolder
@@ -77,6 +103,15 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
                             @Override
                             public void onClick(View v) {
                                 listener.onDataFileClicked(file, filesListViewHolder);
+                            }
+                        });
+        filesListViewHolder
+                .getContainer()
+                .setOnLongClickListener(
+                        new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View v) {
+                                return listener.onDataFileLongClicked(file, filesListViewHolder);
                             }
                         });
     }
@@ -94,6 +129,7 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         private View container;
         private TextView timestampTextView;
         private TextView gpsTextView;
+        private ImageView typeImageView;
         private ImageView syncStatusImageView;
         private ProgressBar uploadingSpinner;
 
@@ -102,6 +138,7 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
             container = itemView;
             timestampTextView = itemView.findViewById(R.id.timestampTextView);
             gpsTextView = itemView.findViewById(R.id.gpsTextView);
+            typeImageView = itemView.findViewById(R.id.typeIcon);
             syncStatusImageView = itemView.findViewById(R.id.syncStatusImageView);
             uploadingSpinner = itemView.findViewById(R.id.uploadingSpinner);
         }
@@ -134,6 +171,10 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
 
         public TextView getGpsTextView() {
             return gpsTextView;
+        }
+
+        public ImageView getTypeImageView() {
+            return typeImageView;
         }
 
         public ImageView getSyncStatusImageView() {
