@@ -5,6 +5,8 @@ import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import org.jtransforms.fft.DoubleFFT_1D;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.computationengine.utility.ComplexVector;
+import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 
 /** A class corresponding to {@code fmcw_range} */
 public class Range {
