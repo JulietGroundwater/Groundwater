@@ -1,13 +1,17 @@
 package uk.ac.cam.cl.juliet.activities;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import com.microsoft.identity.client.PublicClientApplication;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.fragments.DataFragment;
 import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
@@ -51,6 +55,23 @@ public class MainActivity extends AppCompatActivity
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
         transaction.replace(R.id.content, fragment);
         transaction.commit();
+    }
+
+    /**
+     * MSAL requires the calling app to pass an Activity which MUST call this method to get the auth
+     * code passed back correctly
+     *
+     * @param requestCode
+     * @param resultCode
+     * @param data
+     */
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        PublicClientApplication clientApp = AuthenticationManager.getInstance().getPublicClient();
+        if (clientApp != null) {
+            clientApp.handleInteractiveRequestRedirect(requestCode, resultCode, data);
+        }
     }
 
     /**
