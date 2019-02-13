@@ -19,6 +19,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.microsoft.identity.client.AuthenticationResult;
 import com.microsoft.identity.client.MsalClientException;
@@ -44,6 +45,7 @@ public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
     private RecyclerView filesList;
+    private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
     private MenuItem signIn;
     private MenuItem signOut;
@@ -59,15 +61,18 @@ public class DataFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_data, container, false);
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        List<SingleOrManyBursts> files = null;
         try {
-            files = getDataFiles();
+            List<SingleOrManyBursts> files = getDataFiles();
+            adapter = new FilesListAdapter(files);
+            adapter.setOnDataFileSelectedListener(this);
+            filesList.setAdapter(adapter);
+            noFilesToDisplayText = view.findViewById(R.id.noFilesText);
+            int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+            noFilesToDisplayText.setVisibility(visibility);
         } catch (InvalidBurstException e) {
             e.printStackTrace();
+            // TODO: display error message
         }
-        adapter = new FilesListAdapter(files);
-        adapter.setOnDataFileSelectedListener(this);
-        filesList.setAdapter(adapter);
         return view;
     }
 
