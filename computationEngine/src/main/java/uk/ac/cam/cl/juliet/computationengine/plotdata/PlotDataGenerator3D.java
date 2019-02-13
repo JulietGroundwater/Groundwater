@@ -143,7 +143,7 @@ public class PlotDataGenerator3D {
 
             phaseValues.add(zValues);
 
-            xValues.add(burst.getChirpTime().get(0));
+            xValues.add((double) burst.getChirpTime().get(0).getTime());
             lastResult = rangeResult;
         }
 
