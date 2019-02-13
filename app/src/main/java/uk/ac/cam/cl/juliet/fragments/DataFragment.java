@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -21,17 +20,30 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
+
+import com.microsoft.identity.client.AuthenticationResult;
+import com.microsoft.identity.client.MsalClientException;
+import com.microsoft.identity.client.MsalException;
+import com.microsoft.identity.client.PublicClientApplication;
+import com.microsoft.identity.client.User;
+
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
+import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
+import uk.ac.cam.cl.juliet.data.AuthenticationManager;
+import uk.ac.cam.cl.juliet.data.GraphServiceController;
+import uk.ac.cam.cl.juliet.data.IAuthenticationCallback;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
  * Fragment for the 'data' screen.
  *
  * @author Ben Cole
  */
-public class DataFragment extends Fragment implements FilesListAdapter.OnDataFileSelectedListener {
+public class DataFragment extends Fragment implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
     private RecyclerView filesList;
     private FilesListAdapter adapter;
@@ -49,7 +61,12 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         View view = inflater.inflate(R.layout.fragment_data, container, false);
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        List<SingleOrManyBursts> files = getDataFiles();
+        List<SingleOrManyBursts> files = null;
+        try {
+            files = getDataFiles();
+        } catch (InvalidBurstException e) {
+            e.printStackTrace();
+        }
         adapter = new FilesListAdapter(files);
         adapter.setOnDataFileSelectedListener(this);
         filesList.setAdapter(adapter);
@@ -70,13 +87,12 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
                 showSyncDialog();
                 return true;
             case R.id.sign_in_button:
-                // TODO: Show a sign in dialog
                 // Handling Microsoft connection
                 connect();
-                Toast.makeText(getContext(), "Handling sign in...", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.sign_out_button:
                 // Disconnect
+                // TODO: Display some kind of "signed out" message
                 try {
                     AuthenticationManager.getInstance().disconnect();
                 } catch (MsalClientException msal) {
@@ -174,7 +190,7 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
      *
      * @return an ArrayList of data files stored on the device
      */
-    private ArrayList<SingleOrManyBursts> getDataFiles() {
+    private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
         // TODO: Actually load data files!
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
         //        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false,
@@ -184,14 +200,14 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         //        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true,
         // true));
 
-        SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
-        files.add(x);
-        List<SingleOrManyBursts> x2 = new ArrayList<>();
-        x2.add(new SingleOrManyBursts(new Burst("Test 2a", 1), true));
-        x2.add(new SingleOrManyBursts(new Burst("Test 2b", 2), true));
-        files.add(new SingleOrManyBursts(x2, true));
-        SingleOrManyBursts x3 = new SingleOrManyBursts(new Burst("Test 3", 1), true);
-        files.add(x3);
+//        SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
+//        files.add(x);
+//        List<SingleOrManyBursts> x2 = new ArrayList<>();
+//        x2.add(new SingleOrManyBursts(new Burst("Test 2a", 1), true));
+//        x2.add(new SingleOrManyBursts(new Burst("Test 2b", 2), true));
+//        files.add(new SingleOrManyBursts(x2, true));
+//        SingleOrManyBursts x3 = new SingleOrManyBursts(new Burst("Test 3", 1), true);
+//        files.add(x3);
         return files;
     }
 
