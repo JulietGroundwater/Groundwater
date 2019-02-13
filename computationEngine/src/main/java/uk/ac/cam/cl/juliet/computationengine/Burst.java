@@ -3,9 +3,12 @@ package uk.ac.cam.cl.juliet.computationengine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -52,9 +55,28 @@ public class Burst {
     private List<Integer> startInd, endInd, TxAnt, RxAnt, chirpNum = new ArrayList<>();
     private List<List<Double>> vif;
 
-    public Burst(String filename, int burstNum) throws InvalidBurstException {
-        this.filename = filename;
-        loadBurstRMB5(burstNum);
+    /**
+     * A default constructor if the number of the burst is not specified.
+     *
+     * <p>Burst number will default to 1
+     *
+     * @param file name of the {code .DAT} file to read from
+     * @throws InvalidBurstException if there are errors when reading the file
+     */
+    public Burst(File file, InputStream stream) throws InvalidBurstException {
+        this(file, 1);
+    }
+
+    /**
+     * Constructor for a burst that takes both the filename and the number of the burst to load
+     *
+     * @param file name of the {code .DAT} file to read from
+     * @param burstNum number of the burst to load
+     * @throws InvalidBurstException if there are errors when reading the file
+     */
+    public Burst(File file, int burstNum) throws InvalidBurstException {
+        this.filename = file.getName();
+        loadBurstRMB5(burstNum, file);
 
         if (temperature1 > 300) {
             temperature1 -= 512;
@@ -90,14 +112,13 @@ public class Burst {
             chirpTime.add(new Date(dateTime.getTime() + (long) (chirp * chirpInterval)));
         }
 
-        this.filename = filename;
         samplesPerChirp = nSamples;
         fs = 4e4;
         f0 = 2e8;
         k = 2 * Math.PI * 2e8;
         processing = new ArrayList<>();
 
-        loadParametersRMB2();
+        loadParametersRMB2(file);
     }
 
     /**
@@ -493,16 +514,12 @@ public class Burst {
         return new ArrayList<>(chirpAtt);
     }
 
-    private void loadBurstRMB5(int totalNumberOfBursts) throws InvalidBurstException {
+    private void loadBurstRMB5(int totalNumberOfBursts, File file) throws InvalidBurstException {
         int MaxHeaderLen = 1500;
         int burstpointer = 0;
         code = 0;
 
         long fileLength;
-        // file = new File(filename);
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(filename).getFile());
 
         fileLength = file.length();
 
@@ -737,9 +754,9 @@ public class Burst {
         return ret;
     }
 
-    private void loadParametersRMB2() throws InvalidBurstException {
+    private void loadParametersRMB2(File file) throws InvalidBurstException {
         try {
-            Header header = new Header(filename);
+            Header header = new Header(file);
 
             // Read from Reg01
             // noDwellHigh at bit 18
