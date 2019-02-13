@@ -196,21 +196,6 @@ public class DataFragment extends Fragment
     private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
         // TODO: Actually load data files!
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
-        //        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false,
-        // true));
-        //        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true,
-        // false));
-        //        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true,
-        // true));
-
-        //        SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
-        //        files.add(x);
-        //        List<SingleOrManyBursts> x2 = new ArrayList<>();
-        //        x2.add(new SingleOrManyBursts(new Burst("Test 2a", 1), true));
-        //        x2.add(new SingleOrManyBursts(new Burst("Test 2b", 2), true));
-        //        files.add(new SingleOrManyBursts(x2, true));
-        //        SingleOrManyBursts x3 = new SingleOrManyBursts(new Burst("Test 3", 1), true);
-        //        files.add(x3);
         return files;
     }
 
