@@ -20,18 +20,15 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Toast;
-
 import com.microsoft.identity.client.AuthenticationResult;
 import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
-
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
-import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.GraphServiceController;
@@ -43,7 +40,8 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  *
  * @author Ben Cole
  */
-public class DataFragment extends Fragment implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
+public class DataFragment extends Fragment
+        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
     private RecyclerView filesList;
     private FilesListAdapter adapter;
@@ -200,14 +198,14 @@ public class DataFragment extends Fragment implements FilesListAdapter.OnDataFil
         //        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true,
         // true));
 
-//        SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
-//        files.add(x);
-//        List<SingleOrManyBursts> x2 = new ArrayList<>();
-//        x2.add(new SingleOrManyBursts(new Burst("Test 2a", 1), true));
-//        x2.add(new SingleOrManyBursts(new Burst("Test 2b", 2), true));
-//        files.add(new SingleOrManyBursts(x2, true));
-//        SingleOrManyBursts x3 = new SingleOrManyBursts(new Burst("Test 3", 1), true);
-//        files.add(x3);
+        //        SingleOrManyBursts x = new SingleOrManyBursts(new Burst("Test 1", 1), false);
+        //        files.add(x);
+        //        List<SingleOrManyBursts> x2 = new ArrayList<>();
+        //        x2.add(new SingleOrManyBursts(new Burst("Test 2a", 1), true));
+        //        x2.add(new SingleOrManyBursts(new Burst("Test 2b", 2), true));
+        //        files.add(new SingleOrManyBursts(x2, true));
+        //        SingleOrManyBursts x3 = new SingleOrManyBursts(new Burst("Test 3", 1), true);
+        //        files.add(x3);
         return files;
     }
 
