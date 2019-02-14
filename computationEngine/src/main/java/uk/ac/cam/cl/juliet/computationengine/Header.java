@@ -177,6 +177,7 @@ public class Header {
             else if (lhs.equals("IsWebServerOn")) isWebServerOn = (Integer.parseInt(rhs) != 0);
             else if (lhs.equals("IsFTPServerOn")) isFTPServerOn = (Integer.parseInt(rhs) != 0);
         }
+        reader.close();
     }
 
     /**
