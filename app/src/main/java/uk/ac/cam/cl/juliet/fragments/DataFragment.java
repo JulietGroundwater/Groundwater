@@ -232,6 +232,7 @@ public class DataFragment extends Fragment
      * out buttons
      */
     private void displayCorrectAuthButtons() {
+        if (getView() == null || signIn == null || signOut == null) return;
         try {
             if (AuthenticationManager.getInstance().getPublicClient().getUsers().size() == 0) {
                 signIn.setVisible(true);
