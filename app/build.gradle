@@ -44,4 +44,5 @@ dependencies {
     implementation 'com.microsoft.graph:msa-auth-for-android-adapter:0.10.+'
     implementation 'com.microsoft.identity.client:msal:0.1.+'
     implementation 'com.android.support:recyclerview-v7:28.0.0'
+    implementation project(path: ':computationEngine')
 }

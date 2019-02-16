@@ -1,6 +1,8 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.app.Activity;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.TabLayout;
 import android.support.v4.app.Fragment;
@@ -24,7 +26,7 @@ public class DisplayFragment extends Fragment {
 
     @Override
     public View onCreateView(
-            LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+            @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_display, container, false);
 
         // Create instances of the inner fragments
@@ -44,7 +46,8 @@ public class DisplayFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        getActivity().setTitle(R.string.title_display);
+        Activity activity = getActivity();
+        if (activity != null) activity.setTitle(R.string.title_display);
     }
 
     /**

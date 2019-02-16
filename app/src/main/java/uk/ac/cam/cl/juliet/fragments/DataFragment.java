@@ -7,7 +7,6 @@ import android.content.DialogInterface;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,16 +19,22 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
+import android.widget.TextView;
 import android.widget.Toast;
-import com.microsoft.identity.client.*;
+import com.microsoft.identity.client.AuthenticationResult;
+import com.microsoft.identity.client.MsalClientException;
+import com.microsoft.identity.client.MsalException;
+import com.microsoft.identity.client.PublicClientApplication;
+import com.microsoft.identity.client.User;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
+import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
-import uk.ac.cam.cl.juliet.data.Connect;
 import uk.ac.cam.cl.juliet.data.GraphServiceController;
 import uk.ac.cam.cl.juliet.data.IAuthenticationCallback;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
  * Fragment for the 'data' screen.
@@ -40,35 +45,11 @@ public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
     private RecyclerView filesList;
+    private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
     private MenuItem signIn;
     private MenuItem signOut;
     private User user;
-
-    /**
-     * A temporary type to be used so I can test the UI for displaying files before the actual file
-     * handling code is written. This class should eventually be deleted!
-     */
-    public static class TemporaryDataFileType {
-        public String timestamp;
-        public String gps;
-        public boolean syncStatus;
-        public boolean isIndividualFile;
-
-        public TemporaryDataFileType(
-                String timestamp, String gps, boolean syncStatus, boolean isIndividualFile) {
-            this.timestamp = timestamp;
-            this.gps = gps;
-            this.syncStatus = syncStatus;
-            this.isIndividualFile = isIndividualFile;
-        }
-    }
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        Connect.getInstance().setConnectActivityInstanceInstance(getActivity());
-    }
 
     @Override
     public View onCreateView(
@@ -80,10 +61,18 @@ public class DataFragment extends Fragment
         View view = inflater.inflate(R.layout.fragment_data, container, false);
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        ArrayList<TemporaryDataFileType> files = getDataFiles();
-        adapter = new FilesListAdapter(files);
-        adapter.setOnDataFileSelectedListener(this);
-        filesList.setAdapter(adapter);
+        try {
+            List<SingleOrManyBursts> files = getDataFiles();
+            adapter = new FilesListAdapter(files);
+            adapter.setOnDataFileSelectedListener(this);
+            filesList.setAdapter(adapter);
+            noFilesToDisplayText = view.findViewById(R.id.noFilesText);
+            int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+            noFilesToDisplayText.setVisibility(visibility);
+        } catch (InvalidBurstException e) {
+            e.printStackTrace();
+            // TODO: display error message
+        }
         return view;
     }
 
@@ -101,13 +90,12 @@ public class DataFragment extends Fragment
                 showSyncDialog();
                 return true;
             case R.id.sign_in_button:
-                // TODO: Show a sign in dialog
                 // Handling Microsoft connection
                 connect();
-                Toast.makeText(getContext(), "Handling sign in...", Toast.LENGTH_LONG).show();
                 return true;
             case R.id.sign_out_button:
                 // Disconnect
+                // TODO: Display some kind of "signed out" message
                 try {
                     AuthenticationManager.getInstance().disconnect();
                 } catch (MsalClientException msal) {
@@ -149,11 +137,10 @@ public class DataFragment extends Fragment
      */
     @Override
     public void onDataFileClicked(
-            final TemporaryDataFileType file,
-            final FilesListAdapter.FilesListViewHolder viewHolder) {
+            final SingleOrManyBursts file, final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return;
-        if (file.isIndividualFile) {
+        if (file.getIsSingleBurst()) {
             Toast.makeText(context, "Display the file.", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
@@ -162,16 +149,16 @@ public class DataFragment extends Fragment
 
     @Override
     public boolean onDataFileLongClicked(
-            final TemporaryDataFileType file,
-            final FilesListAdapter.FilesListViewHolder viewHolder) {
+            final SingleOrManyBursts file, final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return false;
-        int titleRes = (file.isIndividualFile) ? R.string.file_selected : R.string.folder_selected;
+        int titleRes =
+                (file.getIsSingleBurst()) ? R.string.file_selected : R.string.folder_selected;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(titleRes)
                 .setMessage(R.string.what_do_with_file)
                 .setPositiveButton(
-                        "Sync",
+                        R.string.sync,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -180,7 +167,7 @@ public class DataFragment extends Fragment
                             }
                         })
                 .setNeutralButton(
-                        "Delete",
+                        R.string.delete,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -189,7 +176,7 @@ public class DataFragment extends Fragment
                             }
                         })
                 .setNegativeButton(
-                        "Cancel",
+                        R.string.cancel,
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
@@ -206,12 +193,9 @@ public class DataFragment extends Fragment
      *
      * @return an ArrayList of data files stored on the device
      */
-    private ArrayList<TemporaryDataFileType> getDataFiles() {
+    private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
         // TODO: Actually load data files!
-        ArrayList<TemporaryDataFileType> files = new ArrayList<>();
-        files.add(new TemporaryDataFileType("31/1/2019", "GPS location here", false, true));
-        files.add(new TemporaryDataFileType("30/1/2019", "GPS location here", true, false));
-        files.add(new TemporaryDataFileType("29/1/2019", "GPS location here", true, true));
+        ArrayList<SingleOrManyBursts> files = new ArrayList<>();
         return files;
     }
 
@@ -248,6 +232,7 @@ public class DataFragment extends Fragment
      * out buttons
      */
     private void displayCorrectAuthButtons() {
+        if (getView() == null || signIn == null || signOut == null) return;
         try {
             if (AuthenticationManager.getInstance().getPublicClient().getUsers().size() == 0) {
                 signIn.setVisible(true);
@@ -264,7 +249,7 @@ public class DataFragment extends Fragment
     }
 
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
-    private void showConfirmDeleteDialog(TemporaryDataFileType file) {
+    private void showConfirmDeleteDialog(SingleOrManyBursts file) {
         Context context = getContext();
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
@@ -309,7 +294,7 @@ public class DataFragment extends Fragment
      * @param viewHolder The ViewHolder of the row that was selected
      */
     private void uploadFile(
-            TemporaryDataFileType file, FilesListAdapter.FilesListViewHolder viewHolder) {
+            SingleOrManyBursts file, FilesListAdapter.FilesListViewHolder viewHolder) {
         new UploadFileTask(this, viewHolder).execute(file);
     }
 
@@ -379,9 +364,9 @@ public class DataFragment extends Fragment
     }
 
     /** Asynchronously uploads a file to OneDrive. */
-    private static class UploadFileTask extends AsyncTask<TemporaryDataFileType, Void, Boolean> {
+    private static class UploadFileTask extends AsyncTask<SingleOrManyBursts, Void, Boolean> {
 
-        private TemporaryDataFileType file;
+        private SingleOrManyBursts file;
         private DataFragment parent;
         private FilesListAdapter.FilesListViewHolder viewHolder;
         private GraphServiceController gsc;
@@ -402,10 +387,10 @@ public class DataFragment extends Fragment
         }
 
         @Override
-        protected Boolean doInBackground(TemporaryDataFileType... temporaryDataFileTypes) {
-            if (temporaryDataFileTypes.length < 1) return false;
+        protected Boolean doInBackground(SingleOrManyBursts... files) {
+            if (files.length < 1) return false;
             try {
-                file = temporaryDataFileTypes[0];
+                file = files[0];
                 // TODO: Send it to the server!
                 // Send the data using the graph service controller
                 // gsc.uploadDatafile(file.timestamp + "@" + file.gps, "dat", file.data.getBytes(),
@@ -420,7 +405,7 @@ public class DataFragment extends Fragment
         @Override
         protected void onPostExecute(Boolean success) {
             super.onPostExecute(success);
-            file.syncStatus = success;
+            file.setSyncStatus(success);
             viewHolder.setSpinnerVisibility(false);
             viewHolder.setSyncStatusVisibility(true);
             parent.notifyFilesChanged();
