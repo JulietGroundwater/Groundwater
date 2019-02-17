@@ -26,14 +26,18 @@ import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
+
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
+import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.GraphServiceController;
 import uk.ac.cam.cl.juliet.data.IAuthenticationCallback;
+import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
@@ -145,6 +149,9 @@ public class DataFragment extends Fragment
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
         }
+        // Set the selected data to the correct file
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        idh.setSelectedData(file);
     }
 
     @Override
@@ -194,8 +201,29 @@ public class DataFragment extends Fragment
      * @return an ArrayList of data files stored on the device
      */
     private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
-        // TODO: Actually load data files!
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+
+        // Hardcoded groundwater SDCard Directory
+        File[] groundwater = idh.getRoot().listFiles();
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
+
+        // Iterate over files in the directory
+        for(File file : groundwater) {
+            // If it is a file then it is a single burst
+            if (file.isFile()) {
+                //TODO: Check one drive sync
+                Burst burst = new Burst(file, 1);
+                files.add(new SingleOrManyBursts(burst, false));
+            } else {
+                List<SingleOrManyBursts> list = new ArrayList<>();
+                // Otherwise it is a collection
+                for (File innerFile : file.listFiles()) {
+                    list.add(new SingleOrManyBursts(new Burst(innerFile, 1), false));
+                }
+                SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
+                files.add(many);
+            }
+        }
         return files;
     }
 
@@ -241,8 +269,6 @@ public class DataFragment extends Fragment
                 signIn.setVisible(false);
                 signOut.setVisible(true);
             }
-            System.out.println(
-                    AuthenticationManager.getInstance().getPublicClient().getUsers().size());
         } catch (MsalClientException msal) {
             msal.printStackTrace();
         }

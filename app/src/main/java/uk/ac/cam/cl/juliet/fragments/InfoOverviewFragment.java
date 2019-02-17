@@ -18,20 +18,18 @@ import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
-import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
+import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData2D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator2D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
  * Fragment for the key information page.
@@ -42,8 +40,8 @@ public class InfoOverviewFragment extends Fragment {
 
     private LineChart exampleChart;
     private final int READ_CONSTANT = 1;
-    private Burst burst;
     private InternalDataHandler idh;
+    private Map<String, PlotData2D> cache;
 
     @Nullable
     @Override
@@ -52,11 +50,30 @@ public class InfoOverviewFragment extends Fragment {
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_info_overview, container, false);
+
         // Create the example chart
         exampleChart = (LineChart) view.findViewById(R.id.twoD_chart);
+        exampleChart.setPinchZoom(true);
+        exampleChart.setDragEnabled(true);
+
+        // Initialise the cache
+        cache = new HashMap<>();
 
         // Try external storage
         idh = InternalDataHandler.getInstance();
+
+        // Listen for file changes
+        idh.addListener(new InternalDataHandler.FileListener() {
+            @Override
+            public void onChange() {
+                AsyncTask.execute(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateChart();
+                    }
+                });
+            }
+        });
 
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(getActivity(),
@@ -83,37 +100,56 @@ public class InfoOverviewFragment extends Fragment {
         } else {
            updateChart();
         }
-
         return view;
     }
 
     private void updateChart() {
-        try {
-            File file = idh.getFileByName("DATA2018-04-17-1300.DAT");
-            burst = new Burst(file, 1);
-//            PlotDataGenerator2D twoDimData = new PlotDataGenerator2D(burst);
+        if (checkFile()) {
+            showProcessing();
+            try {
+                PlotDataGenerator2D twoDimDataGen = null;
+                PlotData2D twoDimData = null;
 
-            // Generate entries for the chart
-//            List<Entry> entries = new ArrayList<>();
-//            Iterator<Double> xs = twoDimData.getAmpPlotData().getXValues().iterator();
-//            Iterator<Double> ys = twoDimData.getAmpPlotData().getYValues().iterator();
-//
-//            while(xs.hasNext() && ys.hasNext()) {
-//                entries.add(new Entry(xs.next().floatValue(), ys.next().floatValue()));
-//            }
+                // Check the cache in case the same file was selected again and it is already computed
+                if(cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
+                    twoDimData = cache.get(idh.getSelectedData().getNameToDisplay());
+                } else {
+                    twoDimDataGen = new PlotDataGenerator2D(idh.getSelectedData().getSingleBurst());
+                    twoDimData = twoDimDataGen.getAmpPlotData();
+                    // Add to the cache
+                    cache.put(idh.getSelectedData().getNameToDisplay(), twoDimData);
+                }
 
-            // Create a line data set and then the line data
-//            LineDataSet dataset = new LineDataSet(entries, "Two Dim. Data");
-//            LineData data = new LineData(dataset);
-//
-//            // Set the data and invalidate the chart (re-render)
-//            exampleChart.setData(data);
-//            exampleChart.setPinchZoom(true);
-//            exampleChart.setDragEnabled(true);
-//            exampleChart.invalidate();
-        } catch (InvalidBurstException e) {
-            e.printStackTrace();
+                // Generate entries for the chart
+                List<Entry> entries = new ArrayList<>();
+                Iterator<Double> xs = twoDimData.getXValues().iterator();
+                Iterator<Double> ys = twoDimData.getYValues().iterator();
+
+                while(xs.hasNext() && ys.hasNext()) {
+                    entries.add(new Entry(xs.next().floatValue(), ys.next().floatValue()));
+                }
+
+                // Create a line data set and then the line data
+                LineDataSet dataset = new LineDataSet(entries, "Two Dim. Data");
+                LineData data = new LineData(dataset);
+
+                // Set the data and invalidate the chart (re-render)
+                exampleChart.setData(data);
+                exampleChart.invalidate();
+            } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
+                e.printStackTrace();
+            }
         }
+    }
+
+    private void showProcessing() {
+        //TODO: Add a spinny wheel or something
+    }
+
+    private boolean checkFile() {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        if (idh.getSelectedData() == null) return false;
+        return idh.getSelectedData().getIsSingleBurst();
     }
 
     @Override

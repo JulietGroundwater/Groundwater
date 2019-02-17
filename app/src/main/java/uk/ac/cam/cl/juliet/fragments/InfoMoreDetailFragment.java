@@ -12,42 +12,41 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.webkit.WebChromeClient;
+import android.webkit.WebSettings;
+import android.webkit.WebView;
+import android.webkit.WebViewClient;
+import android.widget.TextView;
 
-import com.github.mikephil.charting.charts.ScatterChart;
-import com.github.mikephil.charting.data.Entry;
-import com.github.mikephil.charting.data.LineData;
-import com.github.mikephil.charting.data.LineDataSet;
-import com.github.mikephil.charting.data.ScatterData;
-import com.github.mikephil.charting.data.ScatterDataSet;
+import com.google.gson.Gson;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.Writer;
 import java.util.ArrayList;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
-import ca.hss.heatmaplib.HeatMap;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
-import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator3D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
+import uk.ac.cam.cl.juliet.models.Datapoint;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
+import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
+import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
 
 /**
  * Displays more detail about the currently open data file.
  *
  * @author Ben Cole
  */
-public class InfoMoreDetailFragment extends Fragment {
+public class InfoMoreDetailFragment extends Fragment implements IProcessingCallback {
 
-    private ScatterChart scatter;
+    private WebView webview;
+    private TextView webviewText;
     private final int BURST_CODE = 1;
     private InternalDataHandler idh;
+    private Map<String, List<PlotData3D>> cache;
 
     @Nullable
     @Override
@@ -57,9 +56,32 @@ public class InfoMoreDetailFragment extends Fragment {
             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_info_detail, container, false);
 
-        scatter = view.findViewById(R.id.threeD_Chart);
+        // Initialise text
+        webviewText = (TextView) view.findViewById(R.id.webview_title);
+
+        // Initialise cache
+        cache = new HashMap<>();
+
+        // Initialise webview
+        webview = (WebView) view.findViewById(R.id.webview);
+        WebSettings webSettings = webview.getSettings();
+        webSettings.setJavaScriptEnabled(true);
+        webview.setWebChromeClient(new WebChromeClient());
 
         idh = InternalDataHandler.getInstance();
+
+        // Listen for file changes
+        idh.addListener(new InternalDataHandler.FileListener() {
+            @Override
+            public void onChange() {
+                webview.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        updateChart();
+                    }
+                });
+            }
+        });
 
         // Here, thisActivity is the current activity
         if (ContextCompat.checkSelfPermission(getActivity(),
@@ -75,71 +97,84 @@ public class InfoMoreDetailFragment extends Fragment {
                 // sees the explanation, try again to request the permission.
             } else {
                 // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
-                        BURST_CODE);
-
-                // READ_CONSTANT is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
+                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, BURST_CODE);
             }
         } else {
-            updateChart();
+            if (checkFile()) {
+                updateChart();
+            }
         }
 
         return view;
     }
 
     private void updateChart() {
-        System.out.println("IS THIS BAD?");
-        int BATCH_SIZE = 1;
-        List<String> filenames = idh.getCollectionOfFiles("collection-2017-03-29");
-        System.out.println(filenames);
-        List<Burst> bursts = new ArrayList<>();
-        List<PlotData3D> dataSets = new ArrayList<>();
-
-        try {
-          for (int batch = 0; batch < filenames.size() / BATCH_SIZE; batch++) {
-          PlotDataGenerator3D pdg;
-            for (int j = 0; j < BATCH_SIZE; j++) {
-              bursts.add(new Burst(idh.getFileByNameIn("collection-2017-03-29", filenames.get(batch * BATCH_SIZE + j)), 1));
-              pdg = new PlotDataGenerator3D(bursts);
-              dataSets.add(pdg.getPowerPlotData());
-              bursts.clear();
-            }
-          }
-        } catch (InvalidBurstException ibe) {
-            ibe.printStackTrace();
-        }
-
-        File dir = idh.getFileByName("test.csv");
-        Writer writer = null;
-        try {
-            writer = new FileWriter(dir);
-            for (int d = 0; d < dataSets.size(); d++) {
-                for(int i = 0; i < dataSets.get(d).getXValues().size(); i++) {
-                    for(int j = 0; j < dataSets.get(d).getYValues().size(); j++) {
-                        writer.write(d + "," + dataSets.get(d).getYValues().get(j) +"," + dataSets.get(d).getZValues().get(i).get(j) + " \n");
+        if (checkFile()) {
+            // Create datapoints, json-ise and pass to Javascript
+            try {
+                webviewText.setText(idh.getSelectedData().getNameToDisplay());
+                final List<SingleOrManyBursts> singles = idh.getSelectedData().getListOfBursts();
+                // Recover data from cache or process new data
+                List<Datapoint> datapoints = new ArrayList<>();
+                if (!cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
+                    ProcessingTask task = new ProcessingTask(this);
+                    task.execute();
+                } else {
+                    List<PlotData3D> dataSets = cache.get(idh.getSelectedData().getNameToDisplay());
+                    for(int set = 0; set < dataSets.size(); set++) {
+                        PlotData3D current = dataSets.get(set);
+                        for(int y = 0; y < current.getYValues().size(); y++) {
+                            datapoints.add(new Datapoint(set, current.getYValues().get(y), current.getZValues().get(0).get(y)));
+                        }
                     }
+                    updateWebview(datapoints);
                 }
+            } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+                e.printStackTrace();
             }
-        } catch(IOException io) {
-            io.printStackTrace();
         }
+    }
 
+    /**
+     * Checking for many bursts
+     * @return <code>boolean</code> if it is a many-burst file
+     */
+    private boolean checkFile() {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        if(idh.getSelectedData() == null) return false;
+        return idh.getSelectedData().getIsManyBursts();
+    }
+
+    /**
+     * A method for passing the datapoints to the webview and JSON-ising them
+     * @param datapoints
+     */
+    private void updateWebview(final List<Datapoint> datapoints) {
+        webview.setWebViewClient(new WebViewClient() {
+            @Override
+            public void onPageFinished(WebView view, String url) {
+                // After the HTML page loads, run JS to initialize graph
+                Gson gson = new Gson();
+                // Convert the data to json which the D3 can handle
+                String json = gson.toJson(datapoints);
+                webview.loadUrl("javascript:initGraph(" + json + ")");
+            }
+        });
+        // Load base html from the assets directory
+        webview.loadUrl("file:///android_asset/html/graph.html");
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case BURST_CODE: {
-                AsyncTask.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateChart();
-                    }
-                });
+                updateChart();
             }
         }
+    }
+
+    @Override
+    public void onTaskCompleted(List<Datapoint> result) {
+        updateWebview(result);
     }
 }

@@ -26,6 +26,7 @@ public class SingleOrManyBursts {
     private List<SingleOrManyBursts> listOfBursts;
     private Burst singleBurst;
     private boolean syncedToOneDrive;
+    private String directoryName;
 
     /**
      * Creates an instance for a single Burst object.
@@ -43,10 +44,11 @@ public class SingleOrManyBursts {
      *
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
-    public SingleOrManyBursts(List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive) {
+    public SingleOrManyBursts(List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
+        this.directoryName = dirName;
     }
 
     /**
@@ -107,8 +109,7 @@ public class SingleOrManyBursts {
             case SINGLE:
                 return singleBurst.getFilename();
             case MANY:
-                // TODO: Generate a summary or something here
-                return "Summary of bursts here...";
+                return this.directoryName;
             default:
                 return "Something went wrong lol";
         }
