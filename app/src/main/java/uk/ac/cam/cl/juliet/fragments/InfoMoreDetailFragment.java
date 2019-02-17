@@ -2,7 +2,6 @@ package uk.ac.cam.cl.juliet.fragments;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -17,18 +16,13 @@ import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
-
 import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import uk.ac.cam.cl.juliet.R;
-import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
-import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator3D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.Datapoint;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
@@ -71,33 +65,38 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
         idh = InternalDataHandler.getInstance();
 
         // Listen for file changes
-        idh.addListener(new InternalDataHandler.FileListener() {
-            @Override
-            public void onChange() {
-                webview.post(new Runnable() {
+        idh.addListener(
+                new InternalDataHandler.FileListener() {
                     @Override
-                    public void run() {
-                        updateChart();
+                    public void onChange() {
+                        webview.post(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        updateChart();
+                                    }
+                                });
                     }
                 });
-            }
-        });
 
         // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
             // Permission is not granted
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
             } else {
                 // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(getActivity(), new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, BURST_CODE);
+                ActivityCompat.requestPermissions(
+                        getActivity(),
+                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
+                        BURST_CODE);
             }
         } else {
             if (checkFile()) {
@@ -121,10 +120,14 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
                     task.execute();
                 } else {
                     List<PlotData3D> dataSets = cache.get(idh.getSelectedData().getNameToDisplay());
-                    for(int set = 0; set < dataSets.size(); set++) {
+                    for (int set = 0; set < dataSets.size(); set++) {
                         PlotData3D current = dataSets.get(set);
-                        for(int y = 0; y < current.getYValues().size(); y++) {
-                            datapoints.add(new Datapoint(set, current.getYValues().get(y), current.getZValues().get(0).get(y)));
+                        for (int y = 0; y < current.getYValues().size(); y++) {
+                            datapoints.add(
+                                    new Datapoint(
+                                            set,
+                                            current.getYValues().get(y),
+                                            current.getZValues().get(0).get(y)));
                         }
                     }
                     updateWebview(datapoints);
@@ -137,39 +140,44 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
 
     /**
      * Checking for many bursts
+     *
      * @return <code>boolean</code> if it is a many-burst file
      */
     private boolean checkFile() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        if(idh.getSelectedData() == null) return false;
+        if (idh.getSelectedData() == null) return false;
         return idh.getSelectedData().getIsManyBursts();
     }
 
     /**
      * A method for passing the datapoints to the webview and JSON-ising them
+     *
      * @param datapoints
      */
     private void updateWebview(final List<Datapoint> datapoints) {
-        webview.setWebViewClient(new WebViewClient() {
-            @Override
-            public void onPageFinished(WebView view, String url) {
-                // After the HTML page loads, run JS to initialize graph
-                Gson gson = new Gson();
-                // Convert the data to json which the D3 can handle
-                String json = gson.toJson(datapoints);
-                webview.loadUrl("javascript:initGraph(" + json + ")");
-            }
-        });
+        webview.setWebViewClient(
+                new WebViewClient() {
+                    @Override
+                    public void onPageFinished(WebView view, String url) {
+                        // After the HTML page loads, run JS to initialize graph
+                        Gson gson = new Gson();
+                        // Convert the data to json which the D3 can handle
+                        String json = gson.toJson(datapoints);
+                        webview.loadUrl("javascript:initGraph(" + json + ")");
+                    }
+                });
         // Load base html from the assets directory
         webview.loadUrl("file:///android_asset/html/graph.html");
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case BURST_CODE: {
-                updateChart();
-            }
+            case BURST_CODE:
+                {
+                    updateChart();
+                }
         }
     }
 

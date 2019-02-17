@@ -12,20 +12,16 @@ import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
 import uk.ac.cam.cl.juliet.R;
-import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData2D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator2D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
@@ -63,34 +59,37 @@ public class InfoOverviewFragment extends Fragment {
         idh = InternalDataHandler.getInstance();
 
         // Listen for file changes
-        idh.addListener(new InternalDataHandler.FileListener() {
-            @Override
-            public void onChange() {
-                AsyncTask.execute(new Runnable() {
+        idh.addListener(
+                new InternalDataHandler.FileListener() {
                     @Override
-                    public void run() {
-                        updateChart();
+                    public void onChange() {
+                        AsyncTask.execute(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        updateChart();
+                                    }
+                                });
                     }
                 });
-            }
-        });
 
         // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(getActivity(),
-                Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
 
             // Permission is not granted
             // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(getActivity(),
-                    Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(
+                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
                 // Show an explanation to the user *asynchronously* -- don't block
                 // this thread waiting for the user's response! After the user
                 // sees the explanation, try again to request the permission.
             } else {
                 // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(getActivity(),
-                        new String[]{Manifest.permission.READ_EXTERNAL_STORAGE},
+                ActivityCompat.requestPermissions(
+                        getActivity(),
+                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
                         READ_CONSTANT);
 
                 // READ_CONSTANT is an
@@ -98,7 +97,7 @@ public class InfoOverviewFragment extends Fragment {
                 // result of the request.
             }
         } else {
-           updateChart();
+            updateChart();
         }
         return view;
     }
@@ -110,8 +109,9 @@ public class InfoOverviewFragment extends Fragment {
                 PlotDataGenerator2D twoDimDataGen = null;
                 PlotData2D twoDimData = null;
 
-                // Check the cache in case the same file was selected again and it is already computed
-                if(cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
+                // Check the cache in case the same file was selected again and it is already
+                // computed
+                if (cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
                     twoDimData = cache.get(idh.getSelectedData().getNameToDisplay());
                 } else {
                     twoDimDataGen = new PlotDataGenerator2D(idh.getSelectedData().getSingleBurst());
@@ -125,7 +125,7 @@ public class InfoOverviewFragment extends Fragment {
                 Iterator<Double> xs = twoDimData.getXValues().iterator();
                 Iterator<Double> ys = twoDimData.getYValues().iterator();
 
-                while(xs.hasNext() && ys.hasNext()) {
+                while (xs.hasNext() && ys.hasNext()) {
                     entries.add(new Entry(xs.next().floatValue(), ys.next().floatValue()));
                 }
 
@@ -143,7 +143,7 @@ public class InfoOverviewFragment extends Fragment {
     }
 
     private void showProcessing() {
-        //TODO: Add a spinny wheel or something
+        // TODO: Add a spinny wheel or something
     }
 
     private boolean checkFile() {
@@ -153,16 +153,19 @@ public class InfoOverviewFragment extends Fragment {
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    public void onRequestPermissionsResult(
+            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
-            case READ_CONSTANT: {
-                AsyncTask.execute(new Runnable() {
-                    @Override
-                    public void run() {
-                        updateChart();
-                    }
-                });
-            }
+            case READ_CONSTANT:
+                {
+                    AsyncTask.execute(
+                            new Runnable() {
+                                @Override
+                                public void run() {
+                                    updateChart();
+                                }
+                            });
+                }
         }
     }
 }

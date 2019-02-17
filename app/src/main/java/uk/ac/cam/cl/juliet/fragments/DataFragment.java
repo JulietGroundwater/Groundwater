@@ -26,7 +26,6 @@ import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -208,10 +207,10 @@ public class DataFragment extends Fragment
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
 
         // Iterate over files in the directory
-        for(File file : groundwater) {
+        for (File file : groundwater) {
             // If it is a file then it is a single burst
             if (file.isFile()) {
-                //TODO: Check one drive sync
+                // TODO: Check one drive sync
                 Burst burst = new Burst(file, 1);
                 files.add(new SingleOrManyBursts(burst, false));
             } else {
