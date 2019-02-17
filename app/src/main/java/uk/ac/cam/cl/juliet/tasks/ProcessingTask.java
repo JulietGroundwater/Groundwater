@@ -1,25 +1,20 @@
 package uk.ac.cam.cl.juliet.tasks;
 
 import android.os.AsyncTask;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator3D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
-import uk.ac.cam.cl.juliet.fragments.InfoMoreDetailFragment;
 import uk.ac.cam.cl.juliet.models.Datapoint;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
-/**
- * A class for running the three-dimensional processing on a different thread
- */
+/** A class for running the three-dimensional processing on a different thread */
 public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     private IProcessingCallback listener;
     private List<Datapoint> datapoints = new ArrayList<>();
-    private  List<SingleOrManyBursts> singles;
+    private List<SingleOrManyBursts> singles;
 
     public ProcessingTask(IProcessingCallback task) {
         try {
@@ -34,7 +29,7 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     protected List<Datapoint> doInBackground(Void... voids) {
         List<PlotData3D> dataSets = new ArrayList<>();
         PlotDataGenerator3D pdg;
-        for(SingleOrManyBursts single : singles) {
+        for (SingleOrManyBursts single : singles) {
             List<Burst> singleton = new ArrayList<>();
             try {
                 singleton.add(single.getSingleBurst());
@@ -48,10 +43,14 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
         }
 
         // Convert to datapoints for JSON serialisation later
-        for(int set = 0; set < dataSets.size(); set++) {
+        for (int set = 0; set < dataSets.size(); set++) {
             PlotData3D current = dataSets.get(set);
-            for(int y = 0; y < current.getYValues().size(); y++) {
-                datapoints.add(new Datapoint(set, current.getYValues().get(y), current.getZValues().get(0).get(y)));
+            for (int y = 0; y < current.getYValues().size(); y++) {
+                datapoints.add(
+                        new Datapoint(
+                                set,
+                                current.getYValues().get(y),
+                                current.getZValues().get(0).get(y)));
             }
         }
         return datapoints;

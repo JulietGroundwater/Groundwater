@@ -44,7 +44,8 @@ public class SingleOrManyBursts {
      *
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
-    public SingleOrManyBursts(List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
+    public SingleOrManyBursts(
+            List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
