@@ -2,6 +2,7 @@ package uk.ac.cam.cl.juliet.computationengine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.text.DateFormat;
@@ -85,95 +86,103 @@ public class Header {
 
     private List<String> headerLines = new ArrayList<>();
 
-    public Header(File file) throws IOException {
+    public Header(File file) throws ComputationEngineException {
 
-        BufferedReader reader = new BufferedReader(new FileReader(file));
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 
-        String line;
-        while ((line = reader.readLine()) != null) {
-            headerLines.add(line);
+            String line;
+            while ((line = reader.readLine()) != null) {
+                headerLines.add(line);
 
-            if (line.contains("*** End Header ***")) break;
+                if (line.contains("*** End Header ***")) break;
 
-            if (!line.contains("=")) continue;
+                if (!line.contains("=")) continue;
 
-            String lhs = line.split("=")[0]; // left hand side
-            String rhs = line.split("=")[1]; // right hand side
+                String lhs = line.split("=")[0]; // left hand side
+                String rhs = line.split("=")[1]; // right hand side
 
-            // would use a switch statement here, but for Strings it requires java 7
-            if (lhs.equals("Time stamp")) {
-                DateFormat format = new SimpleDateFormat("YYYY-MM-dd HH:mm:ss", Locale.ENGLISH);
-                try {
-                    timeStamp = format.parse(rhs);
-                } catch (ParseException e) {
-                    e.printStackTrace();
-                }
-            } else if (lhs.equals("RMB_Issue")) rmbIssue = rhs;
-            else if (lhs.equals("VAB_Issue")) vabIssue = rhs;
-            else if (lhs.equals("SW_Issue")) swIssue = rhs;
-            else if (lhs.equals("Venom_Issue")) venomIssue = rhs;
-            else if (lhs.equals("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
-            else if (lhs.equals("NData")) nData = Integer.parseInt(rhs);
-            else if (lhs.equals("Triples"))
-                for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
-            else if (lhs.equals("Average")) average = Integer.parseInt(rhs);
-            else if (lhs.equals("RepSecs")) repSecs = Integer.parseInt(rhs);
-            else if (lhs.equals("CheckEthernet")) checkEthernet = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
-            else if (lhs.equals("MAX_DATA_FILE_LENGTH")) maxDataFileLength = Integer.parseInt(rhs);
-            else if (lhs.equals("MAX_SAF_FILE_LENGTH")) maxSafFileLength = Integer.parseInt(rhs);
-            else if (lhs.equals("ANTENNA_SELECT")) antennaSelect = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
-            else if (lhs.equals("Housekeeping")) housekeeping = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("GPSon")) gpsOn = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("WATCHDOG_TASK_SECS")) watchdogTaskSecs = Integer.parseInt(rhs);
-            else if (lhs.equals("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
-            else if (lhs.equals("Attenuator1"))
-                for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
-            else if (lhs.equals("AFGain"))
-                for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
-            else if (lhs.equals("TxAnt"))
-                for (String s : rhs.split(",")) txAnt.add(Integer.parseInt(s));
-            else if (lhs.equals("RxAnt"))
-                for (String s : rhs.split(",")) rxAnt.add(Integer.parseInt(s));
-            else if (lhs.equals("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
-            else if (lhs.equals("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("LogOn")) logOn = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("Reg00")) reg00 = rhs;
-            else if (lhs.equals("Reg01")) reg01 = rhs;
-            else if (lhs.equals("Reg02")) reg02 = rhs;
-            else if (lhs.equals("Reg0B")) reg0B = rhs;
-            else if (lhs.equals("Reg0C")) reg0C = rhs;
-            else if (lhs.equals("Reg0D")) reg0D = rhs;
-            else if (lhs.equals("Reg0E")) reg0E = rhs;
-            else if (lhs.equals("SamplingFreqMode")) samplingFreqMode = Integer.parseInt(rhs);
-            else if (lhs.equals("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
-            else if (lhs.equals("BatteryCheck"))
-                for (String s : rhs.split(",")) batteryCheck.add(Integer.parseInt(s));
-            else if (lhs.equals("Latitude")) latitude = Double.parseDouble(rhs);
-            else if (lhs.equals("Longitude")) longitude = Double.parseDouble(rhs);
-            else if (lhs.equals("GPS_Time")) gpsTime = Double.parseDouble(rhs);
-            else if (lhs.equals("VM2_Time")) vm2Time = Double.parseDouble(rhs);
-            else if (lhs.equals("Temp1")) temp1 = Double.parseDouble(rhs);
-            else if (lhs.equals("Temp2")) temp2 = Double.parseDouble(rhs);
-            else if (lhs.equals("BatteryVoltage")) batteryVoltage = Double.parseDouble(rhs);
-            else if (lhs.equals("Ramp")) ramp = Integer.parseInt(rhs);
-            else if (lhs.equals("NoDwell")) noDwell = Integer.parseInt(rhs);
-            else if (lhs.equals("StartFreq")) startFreq = Integer.parseInt(rhs);
-            else if (lhs.equals("StopFreq")) stopFreq = Integer.parseInt(rhs);
-            else if (lhs.equals("FreqStepUp")) freqStepUp = Integer.parseInt(rhs);
-            else if (lhs.equals("FreqStepDn")) freqStepDn = Integer.parseInt(rhs);
-            else if (lhs.equals("TStepUp")) tStepUp = Double.parseDouble(rhs);
-            else if (lhs.equals("TStepDn")) tStepDn = Double.parseDouble(rhs);
-            else if (lhs.equals("BattSleep")) battSleep = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("BurstNo")) burstNo = Integer.parseInt(rhs);
-            else if (lhs.equals("IsEthOn")) isEthOn = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("UpTell")) upTell = Integer.parseInt(rhs);
-            else if (lhs.equals("IsWebServerOn")) isWebServerOn = (Integer.parseInt(rhs) != 0);
-            else if (lhs.equals("IsFTPServerOn")) isFTPServerOn = (Integer.parseInt(rhs) != 0);
+                // would use a switch statement here, but for Strings it requires java 7
+                if (lhs.equals("Time stamp")) {
+                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
+                    try {
+                        timeStamp = format.parse(rhs);
+                    } catch (ParseException e) {
+                        e.printStackTrace();
+                    }
+                } else if (lhs.equals("RMB_Issue")) rmbIssue = rhs;
+                else if (lhs.equals("VAB_Issue")) vabIssue = rhs;
+                else if (lhs.equals("SW_Issue")) swIssue = rhs;
+                else if (lhs.equals("Venom_Issue")) venomIssue = rhs;
+                else if (lhs.equals("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
+                else if (lhs.equals("NData")) nData = Integer.parseInt(rhs);
+                else if (lhs.equals("Triples"))
+                    for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
+                else if (lhs.equals("Average")) average = Integer.parseInt(rhs);
+                else if (lhs.equals("RepSecs")) repSecs = Integer.parseInt(rhs);
+                else if (lhs.equals("CheckEthernet")) checkEthernet = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
+                else if (lhs.equals("MAX_DATA_FILE_LENGTH"))
+                    maxDataFileLength = Integer.parseInt(rhs);
+                else if (lhs.equals("MAX_SAF_FILE_LENGTH"))
+                    maxSafFileLength = Integer.parseInt(rhs);
+                else if (lhs.equals("ANTENNA_SELECT")) antennaSelect = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
+                else if (lhs.equals("Housekeeping")) housekeeping = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("GPSon")) gpsOn = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("WATCHDOG_TASK_SECS")) watchdogTaskSecs = Integer.parseInt(rhs);
+                else if (lhs.equals("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
+                else if (lhs.equals("Attenuator1"))
+                    for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
+                else if (lhs.equals("AFGain"))
+                    for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
+                else if (lhs.equals("TxAnt"))
+                    for (String s : rhs.split(",")) txAnt.add(Integer.parseInt(s));
+                else if (lhs.equals("RxAnt"))
+                    for (String s : rhs.split(",")) rxAnt.add(Integer.parseInt(s));
+                else if (lhs.equals("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
+                else if (lhs.equals("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("LogOn")) logOn = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("Reg00")) reg00 = rhs;
+                else if (lhs.equals("Reg01")) reg01 = rhs;
+                else if (lhs.equals("Reg02")) reg02 = rhs;
+                else if (lhs.equals("Reg0B")) reg0B = rhs;
+                else if (lhs.equals("Reg0C")) reg0C = rhs;
+                else if (lhs.equals("Reg0D")) reg0D = rhs;
+                else if (lhs.equals("Reg0E")) reg0E = rhs;
+                else if (lhs.equals("SamplingFreqMode")) samplingFreqMode = Integer.parseInt(rhs);
+                else if (lhs.equals("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
+                else if (lhs.equals("BatteryCheck"))
+                    for (String s : rhs.split(",")) batteryCheck.add(Integer.parseInt(s));
+                else if (lhs.equals("Latitude")) latitude = Double.parseDouble(rhs);
+                else if (lhs.equals("Longitude")) longitude = Double.parseDouble(rhs);
+                else if (lhs.equals("GPS_Time")) gpsTime = Double.parseDouble(rhs);
+                else if (lhs.equals("VM2_Time")) vm2Time = Double.parseDouble(rhs);
+                else if (lhs.equals("Temp1")) temp1 = Double.parseDouble(rhs);
+                else if (lhs.equals("Temp2")) temp2 = Double.parseDouble(rhs);
+                else if (lhs.equals("BatteryVoltage")) batteryVoltage = Double.parseDouble(rhs);
+                else if (lhs.equals("Ramp")) ramp = Integer.parseInt(rhs);
+                else if (lhs.equals("NoDwell")) noDwell = Integer.parseInt(rhs);
+                else if (lhs.equals("StartFreq")) startFreq = Integer.parseInt(rhs);
+                else if (lhs.equals("StopFreq")) stopFreq = Integer.parseInt(rhs);
+                else if (lhs.equals("FreqStepUp")) freqStepUp = Integer.parseInt(rhs);
+                else if (lhs.equals("FreqStepDn")) freqStepDn = Integer.parseInt(rhs);
+                else if (lhs.equals("TStepUp")) tStepUp = Double.parseDouble(rhs);
+                else if (lhs.equals("TStepDn")) tStepDn = Double.parseDouble(rhs);
+                else if (lhs.equals("BattSleep")) battSleep = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("BurstNo")) burstNo = Integer.parseInt(rhs);
+                else if (lhs.equals("IsEthOn")) isEthOn = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("UpTell")) upTell = Integer.parseInt(rhs);
+                else if (lhs.equals("IsWebServerOn")) isWebServerOn = (Integer.parseInt(rhs) != 0);
+                else if (lhs.equals("IsFTPServerOn")) isFTPServerOn = (Integer.parseInt(rhs) != 0);
+            }
+
+        } catch (FileNotFoundException e) {
+            throw new ComputationEngineException(e.getMessage());
+        } catch (IOException e) {
+            throw new ComputationEngineException(e.getMessage());
         }
     }
 
