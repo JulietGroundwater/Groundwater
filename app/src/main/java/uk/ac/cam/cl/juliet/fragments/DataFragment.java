@@ -1,13 +1,16 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -207,20 +210,22 @@ public class DataFragment extends Fragment
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
 
         // Iterate over files in the directory
-        for (File file : groundwater) {
-            // If it is a file then it is a single burst
-            if (file.isFile()) {
-                // TODO: Check one drive sync
-                Burst burst = new Burst(file, 1);
-                files.add(new SingleOrManyBursts(burst, false));
-            } else {
-                List<SingleOrManyBursts> list = new ArrayList<>();
-                // Otherwise it is a collection
-                for (File innerFile : file.listFiles()) {
-                    list.add(new SingleOrManyBursts(new Burst(innerFile, 1), false));
+        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+            for (File file : groundwater) {
+                // If it is a file then it is a single burst
+                if (file.isFile()) {
+                    // TODO: Check one drive sync
+                    Burst burst = new Burst(file, 1);
+                    files.add(new SingleOrManyBursts(burst, false));
+                } else {
+                    List<SingleOrManyBursts> list = new ArrayList<>();
+                    // Otherwise it is a collection
+                    for (File innerFile : file.listFiles()) {
+                        list.add(new SingleOrManyBursts(new Burst(innerFile, 1), false));
+                    }
+                    SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
+                    files.add(many);
                 }
-                SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
-                files.add(many);
             }
         }
         return files;
