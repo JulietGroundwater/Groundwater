@@ -2,6 +2,7 @@ package uk.ac.cam.cl.juliet.computationengine;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -47,57 +48,61 @@ public class Config {
      *
      * <p>Getters and Setters are supplied for all of the fields in the example {@code Config.ini}
      *
-     * @param filename name of the {@code Config.ini} file to load
+     * @param file The {@code Config.ini} file to load
      */
-    public Config(String filename) throws IOException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(filename).getFile());
+    public Config(File file) throws InvalidConfigException {
+        try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.length() == 0) continue;
+                if (line.charAt(0) == ';') continue;
 
-        BufferedReader reader = new BufferedReader(new FileReader(file));
+                if (!line.contains("=")) continue;
 
-        String line;
-        while ((line = reader.readLine()) != null) {
-            if (line.length() == 0) continue;
-            if (line.charAt(0) == ';') continue;
+                // split on ';' as well as '=' to ensure only taking the relevant information
+                String lhs = line.split(";")[0].split("=")[0]; // left hand side
+                String rhs = line.split(";")[0].split("=")[1]; // right hand side
 
-            if (!line.contains("=")) continue;
-
-            // split on ';' as well as '=' to ensure only taking the relevant information
-            String lhs = line.split(";")[0].split("=")[0]; // left hand side
-            String rhs = line.split(";")[0].split("=")[1]; // right hand side
-
-            if (lhs.contains("AlwaysAttended")) alwaysAttended = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("CheckEthernet")) checkEthernet = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
-            else if (lhs.contains("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
-            else if (lhs.contains("SamplingFreqMode"))
-                samplingFrequencyMode = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("NData")) nData = Integer.parseInt(rhs);
-            else if (lhs.contains("Triples"))
-                for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
-            else if (lhs.contains("WATCHDOG_TASK_SECS")) watchDogTaskSecs = Integer.parseInt(rhs);
-            else if (lhs.contains("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
-            else if (lhs.contains("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
-            else if (lhs.contains("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
-            else if (lhs.contains("Average")) average = Integer.parseInt(rhs);
-            else if (lhs.contains("RepSecs")) repSecs = Integer.parseInt(rhs);
-            else if (lhs.contains("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("MAX_DATA_FILE_LENGTH")) maxDepthToGraph = Integer.parseInt(rhs);
-            else if (lhs.contains("LOGON")) logOn = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
-            else if (lhs.contains("Attenuator1"))
-                for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
-            else if (lhs.contains("AFGain"))
-                for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
-            else if (lhs.contains("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
-            else if (lhs.contains("Reg00")) reg00 = rhs;
-            else if (lhs.contains("Reg01")) reg01 = rhs;
-            else if (lhs.contains("Reg02")) reg02 = rhs;
-            else if (lhs.contains("Reg0B")) reg0B = rhs;
-            else if (lhs.contains("Reg0C")) reg0C = rhs;
-            else if (lhs.contains("Reg0D")) reg0D = rhs;
+                if (lhs.contains("AlwaysAttended")) alwaysAttended = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("CheckEthernet"))
+                    checkEthernet = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
+                else if (lhs.contains("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
+                else if (lhs.contains("SamplingFreqMode"))
+                    samplingFrequencyMode = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("NData")) nData = Integer.parseInt(rhs);
+                else if (lhs.contains("Triples"))
+                    for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
+                else if (lhs.contains("WATCHDOG_TASK_SECS"))
+                    watchDogTaskSecs = Integer.parseInt(rhs);
+                else if (lhs.contains("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
+                else if (lhs.contains("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
+                else if (lhs.contains("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
+                else if (lhs.contains("Average")) average = Integer.parseInt(rhs);
+                else if (lhs.contains("RepSecs")) repSecs = Integer.parseInt(rhs);
+                else if (lhs.contains("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("MAX_DATA_FILE_LENGTH"))
+                    maxDepthToGraph = Integer.parseInt(rhs);
+                else if (lhs.contains("LOGON")) logOn = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
+                else if (lhs.contains("Attenuator1"))
+                    for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
+                else if (lhs.contains("AFGain"))
+                    for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
+                else if (lhs.contains("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
+                else if (lhs.contains("Reg00")) reg00 = rhs;
+                else if (lhs.contains("Reg01")) reg01 = rhs;
+                else if (lhs.contains("Reg02")) reg02 = rhs;
+                else if (lhs.contains("Reg0B")) reg0B = rhs;
+                else if (lhs.contains("Reg0C")) reg0C = rhs;
+                else if (lhs.contains("Reg0D")) reg0D = rhs;
+            }
+        } catch (FileNotFoundException e) {
+            throw new InvalidConfigException(e.getMessage());
+        } catch (IOException e) {
+            throw new InvalidConfigException(e.getMessage());
         }
     }
 
