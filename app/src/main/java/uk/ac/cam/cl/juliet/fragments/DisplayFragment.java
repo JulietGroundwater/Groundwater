@@ -1,6 +1,5 @@
 package uk.ac.cam.cl.juliet.fragments;
 
-import android.app.Activity;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -41,13 +40,6 @@ public class DisplayFragment extends Fragment {
         tabLayout.setupWithViewPager(viewPager);
 
         return view;
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-        Activity activity = getActivity();
-        if (activity != null) activity.setTitle(R.string.title_display);
     }
 
     /**
