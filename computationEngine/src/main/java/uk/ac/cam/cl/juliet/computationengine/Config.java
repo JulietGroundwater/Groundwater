@@ -834,7 +834,7 @@ public class Config {
      * @param iridium Iridium mode to use
      */
     public void setIridium(boolean iridium) {
-        iridium = iridium;
+        this.iridium = iridium;
     }
 
     /**
