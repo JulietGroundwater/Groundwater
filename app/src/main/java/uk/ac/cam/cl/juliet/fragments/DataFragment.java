@@ -14,6 +14,7 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -24,12 +25,19 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import com.microsoft.graph.concurrency.ICallback;
+import com.microsoft.graph.core.ClientException;
+import com.microsoft.graph.extensions.DriveItem;
 import com.microsoft.identity.client.AuthenticationResult;
 import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
+
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
@@ -421,13 +429,29 @@ public class DataFragment extends Fragment
             if (files.length < 1) return false;
             try {
                 file = files[0];
-                // TODO: Send it to the server!
                 // Send the data using the graph service controller
-                // gsc.uploadDatafile(file.timestamp + "@" + file.gps, "dat", file.data.getBytes(),
-                // callback);
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+                AuthenticationManager auth = AuthenticationManager.getInstance();
+                InternalDataHandler idh = InternalDataHandler.getInstance();
+                if (auth.isUserLoggedIn()) {
+                    File datafile = idh.getFileByName(file.getNameToDisplay());
+                    gsc.uploadDatafile(file.getNameToDisplay(), "dat", idh.convertToBytes(datafile), new ICallback<DriveItem>() {
+                        @Override
+                        public void success(DriveItem driveItem) {
+                            Log.d("UPLOAD", "Upload was successful!");
+                        }
+
+                        @Override
+                        public void failure(ClientException ex) {
+                            ex.printStackTrace();
+                        }
+                    });
+                }
+            } catch (MsalClientException msal) {
+                msal.printStackTrace();
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
+            } catch (IOException io) {
+                io.printStackTrace();
             }
             return true;
         }

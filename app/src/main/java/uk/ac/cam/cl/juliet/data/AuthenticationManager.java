@@ -28,6 +28,18 @@ public class AuthenticationManager extends Application {
         return INSTANCE;
     }
 
+    /**
+     * Check to see if a user is logged in
+     * @return <code>boolean</code>
+     * @throws MsalClientException
+     */
+    public boolean isUserLoggedIn() throws MsalClientException{
+        if (PUBLIC_CLIENT != null) {
+            return (1 == PUBLIC_CLIENT.getUsers().size());
+        }
+        return false;
+    }
+
     public static void reset() {
         INSTANCE = null;
     }

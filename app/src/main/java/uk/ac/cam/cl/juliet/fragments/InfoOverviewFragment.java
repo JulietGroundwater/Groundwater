@@ -135,7 +135,7 @@ public class InfoOverviewFragment extends Fragment {
 
                 // Set the data and invalidate the chart (re-render)
                 exampleChart.setData(data);
-                exampleChart.invalidate();
+                exampleChart.postInvalidate();
             } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
                 e.printStackTrace();
             }

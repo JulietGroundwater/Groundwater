@@ -2,6 +2,9 @@ package uk.ac.cam.cl.juliet.data;
 
 import android.os.Environment;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
@@ -47,6 +50,23 @@ public class InternalDataHandler {
         this.listeners.add(listener);
     }
 
+
+    /**
+     * Simple helper function for converting file to byte array
+     * @param file
+     * @return <code>byte[]</code>
+     * @throws IOException
+     */
+    public byte[] convertToBytes(File file) throws IOException {
+        byte[] bytesArray = new byte[(int) file.length()];
+
+        FileInputStream fis = new FileInputStream(file);
+        fis.read(bytesArray);
+        fis.close();
+
+        return bytesArray;
+    }
+
     /**
      * Some helper methods we may need for getting files from the SD Card
      *
@@ -61,7 +81,6 @@ public class InternalDataHandler {
                 list.add(f.getName());
             }
         }
-
         return list;
     }
 
