@@ -95,6 +95,4 @@ public class SettingsFragment extends Fragment {
     private void showSetLocationDialog() {
         // TODO: implement
     }
-
-    //    public
 }

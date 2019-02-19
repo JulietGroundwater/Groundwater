@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.models;
 
+import java.io.Serializable;
 import java.util.List;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 
@@ -9,7 +10,7 @@ import uk.ac.cam.cl.juliet.computationengine.Burst;
  *
  * @author Ben Cole
  */
-public class SingleOrManyBursts {
+public class SingleOrManyBursts implements Serializable {
 
     /** Internally used to specify which type an instance contains. */
     private enum Type {

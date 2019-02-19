@@ -43,36 +43,104 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
+    public String TOP_LEVEL = "top_level";
+    public String FILES_LIST = "files_list";
+
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
     private MenuItem signIn;
     private MenuItem signOut;
     private User user;
+    private List<SingleOrManyBursts> files;
+
+    /**
+     * If this is the fragment displaying the top level then it will load its files globally.
+     * Otherwise, this fragment will display a list of files passed to it.
+     */
+    private boolean isTopLevel;
 
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        // Inflate the layout for this fragment
+        View view = inflater.inflate(R.layout.fragment_data, container, false);
+        setHasOptionsMenu(true);
+
+        // Get the context
         Context context = getContext();
         if (context == null) return null;
-        setHasOptionsMenu(true);
-        View view = inflater.inflate(R.layout.fragment_data, container, false);
+
+        // Determine whether this is a top level or a nested Fragment, which determines where
+        // the data files should be loaded from (global source for top level, passed as argument
+        // for nested)
+        isTopLevel = getIsTopLevel();
+        if (isTopLevel) {
+            try {
+                files = getDataFiles();
+            } catch (InvalidBurstException e) {
+                e.printStackTrace();
+                // TODO: display error message
+                return null;
+            }
+        } else {
+            files = loadPassedFiles();
+        }
+
+        // Set up the UI
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        try {
-            List<SingleOrManyBursts> files = getDataFiles();
-            adapter = new FilesListAdapter(files);
-            adapter.setOnDataFileSelectedListener(this);
-            filesList.setAdapter(adapter);
-            noFilesToDisplayText = view.findViewById(R.id.noFilesText);
-            int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
-            noFilesToDisplayText.setVisibility(visibility);
-        } catch (InvalidBurstException e) {
-            e.printStackTrace();
-            // TODO: display error message
-        }
+        adapter = new FilesListAdapter(files);
+        adapter.setOnDataFileSelectedListener(this);
+        filesList.setAdapter(adapter);
+        noFilesToDisplayText = view.findViewById(R.id.noFilesText);
+        int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+        noFilesToDisplayText.setVisibility(visibility);
+
+        // Return the View that was created
         return view;
+    }
+
+    /**
+     * Determines whether this fragment is the top level in the file hierarchy.
+     *
+     * @return true if this is the top level; false otherwise
+     */
+    private boolean getIsTopLevel() {
+        Bundle arguments = getArguments();
+        if (arguments == null) return false;
+        return arguments.getBoolean(TOP_LEVEL, false);
+    }
+
+    /**
+     * Returns the list of files passed to this Fragment.
+     *
+     * @return The list of files passed to this Fragment.
+     */
+    private List<SingleOrManyBursts> loadPassedFiles() {
+        Bundle arguments = getArguments();
+        if (arguments != null && arguments.containsKey(FILES_LIST)) {
+            //            Object filesAsObject = arguments.get(FILES_LIST);
+            //            if (filesAsObject instanceof List) {
+            //                List filesList = (List) filesAsObject;
+            //                boolean filesAreCorrectFormat = true;
+            //                for (Object object : filesList) {
+            //                    filesAreCorrectFormat &= (object instanceof SingleOrManyBursts);
+            //                }
+            //                if (filesAreCorrectFormat) {
+            //                    return filesList;
+            //                }
+            //            }
+            Object selectedFile = arguments.get(FILES_LIST);
+            if (selectedFile instanceof SingleOrManyBursts) {
+                SingleOrManyBursts singleOrManyBursts = (SingleOrManyBursts) selectedFile;
+                try {
+                    return singleOrManyBursts.getListOfBursts();
+                } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return new ArrayList<>();
     }
 
     @Override
@@ -136,7 +204,24 @@ public class DataFragment extends Fragment
             Toast.makeText(context, "Display the file.", Toast.LENGTH_SHORT).show();
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
+            displayNestedFolder(file);
         }
+    }
+
+    private void displayNestedFolder(SingleOrManyBursts file) {
+        // TODO: Integrate with other code and just display this file instead if this happens
+        if (file.getIsSingleBurst()) return; // Should not happen...
+
+        DataFragment innerFragment = new DataFragment();
+        Bundle arguments = new Bundle();
+        arguments.putBoolean(TOP_LEVEL, false);
+        arguments.putSerializable(FILES_LIST, file);
+        innerFragment.setArguments(arguments);
+        getChildFragmentManager()
+                .beginTransaction()
+                .replace(R.id.dataFragmentContainer, innerFragment)
+                .addToBackStack("Test") // TODO: Make sure this is unique!
+                .commit();
     }
 
     @Override
@@ -185,7 +270,7 @@ public class DataFragment extends Fragment
      *
      * @return an ArrayList of data files stored on the device
      */
-    private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
+    private List<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
         // TODO: Actually load data files!
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
         return files;
