@@ -82,7 +82,7 @@ public class Config {
                 else if (lhs.contains("RepSecs")) repSecs = Integer.parseInt(rhs);
                 else if (lhs.contains("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
                 else if (lhs.contains("MAX_DATA_FILE_LENGTH"))
-                    maxDepthToGraph = Integer.parseInt(rhs);
+                    maxDataFileLength = Integer.parseInt(rhs);
                 else if (lhs.contains("LOGON")) logOn = (Integer.parseInt(rhs) != 0);
                 else if (lhs.contains("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
                 else if (lhs.contains("Attenuator1"))
@@ -104,6 +104,222 @@ public class Config {
         } catch (IOException e) {
             throw new InvalidConfigException(e.getMessage());
         }
+    }
+
+    public String generateConfigFile() {
+        StringBuilder builder = new StringBuilder();
+
+        builder.append(
+                "; ***********************************************\n"
+                        + "; Configuration file for ApRES - Profiling\n"
+                        + "; ***********************************************\n"
+                        + ";******************************************************************************\n"
+                        + "; Configuration settings relevant for Attended Mode\n"
+                        + ";\n"
+                        + ";   Always start the Web Server (ie always go into Attended Mode), regardless\n"
+                        + ";   of an active Ethernet connection. Default 0.\n");
+
+        builder.append("AlwaysAttended=").append(alwaysAttended ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   Check for an Ethernet connection on power-up (1=yes; 0=no)\n"
+                        + ";   Default=1\n");
+
+        builder.append("CheckEthernet=").append(checkEthernet ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   When used in attended mode, and doing a Trial Sub-Burst, the maximum\n"
+                        + ";   depth that is displayed on the FFT (A-scope) display. This can be\n"
+                        + ";   overwritten from the browser\n"
+                        + "maxDepthToGraph=200\n"
+                        + ";\n"
+                        + ";******************************************************************************\n"
+                        + ";******************************************************************************\n"
+                        + "; Configuration settings relevant for both Attended and Unattended modes\n"
+                        + ";\n"
+                        + "\n"
+                        + ";   Number of samples per burst (>=10)\n"
+                        + ";"); // TODO check whether this semicolon should be here
+
+        builder.append("N_ADC_SAMPLES=").append(nADCSamples).append("\n");
+
+        builder.append("; SamplingFreqMode 0->40kHz 1->80kHz\n");
+
+        builder.append("SamplingFreqMode=").append(samplingFrequencyMode ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + "; Every NData burts, one will be averaged, analysed and the results reported via\n"
+                        + "; Iridium. Starts with the first burst of the deployment.\n");
+
+        builder.append("NData=").append(nData).append("\n");
+
+        builder.append(
+                ";\n"
+                        + "; Triples define depth intervals to search for maxima to report on. Up to a max\n"
+                        + "; of four triples allowed.  Each Triple is used in a Matlab sense to define intervals\n"
+                        + "; (A,B,C interpreted as A:B:C). Maximum of 64 intervals allowed.\n");
+
+        String triplesString =
+                triples.toString().substring(1, triples.toString().length() - 1).replace(" ", "");
+
+        builder.append("Triples=").append(triplesString).append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   WatchDog task behaviour. Time in seconds of operation after which;\n"
+                        + ";   radar will be reset.  Assumption is that a fault has occurred if radar\n"
+                        + ";   is active for longer than this time.  Watchdog does not operate in\n"
+                        + ";   attended mode.  If Watchdog time is set to 0, then the default of 3600\n"
+                        + ";   seconds is used.  If set to -1, then Watchdog task is disabled.\n");
+
+        builder.append("WATCHDOG_TASK_SECS=").append(watchDogTaskSecs).append("\n");
+
+        builder.append(";\n" + "; Time for the system to settle down\n");
+
+        builder.append("InterChirpDelay=").append(interChirpDelay).append("\n");
+
+        builder.append("; Don't record first few chirps\n");
+
+        builder.append("Settle_Cycles=").append(settleCycles).append("\n");
+
+        builder.append(";\n" + ";   Number of sub-bursts in a burst (>=0)\n" + ";   Default=10\n");
+
+        builder.append("NSubBursts=").append(nSubBursts).append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";  Are all the chirps from this burst to be stored individually (0),\n"
+                        + ";  averaged (1) or stacked (2)\n");
+
+        builder.append("Average=").append(average).append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   Burst repetition period (integer seconds) (>0).  Interpretation depends\n"
+                        + ";   on IntervalMode.  If IntervalMode = 0 (default), RepSecs is time from\n"
+                        + ";   start of one burst to the start of the next.  If IntervalMode = 1,\n"
+                        + ";   RepSecs is interval between end of one burst and start of next.\n");
+
+        builder.append("RepSecs=").append(repSecs).append("\n");
+        builder.append("IntervalMode=").append(intervalMode ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   Maximum length of data file before another one started (>=1,000,000)\n"
+                        + ";   Default=10,000,000\n");
+
+        builder.append("MAX_DATA_FILE_LENGTH=").append(maxDataFileLength).append("\n");
+        builder.append(
+                ";\n" + "; Whether a logging file is to be maintained (default = no (0)).\n");
+
+        builder.append("LOGON=").append(logOn ? "1" : "0").append("\n");
+
+        builder.append(";\n" + ";   Number of combinations of attenuator settings to be used\n");
+
+        builder.append("nAttenuators=").append(nAttenuators).append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   Attenuator setting sequences (dB) (>0, <=31.5)\n"
+                        + ";   Defaults=30dB.\n");
+
+        String attenString =
+                attenuator1
+                        .toString()
+                        .substring(1, attenuator1.toString().length() - 1)
+                        .replace(" ", "");
+        builder.append("Attenuator1=").append(attenString).append("\n");
+
+        String gainString =
+                afGain.toString().substring(1, afGain.toString().length() - 1).replace(" ", "");
+        builder.append("AFGain=").append(gainString).append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   In unattended mode, does the radar sleep between bursts (default, 0),\n"
+                        + ";   or does it wait (1).  In the sleep case the system is powered down\n"
+                        + ";   between bursts and draws a low current (<200uA). Otherwise system\n"
+                        + ";   remains powered and draws ~1 Amp at 6V, 0.45 Amp at 12 V.\n");
+
+        builder.append("SleepMode=").append(sleepMode ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   Time out for GPS receiver for each burst (0-255 seconds)?\n"
+                        + ";   Default is 0 - do not attempt to obtain fix before each burst. \n");
+
+        builder.append("GPSon=").append(gpsOn ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   Undertake daily housekeeping (GPS clock check, Iridium exchange and\n"
+                        + ";   memory card check? (1 = yes, 0 = no)\n");
+
+        builder.append("Housekeeping=").append(housekeeping ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   If GPS fix obtained during daily housekeeping, synchronise radar clock\n"
+                        + ";   to GPS time (only if Housekeeping=1)? (1 = yes, 0 = no)\n");
+
+        builder.append("SyncGPS=").append(syncGPS ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";   If Housekeeping=1, is Iridium messaging enabled? (1 = yes, 0 = no)\n"
+                        + ";   Default = 0\n");
+
+        builder.append("Iridium=").append(iridium ? "1" : "0").append("\n");
+
+        builder.append(
+                ";\n"
+                        + ";\n"
+                        + ";   Very much for the advanced user. The DDS programming strings.\n"
+                        + ";   These strings are set by defaults in the instrument and, like many\n"
+                        + ";   parameters in the config file, do not need to be set here.\n"
+                        + ";   They are included for completeness.\n"
+                        + ";Reg00=\""
+                        + reg00
+                        + "\"\n"
+                        + ";Reg01=\""
+                        + reg01
+                        + "\"\n"
+                        + ";Reg02=\""
+                        + reg02
+                        + "\"\n"
+                        + ";Reg0B=\""
+                        + reg0B
+                        + "\"\n"
+                        + ";Reg0C=\""
+                        + reg0C
+                        + "\"\n"
+                        + ";Reg0D=\""
+                        + reg0D
+                        + "\"\n"
+                        + ";Reg0E=\"08B500004CCCCCCD\"\n"
+                        + ";\n"
+                        + "; End of configuration file\n"
+                        + "; *************************  \n"
+                        + "\n"
+                        + ";fstart=200 MHz; fstop=400 MHz; K=1.0816 GHz; T=0.18492 s; fSampling=80 kHz\n"
+                        + "; DDS programming strings\n");
+
+        builder.append("Reg00=").append(reg00).append("\n");
+
+        builder.append("Reg01=").append(reg01).append("\n");
+
+        builder.append("Reg02=").append(reg02).append("\n");
+
+        builder.append("Reg0B=").append(reg0B).append("\n");
+
+        builder.append("Reg0C=").append(reg0C).append("\n");
+
+        builder.append("Reg0D=").append(reg0D);
+
+        return builder.toString();
     }
 
     /**
