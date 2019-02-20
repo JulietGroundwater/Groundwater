@@ -8,9 +8,9 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
-import java.util.ArrayList;
+import java.util.List;
 import uk.ac.cam.cl.juliet.R;
-import uk.ac.cam.cl.juliet.fragments.DataFragment;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
  * Adapts a list of files into the RecyclerView in DataFragment.
@@ -19,7 +19,7 @@ import uk.ac.cam.cl.juliet.fragments.DataFragment;
  */
 public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.FilesListViewHolder> {
 
-    private ArrayList<DataFragment.TemporaryDataFileType> dataset;
+    private List<SingleOrManyBursts> dataset;
     private OnDataFileSelectedListener listener;
 
     /**
@@ -31,24 +31,23 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         /**
          * Invoked when a file or folder in the list is clicked.
          *
-         * @param file The file that was clicked
+         * @param itemClicked The burst or collection of bursts that was clicked
          * @param viewHolder The ViewHolder containing all UI elements in that row
          */
-        void onDataFileClicked(
-                DataFragment.TemporaryDataFileType file, FilesListViewHolder viewHolder);
+        void onDataFileClicked(SingleOrManyBursts itemClicked, FilesListViewHolder viewHolder);
 
         /**
          * Invoked when a file or folder in the list is long clicked.
          *
-         * @param file The file that was long clicked
+         * @param itemClicked The burst or collection of bursts that was long clicked
          * @param viewHolder The ViewHolder containing all UI elements in that row
          * @return true if the long click was consumed; false otherwise
          */
         boolean onDataFileLongClicked(
-                DataFragment.TemporaryDataFileType file, FilesListViewHolder viewHolder);
+                SingleOrManyBursts itemClicked, FilesListViewHolder viewHolder);
     }
 
-    public FilesListAdapter(ArrayList<DataFragment.TemporaryDataFileType> files) {
+    public FilesListAdapter(List<SingleOrManyBursts> files) {
         super();
         dataset = files;
     }
@@ -73,11 +72,11 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
 
     @Override
     public void onBindViewHolder(@NonNull final FilesListViewHolder filesListViewHolder, int i) {
-        final DataFragment.TemporaryDataFileType file = dataset.get(i);
-        filesListViewHolder.getTimestampTextView().setText(file.timestamp);
-        filesListViewHolder.getGpsTextView().setText(file.gps);
+        final SingleOrManyBursts file = dataset.get(i);
+        filesListViewHolder.getTimestampTextView().setText(file.getNameToDisplay());
+        filesListViewHolder.getGpsTextView().setText(file.getGPSToDisplay());
         filesListViewHolder.getUploadingSpinner().setVisibility(View.INVISIBLE);
-        if (file.isIndividualFile) {
+        if (file.getIsSingleBurst()) {
             filesListViewHolder
                     .getTypeImageView()
                     .setImageResource(R.drawable.baseline_show_chart_black_36);
@@ -86,7 +85,7 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
                     .getTypeImageView()
                     .setImageResource(R.drawable.baseline_folder_black_36);
         }
-        if (file.syncStatus) {
+        if (file.getSyncStatus()) {
             filesListViewHolder
                     .getSyncStatusImageView()
                     .setImageResource(R.drawable.baseline_cloud_done_black_18);
