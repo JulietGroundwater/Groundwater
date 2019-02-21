@@ -1,8 +1,6 @@
 package uk.ac.cam.cl.juliet.models;
 
 import java.util.List;
-
-import androidx.annotation.Nullable;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 
 /**
@@ -48,7 +46,8 @@ public class SingleOrManyBursts {
      *
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
-    public SingleOrManyBursts(List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
+    public SingleOrManyBursts(
+            List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
@@ -162,5 +161,4 @@ public class SingleOrManyBursts {
     public boolean getSyncStatus() {
         return syncedToOneDrive;
     }
-
 }

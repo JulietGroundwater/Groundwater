@@ -3,7 +3,6 @@ package uk.ac.cam.cl.juliet.activities;
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -16,10 +15,8 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import com.microsoft.identity.client.PublicClientApplication;
-
 import java.util.ArrayList;
 import java.util.List;
-
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.fragments.DataFragment;
@@ -75,8 +72,10 @@ public class MainActivity extends AppCompatActivity
         permissionListeners = new ArrayList<>();
 
         // Get user permission to access file system
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, READ_CONSTANT);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
+                != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(
+                    this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, READ_CONSTANT);
         }
     }
 
@@ -125,6 +124,7 @@ public class MainActivity extends AppCompatActivity
 
     /**
      * Adds a listener to the list
+     *
      * @param listener the <code>PermissionKListener</code> to add
      */
     public void addListener(PermissionListener listener) {
@@ -153,7 +153,9 @@ public class MainActivity extends AppCompatActivity
     }
 
     /**
-     * Method called if we are granted access to the filesystem - iterate over listeners and call the method
+     * Method called if we are granted access to the filesystem - iterate over listeners and call
+     * the method
+     *
      * @param requestCode
      * @param permissions
      * @param grantResults
@@ -163,11 +165,11 @@ public class MainActivity extends AppCompatActivity
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         switch (requestCode) {
             case READ_CONSTANT:
-            {
-                for(PermissionListener listener : permissionListeners) {
-                    listener.onPermissionGranted();
+                {
+                    for (PermissionListener listener : permissionListeners) {
+                        listener.onPermissionGranted();
+                    }
                 }
-            }
         }
     }
 

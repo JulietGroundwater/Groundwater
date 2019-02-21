@@ -1,13 +1,11 @@
 package uk.ac.cam.cl.juliet.tasks;
 
 import android.os.AsyncTask;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
@@ -41,7 +39,7 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
         List<SingleOrManyBursts> list = new ArrayList<>();
         File file = idh.getFileByName(idh.getSelectedData().getNameToDisplay());
         SingleOrManyBursts many = idh.getSelectedData();
-        for(int i = 0; i < file.listFiles().length; i++) {
+        for (int i = 0; i < file.listFiles().length; i++) {
             File innerFile = file.listFiles()[i];
             try {
                 many.getListOfBursts().get(i).setSingleBurst(new Burst(innerFile, 1));
@@ -52,8 +50,9 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     }
 
     /**
-     * Overridden background task to process the data - currently performs this
-     * on singleton bursts until memory usage gets sorted
+     * Overridden background task to process the data - currently performs this on singleton bursts
+     * until memory usage gets sorted
+     *
      * @param voids
      * @return Returns the processed data
      */
@@ -68,7 +67,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
         for (int batchNumber = 0; batchNumber < batches; batchNumber++) {
             for (int burstIndex = 0; burstIndex < BATCH_SIZE; burstIndex++) {
                 try {
-                    batchList.add(singles.get((batchNumber * BATCH_SIZE) + burstIndex).getSingleBurst());
+                    batchList.add(
+                            singles.get((batchNumber * BATCH_SIZE) + burstIndex).getSingleBurst());
                 } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
                     e.printStackTrace();
                 }

@@ -25,7 +25,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.microsoft.graph.concurrency.ICallback;
 import com.microsoft.graph.core.ClientException;
 import com.microsoft.graph.extensions.DriveItem;
@@ -34,7 +33,6 @@ import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -57,7 +55,9 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  * @author Ben Cole
  */
 public class DataFragment extends Fragment
-        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback, MainActivity.PermissionListener {
+        implements FilesListAdapter.OnDataFileSelectedListener,
+                IAuthenticationCallback,
+                MainActivity.PermissionListener {
 
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
@@ -225,7 +225,9 @@ public class DataFragment extends Fragment
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
 
         // Iterate over files in the directory
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
             for (File file : groundwater) {
                 // If it is a file then it is a single burst
                 Burst burst = null;
@@ -458,17 +460,21 @@ public class DataFragment extends Fragment
                 InternalDataHandler idh = InternalDataHandler.getInstance();
                 if (auth.isUserLoggedIn()) {
                     File datafile = idh.getFileByName(file.getNameToDisplay());
-                    gsc.uploadDatafile(file.getNameToDisplay(), "dat", idh.convertToBytes(datafile), new ICallback<DriveItem>() {
-                        @Override
-                        public void success(DriveItem driveItem) {
-                            Log.d("UPLOAD", "Upload was successful!");
-                        }
+                    gsc.uploadDatafile(
+                            file.getNameToDisplay(),
+                            "dat",
+                            idh.convertToBytes(datafile),
+                            new ICallback<DriveItem>() {
+                                @Override
+                                public void success(DriveItem driveItem) {
+                                    Log.d("UPLOAD", "Upload was successful!");
+                                }
 
-                        @Override
-                        public void failure(ClientException ex) {
-                            ex.printStackTrace();
-                        }
-                    });
+                                @Override
+                                public void failure(ClientException ex) {
+                                    ex.printStackTrace();
+                                }
+                            });
                 }
             } catch (MsalClientException msal) {
                 msal.printStackTrace();
