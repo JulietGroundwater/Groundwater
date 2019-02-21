@@ -64,6 +64,7 @@ public class DataFragment extends Fragment
     private FilesListAdapter adapter;
     private MenuItem signIn;
     private MenuItem signOut;
+    private List<SingleOrManyBursts> files;
     private User user;
 
     @Override
@@ -77,7 +78,7 @@ public class DataFragment extends Fragment
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
         try {
-            List<SingleOrManyBursts> files = getDataFiles();
+            files = getDataFiles();
             adapter = new FilesListAdapter(files);
             adapter.setOnDataFileSelectedListener(this);
             filesList.setAdapter(adapter);
@@ -410,6 +411,17 @@ public class DataFragment extends Fragment
     /** Called on permission granted - refresh file listing */
     @Override
     public void onPermissionGranted() {
+        // Update the files now we have permission
+        try {
+            files.addAll(getDataFiles());
+        } catch (InvalidBurstException e) {
+            e.printStackTrace();
+        }
+        // Change visibility of the no files message
+        int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+        noFilesToDisplayText.setVisibility(visibility);
+
+        // Notify the adapter
         adapter.notifyDataSetChanged();
     }
 
