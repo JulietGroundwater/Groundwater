@@ -149,7 +149,10 @@ public class Burst {
 
         if (mean) {
 
-            List<List<Double>> temp = new ArrayList<>();
+            List<List<Double>> burstAverage = new ArrayList<>();
+
+            ArrayList<Double> chirpAverage = new ArrayList<>();
+            burstAverage.add(chirpAverage);
 
             for (int i = 0; i < vif.get(0).size(); i++) {
                 double value = 0;
@@ -157,12 +160,10 @@ public class Burst {
                     value += vif.get(j).get(i);
                 }
                 value /= vif.size();
-                ArrayList<Double> chirpAverage = new ArrayList<>();
                 chirpAverage.add(value);
-                temp.add(chirpAverage);
             }
 
-            vif = temp;
+            vif = burstAverage;
 
             chirpsInBurst = 1;
 
