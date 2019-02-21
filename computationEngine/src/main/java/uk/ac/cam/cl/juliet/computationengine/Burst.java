@@ -160,7 +160,7 @@ public class Burst {
                     value += vif.get(j).get(i);
                 }
                 value /= vif.size();
-                chirpAverage.add(value);
+                burstAverage.get(0).add(value);
             }
 
             vif = burstAverage;
