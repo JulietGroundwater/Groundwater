@@ -1,6 +1,6 @@
 // set the dimensions and margins of the graph
 var margin = {top: 40, right: 10, bottom: 40, left: 50},
-width = window.outerWidth - margin.left - margin.right,
+width = 2 * window.outerWidth - margin.left - margin.right,
 height = window.outerHeight - margin.top - margin.bottom;
 
 function initGraph(dataset) {
@@ -26,17 +26,18 @@ function showGraph(data, svg, height, width) {
   var x = d3.scaleBand()
     .range([ 0, width ])
     .domain(myGroups)
+
   svg.append("g")
     .style("font-size", 15)
     .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x).tickSize(0))
+    .call(d3.axisBottom(x).tickFormat(d3.formatPrefix(".1", 1e1)).tickValues(x.domain().filter(function(d,i){ return !(i%3)})))
     .select(".domain").remove()
 
   // Build Y scales and axis - bit messy
   var y = d3.scaleBand()
     .range([ height, 0 ])
     .domain(myVars)
-    .padding(0.05);
+
   svg.append("g")
       .style("font-size", 15)
       .call(d3.axisLeft(y).tickFormat(d3.formatPrefix(".1", 1e1)).tickValues(y.domain().filter(function(d,i){ return !(i%10)})))

@@ -1,6 +1,8 @@
 package uk.ac.cam.cl.juliet.models;
 
 import java.util.List;
+
+import androidx.annotation.Nullable;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 
 /**
@@ -26,6 +28,7 @@ public class SingleOrManyBursts {
     private List<SingleOrManyBursts> listOfBursts;
     private Burst singleBurst;
     private boolean syncedToOneDrive;
+    private String fileName;
     private String directoryName;
 
     /**
@@ -33,9 +36,10 @@ public class SingleOrManyBursts {
      *
      * @param burst The Burst to be contained
      */
-    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive) {
+    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive, String fileName) {
         this.singleBurst = burst;
         type = Type.SINGLE;
+        this.fileName = fileName;
         syncedToOneDrive = isSyncedToOneDrive;
     }
 
@@ -44,8 +48,7 @@ public class SingleOrManyBursts {
      *
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
-    public SingleOrManyBursts(
-            List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
+    public SingleOrManyBursts(List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
@@ -71,6 +74,17 @@ public class SingleOrManyBursts {
     }
 
     /**
+     * Sets the single burst if it has not already been set
+     *
+     * @param burst The burst to set it to
+     */
+    public void setSingleBurst(Burst burst) {
+        if (this.singleBurst == null) {
+            this.singleBurst = burst;
+        }
+    }
+
+    /**
      * Returns the contained single Burst.
      *
      * @return the Burst object contained in this instance
@@ -83,6 +97,10 @@ public class SingleOrManyBursts {
         } else {
             throw new AccessManyBurstsAsSingleException();
         }
+    }
+
+    public void setListOfBursts(List<SingleOrManyBursts> bursts) {
+        this.listOfBursts = bursts;
     }
 
     /**
@@ -108,7 +126,7 @@ public class SingleOrManyBursts {
     public String getNameToDisplay() {
         switch (type) {
             case SINGLE:
-                return singleBurst.getFilename();
+                return this.fileName;
             case MANY:
                 return this.directoryName;
             default:
@@ -144,4 +162,5 @@ public class SingleOrManyBursts {
     public boolean getSyncStatus() {
         return syncedToOneDrive;
     }
+
 }

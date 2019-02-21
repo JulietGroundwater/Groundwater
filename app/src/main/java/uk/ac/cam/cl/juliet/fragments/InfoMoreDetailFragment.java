@@ -25,7 +25,6 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.Datapoint;
-import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
 
@@ -115,30 +114,25 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     private void updateChart() {
         if (checkFile()) {
             // Create datapoints, json-ise and pass to Javascript
-            try {
-                webviewText.setText(idh.getSelectedData().getNameToDisplay());
-                final List<SingleOrManyBursts> singles = idh.getSelectedData().getListOfBursts();
-                // Recover data from cache or process new data
-                List<Datapoint> datapoints = new ArrayList<>();
-                if (!cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
-                    ProcessingTask task = new ProcessingTask(this);
-                    task.execute();
-                } else {
-                    List<PlotData3D> dataSets = cache.get(idh.getSelectedData().getNameToDisplay());
-                    for (int set = 0; set < dataSets.size(); set++) {
-                        PlotData3D current = dataSets.get(set);
-                        for (int y = 0; y < current.getYValues().size(); y++) {
-                            datapoints.add(
-                                    new Datapoint(
-                                            set,
-                                            current.getYValues().get(y),
-                                            current.getZValues().get(0).get(y)));
-                        }
+            webviewText.setText(idh.getSelectedData().getNameToDisplay());
+
+            List<Datapoint> datapoints = new ArrayList<>();
+            if (!cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
+                ProcessingTask task = new ProcessingTask(this);
+                task.execute();
+            } else {
+                List<PlotData3D> dataSets = cache.get(idh.getSelectedData().getNameToDisplay());
+                for (int set = 0; set < dataSets.size(); set++) {
+                    PlotData3D current = dataSets.get(set);
+                    for (int y = 0; y < current.getYValues().size(); y++) {
+                        datapoints.add(
+                                new Datapoint(
+                                        set,
+                                        current.getYValues().get(y),
+                                        current.getZValues().get(0).get(y)));
                     }
-                    updateWebview(datapoints);
                 }
-            } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
-                e.printStackTrace();
+                updateWebview(datapoints);
             }
         }
     }

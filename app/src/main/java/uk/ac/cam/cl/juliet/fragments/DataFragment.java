@@ -41,6 +41,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
@@ -56,7 +57,7 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  * @author Ben Cole
  */
 public class DataFragment extends Fragment
-        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
+        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback, MainActivity.PermissionListener {
 
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
@@ -87,6 +88,11 @@ public class DataFragment extends Fragment
             e.printStackTrace();
             // TODO: display error message
         }
+
+        // Subscribe for permission updates
+        MainActivity main = (MainActivity) getActivity();
+        main.addListener(this);
+
         return view;
     }
 
@@ -221,15 +227,15 @@ public class DataFragment extends Fragment
         if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
             for (File file : groundwater) {
                 // If it is a file then it is a single burst
+                Burst burst = null;
                 if (file.isFile()) {
                     // TODO: Check one drive sync
-                    Burst burst = new Burst(file, 1);
-                    files.add(new SingleOrManyBursts(burst, false));
+                    files.add(new SingleOrManyBursts(burst, false, file.getName()));
                 } else {
                     List<SingleOrManyBursts> list = new ArrayList<>();
                     // Otherwise it is a collection
                     for (File innerFile : file.listFiles()) {
-                        list.add(new SingleOrManyBursts(new Burst(innerFile, 1), false));
+                        list.add(new SingleOrManyBursts(burst, false, file.getName()));
                     }
                     SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
                     files.add(many);
@@ -399,6 +405,12 @@ public class DataFragment extends Fragment
     @Override
     public void onCancel() {
         Toast.makeText(getContext(), "The user cancelled logging in", Toast.LENGTH_LONG).show();
+    }
+
+    /** Called on permission granted - refresh file listing */
+    @Override
+    public void onPermissionGranted() {
+        adapter.notifyDataSetChanged();
     }
 
     /** Asynchronously uploads a file to OneDrive. */
