@@ -64,7 +64,7 @@ public class Burst {
      * @throws InvalidBurstException if there are errors when reading the file
      */
     public Burst(File file) throws InvalidBurstException {
-        this(file, 1, false);
+        this(file, 1, true);
     }
 
     /**
@@ -90,7 +90,7 @@ public class Burst {
      * @throws InvalidBurstException if there are errors when reading the file
      */
     public Burst(File file, int burstNum) throws InvalidBurstException {
-        this(file, burstNum, false);
+        this(file, burstNum, true);
     }
 
     /**
@@ -187,6 +187,9 @@ public class Burst {
 
             processing.add("burst mean");
         }
+
+        // allows v to be garbage collected
+        v = null;
     }
 
     /**
