@@ -184,7 +184,6 @@ public class Header {
         } catch (IOException e) {
             throw new ComputationEngineException(e.getMessage());
         }
-        reader.close();
     }
 
     /**
