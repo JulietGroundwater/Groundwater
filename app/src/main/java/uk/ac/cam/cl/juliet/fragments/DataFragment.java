@@ -219,29 +219,29 @@ public class DataFragment extends Fragment
      */
     private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-
-        // Hardcoded groundwater SDCard Directory
-        File[] groundwater = idh.getRoot().listFiles();
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
-
-        // Iterate over files in the directory
-        if (ContextCompat.checkSelfPermission(
-                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            for (File file : groundwater) {
-                // If it is a file then it is a single burst
-                Burst burst = null;
-                if (file.isFile()) {
-                    // TODO: Check one drive sync
-                    files.add(new SingleOrManyBursts(burst, false, file.getName()));
-                } else {
-                    List<SingleOrManyBursts> list = new ArrayList<>();
-                    // Otherwise it is a collection
-                    for (File innerFile : file.listFiles()) {
-                        list.add(new SingleOrManyBursts(burst, false, file.getName()));
+        // Hardcoded groundwater SDCard Directory
+        if (!idh.isRootEmpty()) {
+            File[] groundwater = idh.getRoot().listFiles();
+            // Iterate over files in the directory
+            if (ContextCompat.checkSelfPermission(
+                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+                for (File file : groundwater) {
+                    // If it is a file then it is a single burst
+                    Burst burst = null;
+                    if (file.isFile()) {
+                        // TODO: Check one drive sync
+                        files.add(new SingleOrManyBursts(burst, false, file.getName()));
+                    } else {
+                        List<SingleOrManyBursts> list = new ArrayList<>();
+                        // Otherwise it is a collection
+                        for (File innerFile : file.listFiles()) {
+                            list.add(new SingleOrManyBursts(burst, false, file.getName()));
+                        }
+                        SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
+                        files.add(many);
                     }
-                    SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
-                    files.add(many);
                 }
             }
         }

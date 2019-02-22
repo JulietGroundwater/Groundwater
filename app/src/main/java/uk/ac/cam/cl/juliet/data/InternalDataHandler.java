@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.data;
 import android.os.Environment;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,11 +17,13 @@ public class InternalDataHandler {
     private static File root;
     private static SingleOrManyBursts selectedData;
     private static List<FileListener> listeners;
+    private static boolean rootEmpty;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new InternalDataHandler();
             root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
+            rootEmpty = (root.listFiles() == null);
             if (listeners == null) {
                 listeners = new ArrayList<>();
             }
@@ -70,14 +73,16 @@ public class InternalDataHandler {
      * Some helper methods we may need for getting files from the SD Card
      *
      * @param dirName
-     * @return
+     * @return List of files in root + dirName (empty if root isn't there)
      */
     public List<String> getCollectionOfFiles(String dirName) {
         List<String> list = new ArrayList<>();
-        File dir = new File(root.getAbsolutePath(), dirName);
-        for (File f : dir.listFiles()) {
-            if (f.getName().contains("DAT")) {
-                list.add(f.getName());
+        if(!rootEmpty) {
+            File dir = new File(root.getAbsolutePath(), dirName);
+            for (File f : dir.listFiles()) {
+                if (f.getName().contains("DAT")) {
+                    list.add(f.getName());
+                }
             }
         }
         return list;
@@ -103,11 +108,23 @@ public class InternalDataHandler {
         return selectedData;
     }
 
+    public static void setRootEmpty(boolean emptyValue) {
+        rootEmpty = emptyValue;
+    }
+
+    public static boolean isRootEmpty() {
+        return rootEmpty;
+    }
+
     public static List<FileListener> getListeners() {
         return listeners;
     }
 
     public interface FileListener {
         void onChange();
+    }
+
+    public class NoRootFoundException extends FileNotFoundException {
+        public NoRootFoundException(String msg){super(msg);}
     }
 }
