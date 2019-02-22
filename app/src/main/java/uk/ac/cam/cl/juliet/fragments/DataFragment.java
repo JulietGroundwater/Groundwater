@@ -1,7 +1,6 @@
 package uk.ac.cam.cl.juliet.fragments;
 
 import android.Manifest;
-import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -25,7 +24,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.microsoft.graph.concurrency.ICallback;
 import com.microsoft.graph.core.ClientException;
 import com.microsoft.graph.extensions.DriveItem;
@@ -34,7 +32,6 @@ import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -58,8 +55,8 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
 
-    public String TOP_LEVEL = "top_level";
-    public String FILES_LIST = "files_list";
+    public static String TOP_LEVEL = "top_level";
+    public static String FILES_LIST = "files_list";
 
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
@@ -122,8 +119,8 @@ public class DataFragment extends Fragment
      */
     private boolean getIsTopLevel() {
         Bundle arguments = getArguments();
-        if (arguments == null) return false;
-        return arguments.getBoolean(TOP_LEVEL, false);
+        if (arguments == null) return true;
+        return arguments.getBoolean(TOP_LEVEL, true);
     }
 
     /**
@@ -134,17 +131,6 @@ public class DataFragment extends Fragment
     private List<SingleOrManyBursts> loadPassedFiles() {
         Bundle arguments = getArguments();
         if (arguments != null && arguments.containsKey(FILES_LIST)) {
-            //            Object filesAsObject = arguments.get(FILES_LIST);
-            //            if (filesAsObject instanceof List) {
-            //                List filesList = (List) filesAsObject;
-            //                boolean filesAreCorrectFormat = true;
-            //                for (Object object : filesList) {
-            //                    filesAreCorrectFormat &= (object instanceof SingleOrManyBursts);
-            //                }
-            //                if (filesAreCorrectFormat) {
-            //                    return filesList;
-            //                }
-            //            }
             Object selectedFile = arguments.get(FILES_LIST);
             if (selectedFile instanceof SingleOrManyBursts) {
                 SingleOrManyBursts singleOrManyBursts = (SingleOrManyBursts) selectedFile;
@@ -296,7 +282,9 @@ public class DataFragment extends Fragment
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
 
         // Iterate over files in the directory
-        if (ContextCompat.checkSelfPermission(getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(
+                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
             for (File file : groundwater) {
                 // If it is a file then it is a single burst
                 if (file.isFile()) {
@@ -513,17 +501,21 @@ public class DataFragment extends Fragment
                 InternalDataHandler idh = InternalDataHandler.getInstance();
                 if (auth.isUserLoggedIn()) {
                     File datafile = idh.getFileByName(file.getNameToDisplay());
-                    gsc.uploadDatafile(file.getNameToDisplay(), "dat", idh.convertToBytes(datafile), new ICallback<DriveItem>() {
-                        @Override
-                        public void success(DriveItem driveItem) {
-                            Log.d("UPLOAD", "Upload was successful!");
-                        }
+                    gsc.uploadDatafile(
+                            file.getNameToDisplay(),
+                            "dat",
+                            idh.convertToBytes(datafile),
+                            new ICallback<DriveItem>() {
+                                @Override
+                                public void success(DriveItem driveItem) {
+                                    Log.d("UPLOAD", "Upload was successful!");
+                                }
 
-                        @Override
-                        public void failure(ClientException ex) {
-                            ex.printStackTrace();
-                        }
-                    });
+                                @Override
+                                public void failure(ClientException ex) {
+                                    ex.printStackTrace();
+                                }
+                            });
                 }
             } catch (MsalClientException msal) {
                 msal.printStackTrace();

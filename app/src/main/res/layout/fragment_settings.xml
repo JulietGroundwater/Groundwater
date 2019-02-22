@@ -101,13 +101,14 @@
         app:layout_constraintTop_toBottomOf="@+id/useThisPhoneGPSSwitch" />
 
     <SeekBar
-        android:id="@+id/seekBar"
+        android:id="@+id/attenuationSeekBar"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
-        android:layout_marginEnd="16dp"
-        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginEnd="8dp"
+        android:splitTrack="false"
+        app:layout_constraintEnd_toStartOf="@+id/attenuationValueOutput"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView9" />
 
@@ -120,5 +121,16 @@
         app:layout_constraintStart_toEndOf="@+id/connectionStatusText"
         app:layout_constraintTop_toTopOf="@+id/connectionStatusText"
         app:srcCompat="@drawable/baseline_wifi_black_24" />
+
+    <TextView
+        android:id="@+id/attenuationValueOutput"
+        android:layout_width="36dp"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="16dp"
+        android:gravity="right"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="@+id/attenuationSeekBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/attenuationSeekBar" />
 
 </android.support.constraint.ConstraintLayout>

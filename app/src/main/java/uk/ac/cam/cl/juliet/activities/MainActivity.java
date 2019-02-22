@@ -41,7 +41,10 @@ public class MainActivity extends AppCompatActivity
 
         // Create an instance of each fragment
         displayFragment = new DisplayFragment();
+        Bundle dataFragmentArgs = new Bundle();
+        dataFragmentArgs.putBoolean(DataFragment.TOP_LEVEL, true);
         dataFragment = new DataFragment();
+        dataFragment.setArguments(dataFragmentArgs);
         settingsFragment = new SettingsFragment();
 
         // Set up a ViewPager to handle displaying the three Fragments
@@ -86,7 +89,6 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
                 viewPager.setCurrentItem(0, false);

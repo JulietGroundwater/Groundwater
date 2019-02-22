@@ -26,8 +26,9 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     }
 
     /**
-     * Overridden background task to process the data - currently performs this
-     * on singleton bursts until memory usage gets sorted
+     * Overridden background task to process the data - currently performs this on singleton bursts
+     * until memory usage gets sorted
+     *
      * @param voids
      * @return Returns the processed data
      */

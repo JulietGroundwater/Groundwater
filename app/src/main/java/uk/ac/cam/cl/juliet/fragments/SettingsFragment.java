@@ -7,9 +7,12 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
+import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+import java.text.DecimalFormat;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.computationengine.Config;
 
 /**
  * Fragment for the 'settings' screen.
@@ -18,11 +21,16 @@ import uk.ac.cam.cl.juliet.R;
  */
 public class SettingsFragment extends Fragment {
 
+    private static double ATTENUATION_MIN = 2;
+    private static double ATTENUATION_MAX = 10;
+
     private Switch usePhoneDateSwitch;
     private Switch usePhoneTimeSwitch;
     private Switch usePhoneGPSSwitch;
     private TextView connectionStatusText;
     private ImageView connectionStatusIcon;
+    private SeekBar attenuationSeekBar;
+    private TextView attenuationValueOutput;
 
     @Override
     public View onCreateView(
@@ -64,6 +72,23 @@ public class SettingsFragment extends Fragment {
         connectionStatusText = view.findViewById(R.id.connectionStatusText);
         connectionStatusIcon = view.findViewById(R.id.connectionStatusImageView);
 
+        attenuationSeekBar = view.findViewById(R.id.attenuationSeekBar);
+        attenuationValueOutput = view.findViewById(R.id.attenuationValueOutput);
+        attenuationSeekBar.setOnSeekBarChangeListener(
+                new SeekBar.OnSeekBarChangeListener() {
+                    @Override
+                    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                        attenuationValueOutput.setText(getFormattedAttenuationValue());
+                    }
+
+                    @Override
+                    public void onStartTrackingTouch(SeekBar seekBar) {}
+
+                    @Override
+                    public void onStopTrackingTouch(SeekBar seekBar) {}
+                });
+        attenuationSeekBar.setProgress(attenuationSeekBar.getMax() / 2);
+
         setConnectedStatus(getConnectionStatus());
         return view;
     }
@@ -71,6 +96,21 @@ public class SettingsFragment extends Fragment {
     private boolean getConnectionStatus() {
         // TODO: Implement
         return true;
+    }
+
+    /**
+     * Computes the currently selected attenuation value, from <code>ATTENUATION_MAX</code> to
+     * <code>ATTENUATION_MAX</code> as determined by the seek bar.
+     *
+     * @return The currently selected attenuation value
+     */
+    private double getAttenuationValue() {
+        double r = (double) attenuationSeekBar.getProgress() / attenuationSeekBar.getMax();
+        return ATTENUATION_MIN + r * (ATTENUATION_MAX - ATTENUATION_MIN);
+    }
+
+    private String getFormattedAttenuationValue() {
+        return new DecimalFormat("#.00").format(getAttenuationValue());
     }
 
     private void setConnectedStatus(boolean connected) {
@@ -94,5 +134,14 @@ public class SettingsFragment extends Fragment {
 
     private void showSetLocationDialog() {
         // TODO: implement
+    }
+
+    private Config generateConfig() {
+        Config config = new Config(null);
+        //        config.setAttenu
+
+        // TODO: Implement this
+
+        return config;
     }
 }

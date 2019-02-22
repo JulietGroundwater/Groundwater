@@ -3,7 +3,6 @@ package uk.ac.cam.cl.juliet.data;
 import android.os.Environment;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -50,9 +49,9 @@ public class InternalDataHandler {
         this.listeners.add(listener);
     }
 
-
     /**
      * Simple helper function for converting file to byte array
+     *
      * @param file
      * @return <code>byte[]</code>
      * @throws IOException

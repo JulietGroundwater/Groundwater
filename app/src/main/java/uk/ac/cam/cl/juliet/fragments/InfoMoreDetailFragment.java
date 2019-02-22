@@ -108,9 +108,9 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     }
 
     /**
-     * This method checks to see if we have the right type of file selected and then runs
-     * the processing if we haven't already cached the results from a previous round of processing.
-     * The uniqueness in the cache is dependent on the file/directory name.
+     * This method checks to see if we have the right type of file selected and then runs the
+     * processing if we haven't already cached the results from a previous round of processing. The
+     * uniqueness in the cache is dependent on the file/directory name.
      */
     private void updateChart() {
         if (checkFile()) {
