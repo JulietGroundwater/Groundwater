@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -85,9 +87,7 @@ public class Header {
 
     private List<String> headerLines = new ArrayList<>();
 
-    public Header(String filename) throws IOException {
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(filename).getFile());
+    public Header(File file) throws IOException {
 
         BufferedReader reader = new BufferedReader(new FileReader(file));
 
@@ -177,6 +177,7 @@ public class Header {
             else if (lhs.equals("IsWebServerOn")) isWebServerOn = (Integer.parseInt(rhs) != 0);
             else if (lhs.equals("IsFTPServerOn")) isFTPServerOn = (Integer.parseInt(rhs) != 0);
         }
+        reader.close();
     }
 
     /**
