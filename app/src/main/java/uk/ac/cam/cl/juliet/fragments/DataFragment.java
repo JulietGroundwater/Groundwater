@@ -1,16 +1,20 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -21,19 +25,28 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
+import com.microsoft.graph.concurrency.ICallback;
+import com.microsoft.graph.core.ClientException;
+import com.microsoft.graph.extensions.DriveItem;
 import com.microsoft.identity.client.AuthenticationResult;
 import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
+import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.GraphServiceController;
 import uk.ac.cam.cl.juliet.data.IAuthenticationCallback;
+import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
@@ -42,13 +55,16 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  * @author Ben Cole
  */
 public class DataFragment extends Fragment
-        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
+        implements FilesListAdapter.OnDataFileSelectedListener,
+                IAuthenticationCallback,
+                MainActivity.PermissionListener {
 
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
     private MenuItem signIn;
     private MenuItem signOut;
+    private List<SingleOrManyBursts> files;
     private User user;
 
     @Override
@@ -62,7 +78,7 @@ public class DataFragment extends Fragment
         filesList = view.findViewById(R.id.filesListRecyclerView);
         filesList.setLayoutManager(new LinearLayoutManager(getContext()));
         try {
-            List<SingleOrManyBursts> files = getDataFiles();
+            files = getDataFiles();
             adapter = new FilesListAdapter(files);
             adapter.setOnDataFileSelectedListener(this);
             filesList.setAdapter(adapter);
@@ -73,6 +89,11 @@ public class DataFragment extends Fragment
             e.printStackTrace();
             // TODO: display error message
         }
+
+        // Subscribe for permission updates
+        MainActivity main = (MainActivity) getActivity();
+        main.addListener(this);
+
         return view;
     }
 
@@ -145,6 +166,9 @@ public class DataFragment extends Fragment
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
         }
+        // Set the selected data to the correct file
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        idh.setSelectedData(file);
     }
 
     @Override
@@ -194,8 +218,34 @@ public class DataFragment extends Fragment
      * @return an ArrayList of data files stored on the device
      */
     private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
-        // TODO: Actually load data files!
+        InternalDataHandler idh = InternalDataHandler.getInstance();
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
+        // Hardcoded groundwater SDCard Directory
+        if (!idh.isRootEmpty()) {
+            File[] groundwater = idh.getRoot().listFiles();
+            // Iterate over files in the directory
+            if (ContextCompat.checkSelfPermission(
+                            getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                for (File file : groundwater) {
+                    // If it is a file then it is a single burst
+                    Burst burst = null;
+                    if (file.isFile()) {
+                        // TODO: Check one drive sync
+                        files.add(new SingleOrManyBursts(burst, false, file.getName()));
+                    } else {
+                        List<SingleOrManyBursts> list = new ArrayList<>();
+                        // Otherwise it is a collection
+                        for (File innerFile : file.listFiles()) {
+                            list.add(new SingleOrManyBursts(burst, false, file.getName()));
+                        }
+                        SingleOrManyBursts many =
+                                new SingleOrManyBursts(list, false, file.getName());
+                        files.add(many);
+                    }
+                }
+            }
+        }
         return files;
     }
 
@@ -241,8 +291,6 @@ public class DataFragment extends Fragment
                 signIn.setVisible(false);
                 signOut.setVisible(true);
             }
-            System.out.println(
-                    AuthenticationManager.getInstance().getPublicClient().getUsers().size());
         } catch (MsalClientException msal) {
             msal.printStackTrace();
         }
@@ -363,6 +411,23 @@ public class DataFragment extends Fragment
         Toast.makeText(getContext(), "The user cancelled logging in", Toast.LENGTH_LONG).show();
     }
 
+    /** Called on permission granted - refresh file listing */
+    @Override
+    public void onPermissionGranted() {
+        // Update the files now we have permission
+        try {
+            files.addAll(getDataFiles());
+        } catch (InvalidBurstException e) {
+            e.printStackTrace();
+        }
+        // Change visibility of the no files message
+        int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+        noFilesToDisplayText.setVisibility(visibility);
+
+        // Notify the adapter
+        adapter.notifyDataSetChanged();
+    }
+
     /** Asynchronously uploads a file to OneDrive. */
     private static class UploadFileTask extends AsyncTask<SingleOrManyBursts, Void, Boolean> {
 
@@ -391,13 +456,33 @@ public class DataFragment extends Fragment
             if (files.length < 1) return false;
             try {
                 file = files[0];
-                // TODO: Send it to the server!
                 // Send the data using the graph service controller
-                // gsc.uploadDatafile(file.timestamp + "@" + file.gps, "dat", file.data.getBytes(),
-                // callback);
-                Thread.sleep(2000);
-            } catch (InterruptedException e) {
+                AuthenticationManager auth = AuthenticationManager.getInstance();
+                InternalDataHandler idh = InternalDataHandler.getInstance();
+                if (auth.isUserLoggedIn()) {
+                    File datafile = idh.getFileByName(file.getNameToDisplay());
+                    gsc.uploadDatafile(
+                            file.getNameToDisplay(),
+                            "dat",
+                            idh.convertToBytes(datafile),
+                            new ICallback<DriveItem>() {
+                                @Override
+                                public void success(DriveItem driveItem) {
+                                    Log.d("UPLOAD", "Upload was successful!");
+                                }
+
+                                @Override
+                                public void failure(ClientException ex) {
+                                    ex.printStackTrace();
+                                }
+                            });
+                }
+            } catch (MsalClientException msal) {
+                msal.printStackTrace();
+            } catch (FileNotFoundException e) {
                 e.printStackTrace();
+            } catch (IOException io) {
+                io.printStackTrace();
             }
             return true;
         }
