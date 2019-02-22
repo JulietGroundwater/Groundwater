@@ -27,6 +27,7 @@ public class SingleOrManyBursts implements Serializable {
     private List<SingleOrManyBursts> listOfBursts;
     private Burst singleBurst;
     private boolean syncedToOneDrive;
+    private String fileName;
     private String directoryName;
 
     /**
@@ -34,9 +35,10 @@ public class SingleOrManyBursts implements Serializable {
      *
      * @param burst The Burst to be contained
      */
-    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive) {
+    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive, String fileName) {
         this.singleBurst = burst;
         type = Type.SINGLE;
+        this.fileName = fileName;
         syncedToOneDrive = isSyncedToOneDrive;
     }
 
@@ -72,6 +74,17 @@ public class SingleOrManyBursts implements Serializable {
     }
 
     /**
+     * Sets the single burst if it has not already been set
+     *
+     * @param burst The burst to set it to
+     */
+    public void setSingleBurst(Burst burst) {
+        if (this.singleBurst == null) {
+            this.singleBurst = burst;
+        }
+    }
+
+    /**
      * Returns the contained single Burst.
      *
      * @return the Burst object contained in this instance
@@ -84,6 +97,10 @@ public class SingleOrManyBursts implements Serializable {
         } else {
             throw new AccessManyBurstsAsSingleException();
         }
+    }
+
+    public void setListOfBursts(List<SingleOrManyBursts> bursts) {
+        this.listOfBursts = bursts;
     }
 
     /**
@@ -109,7 +126,7 @@ public class SingleOrManyBursts implements Serializable {
     public String getNameToDisplay() {
         switch (type) {
             case SINGLE:
-                return singleBurst.getFilename();
+                return this.fileName;
             case MANY:
                 return this.directoryName;
             default:

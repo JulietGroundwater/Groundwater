@@ -1,14 +1,10 @@
 package uk.ac.cam.cl.juliet.fragments;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,6 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData2D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator2D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
@@ -35,7 +33,6 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 public class InfoOverviewFragment extends Fragment {
 
     private LineChart exampleChart;
-    private final int READ_CONSTANT = 1;
     private InternalDataHandler idh;
     private Map<String, PlotData2D> cache;
 
@@ -72,33 +69,6 @@ public class InfoOverviewFragment extends Fragment {
                                 });
                     }
                 });
-
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(
-                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(
-                        getActivity(),
-                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
-                        READ_CONSTANT);
-
-                // READ_CONSTANT is an
-                // app-defined int constant. The callback method gets the
-                // result of the request.
-            }
-        } else {
-            updateChart();
-        }
         return view;
     }
 
@@ -108,6 +78,10 @@ public class InfoOverviewFragment extends Fragment {
             try {
                 PlotDataGenerator2D twoDimDataGen = null;
                 PlotData2D twoDimData = null;
+
+                // Compute burst
+                SingleOrManyBursts file = idh.getSelectedData();
+                file.setSingleBurst(new Burst(idh.getFileByName(file.getNameToDisplay()), 1));
 
                 // Check the cache in case the same file was selected again and it is already
                 // computed
@@ -138,6 +112,8 @@ public class InfoOverviewFragment extends Fragment {
                 exampleChart.postInvalidate();
             } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
                 e.printStackTrace();
+            } catch (InvalidBurstException e) {
+                e.printStackTrace();
             }
         }
     }
@@ -150,22 +126,5 @@ public class InfoOverviewFragment extends Fragment {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         if (idh.getSelectedData() == null) return false;
         return idh.getSelectedData().getIsSingleBurst();
-    }
-
-    @Override
-    public void onRequestPermissionsResult(
-            int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        switch (requestCode) {
-            case READ_CONSTANT:
-                {
-                    AsyncTask.execute(
-                            new Runnable() {
-                                @Override
-                                public void run() {
-                                    updateChart();
-                                }
-                            });
-                }
-        }
     }
 }

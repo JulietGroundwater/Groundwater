@@ -47,4 +47,5 @@ dependencies {
     implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'
     implementation 'com.google.code.gson:gson:2.8.5'
     implementation project(path: ':computationEngine')
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0-alpha'
 }

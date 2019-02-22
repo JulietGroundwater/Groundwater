@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -38,6 +39,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
@@ -53,7 +55,9 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  * @author Ben Cole
  */
 public class DataFragment extends Fragment
-        implements FilesListAdapter.OnDataFileSelectedListener, IAuthenticationCallback {
+        implements FilesListAdapter.OnDataFileSelectedListener,
+                IAuthenticationCallback,
+                MainActivity.PermissionListener {
 
     public static String TOP_LEVEL = "top_level";
     public static String FILES_LIST = "files_list";
@@ -63,8 +67,8 @@ public class DataFragment extends Fragment
     private FilesListAdapter adapter;
     private MenuItem signIn;
     private MenuItem signOut;
-    private User user;
     private List<SingleOrManyBursts> files;
+    private User user;
 
     /**
      * If this is the fragment displaying the top level then it will load its files globally.
@@ -107,6 +111,10 @@ public class DataFragment extends Fragment
         noFilesToDisplayText = view.findViewById(R.id.noFilesText);
         int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
         noFilesToDisplayText.setVisibility(visibility);
+
+        // Subscribe for permission updates
+        MainActivity main = (MainActivity) getActivity();
+        main.addListener(this);
 
         // Return the View that was created
         return view;
@@ -276,29 +284,30 @@ public class DataFragment extends Fragment
      */
     private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-
-        // Hardcoded groundwater SDCard Directory
-        File[] groundwater = idh.getRoot().listFiles();
         ArrayList<SingleOrManyBursts> files = new ArrayList<>();
-
-        // Iterate over files in the directory
-        if (ContextCompat.checkSelfPermission(
-                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-            for (File file : groundwater) {
-                // If it is a file then it is a single burst
-                if (file.isFile()) {
-                    // TODO: Check one drive sync
-                    Burst burst = new Burst(file, 1);
-                    files.add(new SingleOrManyBursts(burst, false));
-                } else {
-                    List<SingleOrManyBursts> list = new ArrayList<>();
-                    // Otherwise it is a collection
-                    for (File innerFile : file.listFiles()) {
-                        list.add(new SingleOrManyBursts(new Burst(innerFile, 1), false));
+        // Hardcoded groundwater SDCard Directory
+        if (!idh.isRootEmpty()) {
+            File[] groundwater = idh.getRoot().listFiles();
+            // Iterate over files in the directory
+            if (ContextCompat.checkSelfPermission(
+                            getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
+                for (File file : groundwater) {
+                    // If it is a file then it is a single burst
+                    Burst burst = null;
+                    if (file.isFile()) {
+                        // TODO: Check one drive sync
+                        files.add(new SingleOrManyBursts(burst, false, file.getName()));
+                    } else {
+                        List<SingleOrManyBursts> list = new ArrayList<>();
+                        // Otherwise it is a collection
+                        for (File innerFile : file.listFiles()) {
+                            list.add(new SingleOrManyBursts(burst, false, file.getName()));
+                        }
+                        SingleOrManyBursts many =
+                                new SingleOrManyBursts(list, false, file.getName());
+                        files.add(many);
                     }
-                    SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
-                    files.add(many);
                 }
             }
         }
@@ -467,6 +476,23 @@ public class DataFragment extends Fragment
         Toast.makeText(getContext(), "The user cancelled logging in", Toast.LENGTH_LONG).show();
     }
 
+    /** Called on permission granted - refresh file listing */
+    @Override
+    public void onPermissionGranted() {
+        // Update the files now we have permission
+        try {
+            files.addAll(getDataFiles());
+        } catch (InvalidBurstException e) {
+            e.printStackTrace();
+        }
+        // Change visibility of the no files message
+        int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+        noFilesToDisplayText.setVisibility(visibility);
+
+        // Notify the adapter
+        adapter.notifyDataSetChanged();
+    }
+
     /** Asynchronously uploads a file to OneDrive. */
     private static class UploadFileTask extends AsyncTask<SingleOrManyBursts, Void, Boolean> {
 
@@ -495,7 +521,6 @@ public class DataFragment extends Fragment
             if (files.length < 1) return false;
             try {
                 file = files[0];
-                // TODO: Send it to the server!
                 // Send the data using the graph service controller
                 AuthenticationManager auth = AuthenticationManager.getInstance();
                 InternalDataHandler idh = InternalDataHandler.getInstance();
