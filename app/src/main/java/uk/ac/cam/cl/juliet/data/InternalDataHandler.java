@@ -77,7 +77,7 @@ public class InternalDataHandler {
      */
     public List<String> getCollectionOfFiles(String dirName) {
         List<String> list = new ArrayList<>();
-        if(!rootEmpty) {
+        if (!rootEmpty) {
             File dir = new File(root.getAbsolutePath(), dirName);
             for (File f : dir.listFiles()) {
                 if (f.getName().contains("DAT")) {
@@ -125,6 +125,8 @@ public class InternalDataHandler {
     }
 
     public class NoRootFoundException extends FileNotFoundException {
-        public NoRootFoundException(String msg){super(msg);}
+        public NoRootFoundException(String msg) {
+            super(msg);
+        }
     }
 }

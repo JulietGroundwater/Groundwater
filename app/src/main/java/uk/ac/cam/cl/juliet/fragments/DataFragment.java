@@ -225,8 +225,8 @@ public class DataFragment extends Fragment
             File[] groundwater = idh.getRoot().listFiles();
             // Iterate over files in the directory
             if (ContextCompat.checkSelfPermission(
-                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                        == PackageManager.PERMISSION_GRANTED) {
+                            getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                    == PackageManager.PERMISSION_GRANTED) {
                 for (File file : groundwater) {
                     // If it is a file then it is a single burst
                     Burst burst = null;
@@ -239,7 +239,8 @@ public class DataFragment extends Fragment
                         for (File innerFile : file.listFiles()) {
                             list.add(new SingleOrManyBursts(burst, false, file.getName()));
                         }
-                        SingleOrManyBursts many = new SingleOrManyBursts(list, false, file.getName());
+                        SingleOrManyBursts many =
+                                new SingleOrManyBursts(list, false, file.getName());
                         files.add(many);
                     }
                 }
