@@ -10,7 +10,9 @@ import android.widget.ImageView;
 import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
+
 import java.text.DecimalFormat;
+
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
@@ -137,11 +139,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private Config generateConfig() {
-        Config config = new Config(null);
-        //        config.setAttenu
-
         // TODO: Implement this
-
-        return config;
+        return null;
     }
 }
