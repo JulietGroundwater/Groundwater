@@ -2,7 +2,7 @@ package uk.ac.cam.cl.juliet.computationengine;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.IOException;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
@@ -46,15 +46,64 @@ public class Burst {
             er,
             ci,
             lambdac;
-    private List<Double> attenuator1, attenuator2, v, processing, tList, fList;
+    private List<Double> attenuator1, attenuator2, v, tList, fList;
+    private List<String> processing;
     private List<Complex> chirpAtt = new ArrayList<>();
     private List<Date> chirpTime = new ArrayList<>();
     private List<Integer> startInd, endInd, TxAnt, RxAnt, chirpNum = new ArrayList<>();
     private List<List<Double>> vif;
 
-    public Burst(String filename, int burstNum) throws InvalidBurstException {
-        this.filename = filename;
-        loadBurstRMB5(burstNum);
+    /**
+     * A default constructor if the number of the burst is not specified.
+     *
+     * <p>Burst number will default to 1
+     *
+     * <p>Mean value will default to false
+     *
+     * @param file name of the {@code .DAT} file to read from
+     * @throws InvalidBurstException if there are errors when reading the file
+     */
+    public Burst(File file) throws InvalidBurstException {
+        this(file, 1, true);
+    }
+
+    /**
+     * A constructor if the burst number is not specified, but the mean option is
+     *
+     * <p>Burst number will default to 1
+     *
+     * @param file name of the {@code .DAT} file to read from
+     * @param mean whether to find the mean of the Burst's data or not
+     * @throws InvalidBurstException if there are errors when reading the file
+     */
+    public Burst(File file, boolean mean) throws InvalidBurstException {
+        this(file, 1, mean);
+    }
+
+    /**
+     * A constructor if the burst number is not specified, but the mean option is
+     *
+     * <p>Burst number will default to 1
+     *
+     * @param file name of the {@code .DAT} file to read from
+     * @param burstNum number of the burst to load (starts from 1)
+     * @throws InvalidBurstException if there are errors when reading the file
+     */
+    public Burst(File file, int burstNum) throws InvalidBurstException {
+        this(file, burstNum, true);
+    }
+
+    /**
+     * Constructor for a burst that takes both the filename and the number of the burst to load
+     *
+     * @param file name of the {code .DAT} file to read from
+     * @param burstNum number of the burst to load (starts from 1)
+     * @param mean whether to find the mean of the Burst's data or not
+     * @throws InvalidBurstException if there are errors when reading the file
+     */
+    public Burst(File file, int burstNum, boolean mean) throws InvalidBurstException {
+        this.filename = file.getName();
+        loadBurstRMB5(burstNum, file);
 
         if (temperature1 > 300) {
             temperature1 -= 512;
@@ -90,14 +139,57 @@ public class Burst {
             chirpTime.add(new Date(dateTime.getTime() + (long) (chirp * chirpInterval)));
         }
 
-        this.filename = filename;
         samplesPerChirp = nSamples;
         fs = 4e4;
         f0 = 2e8;
         k = 2 * Math.PI * 2e8;
         processing = new ArrayList<>();
 
-        loadParametersRMB2();
+        loadParametersRMB2(file);
+
+        if (mean) {
+
+            List<List<Double>> burstAverage = new ArrayList<>();
+
+            ArrayList<Double> chirpAverage = new ArrayList<>();
+            burstAverage.add(chirpAverage);
+
+            for (int i = 0; i < vif.get(0).size(); i++) {
+                double value = 0;
+                for (int j = 0; j < vif.size(); j++) {
+                    value += vif.get(j).get(i);
+                }
+                value /= vif.size();
+                burstAverage.get(0).add(value);
+            }
+
+            vif = burstAverage;
+
+            chirpsInBurst = 1;
+
+            // using BigInteger to avoid value overflow
+            BigInteger total = BigInteger.ZERO;
+            for (Date date : chirpTime) {
+                total = total.add(BigInteger.valueOf(date.getTime()));
+            }
+            BigInteger averageMillis = total.divide(BigInteger.valueOf(chirpTime.size()));
+            Date averageDate = new Date(averageMillis.longValue());
+
+            chirpTime.clear();
+            chirpTime.add(averageDate);
+
+            Complex averageComplex = new Complex(0);
+            for (Complex c : chirpAtt) {
+                averageComplex = averageComplex.add(c);
+            }
+            chirpAtt.clear();
+            chirpAtt.add(averageComplex);
+
+            processing.add("burst mean");
+        }
+
+        // allows v to be garbage collected
+        v = null;
     }
 
     /**
@@ -371,14 +463,19 @@ public class Burst {
     /**
      * Returns processing parameter
      *
-     * <p>Implemented as {@code List<Double>} since in the original MATLAB it was a matrix with a
+     * <p>Implemented as {@code List<String>} since in the original MATLAB it was a matrix with a
      * height of 1
      *
-     * <p>In the original MATLAB processing is always set to {@code {}}, so this could be removed
+     * <p>This parameters says how the data has been processed, currently there are 2 options:
+     *
+     * <p>{} (empty list) -> No processing has been done to the data, and is the same as the file
+     *
+     * <p>"burst mean" -> The mean of the data has been calculated and saved in the object
+     * (Implements {@code fmcw_burst_mean()}
      *
      * @return processing parameter
      */
-    public List<Double> getProcessing() {
+    public List<String> getProcessing() {
         return new ArrayList<>(processing);
     }
 
@@ -493,16 +590,12 @@ public class Burst {
         return new ArrayList<>(chirpAtt);
     }
 
-    private void loadBurstRMB5(int totalNumberOfBursts) throws InvalidBurstException {
+    private void loadBurstRMB5(int totalNumberOfBursts, File file) throws InvalidBurstException {
         int MaxHeaderLen = 1500;
         int burstpointer = 0;
         code = 0;
 
         long fileLength;
-        // file = new File(filename);
-
-        ClassLoader classLoader = getClass().getClassLoader();
-        File file = new File(classLoader.getResource(filename).getFile());
 
         fileLength = file.length();
 
@@ -737,9 +830,9 @@ public class Burst {
         return ret;
     }
 
-    private void loadParametersRMB2() throws InvalidBurstException {
+    private void loadParametersRMB2(File file) throws InvalidBurstException {
         try {
-            Header header = new Header(filename);
+            Header header = new Header(file);
 
             // Read from Reg01
             // noDwellHigh at bit 18
@@ -812,7 +905,7 @@ public class Burst {
                 fList.add(f0 + tempT * (k / (2 * Math.PI)));
             }
 
-        } catch (IOException e) {
+        } catch (ComputationEngineException e) {
             throw new InvalidBurstException(
                     "Caught: " + e.getClass() + " with message: " + e.getMessage());
         }
