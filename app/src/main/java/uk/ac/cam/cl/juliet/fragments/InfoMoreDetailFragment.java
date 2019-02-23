@@ -1,14 +1,14 @@
 package uk.ac.cam.cl.juliet.fragments;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
@@ -17,15 +17,20 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 import com.google.gson.Gson;
+
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
+import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.Datapoint;
 import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
+import uk.ac.cam.cl.juliet.tasks.LiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
 
 /**
@@ -40,6 +45,12 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     private final int BURST_CODE = 1;
     private InternalDataHandler idh;
     private Map<String, List<PlotData3D>> cache;
+    private MenuItem connect;
+    private MenuItem measure;
+    private MenuItem disconnect;
+    private ConnectionSimulator simulator;
+    private boolean connected;
+    private boolean gatheringData;
 
     @Nullable
     @Override
@@ -48,6 +59,11 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_info_detail, container, false);
+
+        // Menu boolean
+        setHasOptionsMenu(true);
+        this.connected = false;
+        this.gatheringData = false;
 
         // Initialise text
         webviewText = (TextView) view.findViewById(R.id.webview_title);
@@ -78,32 +94,36 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
                     }
                 });
 
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(
-                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(
-                        getActivity(),
-                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
-                        BURST_CODE);
-            }
-        } else {
-            if (checkFile()) {
-                updateChart();
-            }
-        }
-
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        menu.clear();
+        inflater.inflate(R.menu.menu_data, menu);
+        measure = menu.findItem(R.id.take_measurement_button);
+        connect = menu.findItem(R.id.connect_button);
+        disconnect = menu.findItem(R.id.disconnect_button);
+
+        // Only have connect visible if we aren't running any data gathering
+        toggleMenuItems();
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.connect_button:
+                establishConnection();
+                return true;
+            case R.id.take_measurement_button:
+                gatherData();
+                return true;
+            case R.id.disconnect_button:
+                destroyConnection();
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -169,6 +189,71 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
         webview.loadUrl("file:///android_asset/html/graph.html");
     }
 
+    /** Establishes a connection and waits for the data gathering to commence */
+    private void establishConnection() {
+        // We know we will have a good connection so change buttons
+        this.connected = true;
+        toggleMenuItems();
+
+        simulator = ConnectionSimulator.getInstance();
+        System.out.println(simulator.getConnecitonLive());
+        System.out.println(simulator.getDataReady());
+        AsyncTask.execute(new Runnable() {
+            @Override
+            public void run() {
+                // Connect to our simulated connection
+                InternalDataHandler idh = InternalDataHandler.getInstance();
+                simulator.connect();
+
+                // Create a new directory in groundwater for the incoming data
+                String name = new Date().toString();
+                idh.setCurrentLiveData(name);
+                idh.addNewDirectory(idh.getCurrentLiveData());
+
+                // TODO: Perhaps sleep the thread instead of spinning and wake it on measure button click
+                while(simulator.getConnecitonLive()) {
+                    while(simulator.getDataReady()) {
+                        List<File> batch = new ArrayList<>();
+                        batch.add(simulator.pollData());
+                        if (batch.size() > 0) {
+                            for (File file : batch) {
+                                if (file != null) {
+                                    idh.addFileToDirectory(name, file);
+                                    processLiveData(batch);
+                                }
+                            }
+                        }
+                    }
+                }
+                simulator.disconnect();
+            }
+        });
+    }
+
+    /**
+     * Starts a new <code>LiveProcessingTask</code> to process the data coming in
+     * @param batch - the list of files to process
+     */
+    private void processLiveData(List<File> batch) {
+        LiveProcessingTask task = new LiveProcessingTask(this, batch);
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    /** Called to initialise the data gathering phase */
+    private void gatherData() {
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        simulator.beginDataGathering();
+        this.gatheringData = true;
+        toggleMeasuringButton();
+    }
+
+    /** Destroying the connection and setting the menu items correctly */
+    private void destroyConnection() {
+        this.connected = false;
+        simulator.disconnect();
+        toggleMenuItems();
+    }
+
     @Override
     public void onRequestPermissionsResult(
             int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
@@ -181,7 +266,90 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     }
 
     @Override
-    public void onTaskCompleted(List<Datapoint> result) {
-        updateWebview(result);
+    public void onTaskCompleted(List<Datapoint> result, List<PlotData3D> dataset, boolean isLive) {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+
+        // If we are drawing live data then we need to be updating the cached values because we don't yet have them all
+        if (isLive) {
+            if (cache.containsKey(idh.getCurrentLiveData())) {
+                cache.get(idh.getCurrentLiveData()).addAll(dataset);
+            } else {
+                List<PlotData3D> data = new ArrayList<>(dataset);
+                cache.put(idh.getCurrentLiveData(), data);
+            }
+            updateWebview(generateDatapoints(cache.get(idh.getCurrentLiveData())));
+        } else {
+            cache.put(idh.getSelectedData().getNameToDisplay(), dataset);
+            updateWebview(result);
+        }
+
+        // At some point we get the last data value and we can destroy the connection
+        if (!simulator.getConnecitonLive()) {
+            this.connected = false;
+            toggleMenuItems();
+        }
+    }
+
+    /**
+     * For generating the datapoints to plot from the <code>PlotData3D</code> dataset
+     * @param datasets - the processed data collections
+     * @return <code>List<Datapoint></code> - the plottable points
+     */
+    private List<Datapoint> generateDatapoints(List<PlotData3D> datasets) {
+        // Convert time to natural numbers for the x-axis
+        Map<Double, Integer> converter = new HashMap<>();
+        int count = 1;
+        for (int set = 0; set < datasets.size(); set++) {
+            PlotData3D current = datasets.get(set);
+            for (int x = 0; x < current.getXValues().size(); x++) {
+                if (!converter.containsKey(current.getXValues().get(x))) {
+                    converter.put(current.getXValues().get(x), count);
+                    count++;
+                }
+            }
+        }
+
+        List<Datapoint> datapoints = new ArrayList<>();
+        // Convert to datapoints for JSON serialisation later
+        for (int set = 0; set < datasets.size(); set++) {
+            PlotData3D current = datasets.get(set);
+            for (int x = 0; x < current.getXValues().size(); x++) {
+                for (int y = 0; y < current.getYValues().size(); y++) {
+                    datapoints.add(
+                            new Datapoint(
+                                    converter.get(current.getXValues().get(x)),
+                                    current.getYValues().get(y),
+                                    current.getZValues().get(0).get(y)));
+                }
+            }
+        }
+        return datapoints;
+    }
+
+    /** Helper function for measure button toggling */
+    private void toggleMeasuringButton() {
+        if (this.gatheringData) {
+            measure.setEnabled(false);
+            measure.setVisible(false);
+        }
+    }
+
+    /** Helper function for menu items toggling */
+    private void toggleMenuItems() {
+        if (!connected) {
+            connect.setVisible(true);
+            connect.setEnabled(true);
+            disconnect.setVisible(false);
+            disconnect.setEnabled(false);
+            measure.setVisible(false);
+            measure.setEnabled(false);
+        } else {
+            connect.setVisible(false);
+            connect.setEnabled(false);
+            disconnect.setVisible(true);
+            disconnect.setEnabled(true);
+            measure.setVisible(true);
+            measure.setEnabled(true);
+        }
     }
 }

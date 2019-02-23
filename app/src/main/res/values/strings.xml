@@ -41,4 +41,7 @@
     <string name="invalid_gps_coords">Invalid GPS coordinates</string>
     <string name="not_set">Not set</string>
     <string name="generating_plot">Generating plot...</string>
+    <string name="measure">Measure</string>
+    <string name="connect">Connect</string>
+    <string name="disconnect">Disconnect</string>
 </resources>
