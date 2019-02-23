@@ -1,11 +1,16 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+
+import java.io.File;
+
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 
 /**
  * Fragment for the 'settings' screen.
@@ -18,7 +23,8 @@ public class SettingsFragment extends Fragment {
     public View onCreateView(
             LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
-        return inflater.inflate(R.layout.fragment_settings, container, false);
+        View view = inflater.inflate(R.layout.fragment_settings, container, false);
+        return view;
     }
 
     @Override

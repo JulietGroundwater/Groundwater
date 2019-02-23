@@ -4,6 +4,7 @@ import android.os.Environment;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ public class InternalDataHandler {
     private static SingleOrManyBursts selectedData;
     private static List<FileListener> listeners;
     private static boolean rootEmpty;
+    private static String currentLiveData;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
@@ -70,6 +72,32 @@ public class InternalDataHandler {
     }
 
     /**
+     * Create a new directory with a given name on the external storage
+     * @param dirName - name of the directory
+     */
+    public void addNewDirectory(String dirName) {
+        File file = new File(root.getAbsolutePath(), dirName);
+        file.mkdir();
+    }
+
+    /**
+     * Creates a file in a given directory
+     * @param dirName - where to place the file
+     * @param file - the file
+     */
+    public void addFileToDirectory(String dirName, File file) {
+        File newFile = new File(root.getAbsolutePath() + "/" + dirName, file.getName());
+        try {
+            FileOutputStream fos = new FileOutputStream(newFile);
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * Some helper methods we may need for getting files from the SD Card
      *
      * @param dirName
@@ -106,6 +134,14 @@ public class InternalDataHandler {
 
     public SingleOrManyBursts getSelectedData() {
         return selectedData;
+    }
+
+    public void setCurrentLiveData(String name) {
+        this.currentLiveData = name;
+    }
+
+    public String getCurrentLiveData() {
+        return this.currentLiveData;
     }
 
     public static void setRootEmpty(boolean emptyValue) {

@@ -18,6 +18,7 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     private final int BATCH_SIZE = 5;
     private IProcessingCallback listener;
+    private List<PlotData3D> datasets = new ArrayList<>();
     private List<Datapoint> datapoints = new ArrayList<>();
     private List<SingleOrManyBursts> singles;
 
@@ -58,7 +59,6 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
      */
     @Override
     protected List<Datapoint> doInBackground(Void... voids) {
-        List<PlotData3D> dataSets = new ArrayList<>();
         PlotDataGenerator3D pdg;
         List<Burst> batchList = new ArrayList<>();
 
@@ -74,21 +74,15 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
                 }
             }
             pdg = new PlotDataGenerator3D(batchList);
-            dataSets.add(pdg.getPowerPlotData());
+            datasets.add(pdg.getPowerPlotData());
             batchList.clear();
-        }
-
-        for (int set = 0; set < dataSets.size(); set++) {
-            for (int x = 0; x < dataSets.get(set).getXValues().size(); x++) {
-                System.out.println(dataSets.get(set).getXValues().get(x));
-            }
         }
 
         // Convert time to natural numbers for the x-axis
         Map<Double, Integer> converter = new HashMap<>();
         int count = 1;
-        for (int set = 0; set < dataSets.size(); set++) {
-            PlotData3D current = dataSets.get(set);
+        for (int set = 0; set < datasets.size(); set++) {
+            PlotData3D current = datasets.get(set);
             for (int x = 0; x < current.getXValues().size(); x++) {
                 if (!converter.containsKey(current.getXValues().get(x))) {
                     converter.put(current.getXValues().get(x), count);
@@ -98,8 +92,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
         }
 
         // Convert to datapoints for JSON serialisation later
-        for (int set = 0; set < dataSets.size(); set++) {
-            PlotData3D current = dataSets.get(set);
+        for (int set = 0; set < datasets.size(); set++) {
+            PlotData3D current = datasets.get(set);
             for (int x = 0; x < current.getXValues().size(); x++) {
                 for (int y = 0; y < current.getYValues().size(); y++) {
                     datapoints.add(
@@ -117,6 +111,6 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     protected void onPostExecute(List<Datapoint> datapoint) {
         super.onPostExecute(datapoint);
         // Notify listener that the execution has returned
-        listener.onTaskCompleted(datapoint);
+        listener.onTaskCompleted(datapoint, datasets, false);
     }
 }
