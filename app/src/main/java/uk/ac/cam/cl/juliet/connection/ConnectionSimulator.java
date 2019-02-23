@@ -3,11 +3,10 @@ package uk.ac.cam.cl.juliet.connection;
 import java.io.File;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
 /** Our simulation for a connection to the radar device */
-public class ConnectionSimulator implements IConnection{
+public class ConnectionSimulator implements IConnection {
     private ConcurrentLinkedQueue<File> transientFiles;
     private AtomicBoolean connectionLive;
     private AtomicBoolean dataReady;
@@ -70,7 +69,7 @@ public class ConnectionSimulator implements IConnection{
 
     @Override
     public void interruptDataGathering() {
-        //TODO: Implement interruption
+        // TODO: Implement interruption
     }
 
     @Override
@@ -93,6 +92,6 @@ public class ConnectionSimulator implements IConnection{
     }
 
     public boolean getConnecitonLive() {
-       return this.connectionLive.get();
+        return this.connectionLive.get();
     }
 }

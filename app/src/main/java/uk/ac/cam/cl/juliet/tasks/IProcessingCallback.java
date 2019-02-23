@@ -1,7 +1,6 @@
 package uk.ac.cam.cl.juliet.tasks;
 
 import java.util.List;
-
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.models.Datapoint;
 

@@ -17,7 +17,6 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.TextView;
 import com.google.gson.Gson;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -198,40 +197,43 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
         simulator = ConnectionSimulator.getInstance();
         System.out.println(simulator.getConnecitonLive());
         System.out.println(simulator.getDataReady());
-        AsyncTask.execute(new Runnable() {
-            @Override
-            public void run() {
-                // Connect to our simulated connection
-                InternalDataHandler idh = InternalDataHandler.getInstance();
-                simulator.connect();
+        AsyncTask.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // Connect to our simulated connection
+                        InternalDataHandler idh = InternalDataHandler.getInstance();
+                        simulator.connect();
 
-                // Create a new directory in groundwater for the incoming data
-                String name = new Date().toString();
-                idh.setCurrentLiveData(name);
-                idh.addNewDirectory(idh.getCurrentLiveData());
+                        // Create a new directory in groundwater for the incoming data
+                        String name = new Date().toString();
+                        idh.setCurrentLiveData(name);
+                        idh.addNewDirectory(idh.getCurrentLiveData());
 
-                // TODO: Perhaps sleep the thread instead of spinning and wake it on measure button click
-                while(simulator.getConnecitonLive()) {
-                    while(simulator.getDataReady()) {
-                        List<File> batch = new ArrayList<>();
-                        batch.add(simulator.pollData());
-                        if (batch.size() > 0) {
-                            for (File file : batch) {
-                                if (file != null) {
-                                    idh.addFileToDirectory(name, file);
-                                    processLiveData(batch);
+                        // TODO: Perhaps sleep the thread instead of spinning and wake it on measure
+                        // button click
+                        while (simulator.getConnecitonLive()) {
+                            while (simulator.getDataReady()) {
+                                List<File> batch = new ArrayList<>();
+                                batch.add(simulator.pollData());
+                                if (batch.size() > 0) {
+                                    for (File file : batch) {
+                                        if (file != null) {
+                                            idh.addFileToDirectory(name, file);
+                                            processLiveData(batch);
+                                        }
+                                    }
                                 }
                             }
                         }
+                        simulator.disconnect();
                     }
-                }
-                simulator.disconnect();
-            }
-        });
+                });
     }
 
     /**
      * Starts a new <code>LiveProcessingTask</code> to process the data coming in
+     *
      * @param batch - the list of files to process
      */
     private void processLiveData(List<File> batch) {
@@ -269,7 +271,8 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     public void onTaskCompleted(List<Datapoint> result, List<PlotData3D> dataset, boolean isLive) {
         InternalDataHandler idh = InternalDataHandler.getInstance();
 
-        // If we are drawing live data then we need to be updating the cached values because we don't yet have them all
+        // If we are drawing live data then we need to be updating the cached values because we
+        // don't yet have them all
         if (isLive) {
             if (cache.containsKey(idh.getCurrentLiveData())) {
                 cache.get(idh.getCurrentLiveData()).addAll(dataset);
@@ -292,6 +295,7 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
 
     /**
      * For generating the datapoints to plot from the <code>PlotData3D</code> dataset
+     *
      * @param datasets - the processed data collections
      * @return <code>List<Datapoint></code> - the plottable points
      */

@@ -1,16 +1,11 @@
 package uk.ac.cam.cl.juliet.fragments;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-
-import java.io.File;
-
 import uk.ac.cam.cl.juliet.R;
-import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 
 /**
  * Fragment for the 'settings' screen.

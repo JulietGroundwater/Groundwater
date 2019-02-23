@@ -1,11 +1,9 @@
 package uk.ac.cam.cl.juliet.tasks;
 
 import android.os.AsyncTask;
-
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;

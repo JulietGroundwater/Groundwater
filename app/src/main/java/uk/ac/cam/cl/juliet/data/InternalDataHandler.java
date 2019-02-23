@@ -73,6 +73,7 @@ public class InternalDataHandler {
 
     /**
      * Create a new directory with a given name on the external storage
+     *
      * @param dirName - name of the directory
      */
     public void addNewDirectory(String dirName) {
@@ -82,6 +83,7 @@ public class InternalDataHandler {
 
     /**
      * Creates a file in a given directory
+     *
      * @param dirName - where to place the file
      * @param file - the file
      */
