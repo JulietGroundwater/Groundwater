@@ -8,40 +8,109 @@
     <TextView
         android:id="@+id/connectionStatusText"
         android:layout_width="wrap_content"
-        android:layout_height="17dp"
-        android:layout_marginTop="24dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
         android:text="@string/connected"
+        android:textAppearance="@style/TextAppearance.AppCompat.Medium"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <Switch
-        android:id="@+id/usePhoneDateSwitch"
-        android:layout_width="0dp"
+    <ImageView
+        android:id="@+id/connectionStatusImageView"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:text="@string/use_this_phone_s_date"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView7" />
+        android:layout_marginStart="8dp"
+        android:contentDescription="@string/connection_symbol"
+        app:layout_constraintBottom_toBottomOf="@+id/connectionStatusText"
+        app:layout_constraintStart_toEndOf="@+id/connectionStatusText"
+        app:layout_constraintTop_toTopOf="@+id/connectionStatusText"
+        app:srcCompat="@drawable/baseline_wifi_black_24" />
 
-    <Switch
-        android:id="@+id/usePhoneTimeSwitch"
-        android:layout_width="0dp"
+    <TextView
+        android:id="@+id/dateAndTimeHeading"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/date_and_time"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/connectionStatusText" />
+
+    <TextView
+        android:id="@+id/dateLabel"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="@string/date_colon"
+        android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
+        app:layout_constraintBottom_toBottomOf="@+id/setDateButton"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/setDateButton" />
+
+    <TextView
+        android:id="@+id/selectedDateText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Date here"
+        app:layout_constraintBottom_toBottomOf="@+id/dateLabel"
+        app:layout_constraintStart_toEndOf="@+id/dateLabel"
+        app:layout_constraintTop_toTopOf="@+id/dateLabel" />
+
+    <Button
+        android:id="@+id/setDateButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
         android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
-        android:checked="true"
-        android:text="@string/use_this_phone_s_time"
+        android:text="@string/set_date"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintTop_toBottomOf="@+id/dateAndTimeHeading" />
+
+    <TextView
+        android:id="@+id/timeLabel"
+        android:layout_width="50dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:text="@string/time_colon"
+        android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
+        app:layout_constraintBottom_toBottomOf="@+id/setTimeButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/usePhoneDateSwitch" />
+        app:layout_constraintTop_toTopOf="@+id/setTimeButton" />
+
+    <TextView
+        android:id="@+id/selectedTimeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="Time here"
+        app:layout_constraintBottom_toBottomOf="@+id/timeLabel"
+        app:layout_constraintStart_toEndOf="@+id/timeLabel"
+        app:layout_constraintTop_toTopOf="@+id/timeLabel" />
+
+    <Button
+        android:id="@+id/setTimeButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:text="@string/set_time"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/setDateButton" />
+
+    <TextView
+        android:id="@+id/gpsHeading"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/gps"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/setTimeButton" />
 
     <Switch
         android:id="@+id/useThisPhoneGPSSwitch"
@@ -55,7 +124,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView8" />
+        app:layout_constraintTop_toBottomOf="@+id/gpsHeading" />
 
     <Button
         android:id="@+id/sendToDeviceButton"
@@ -71,66 +140,26 @@
         app:layout_constraintStart_toStartOf="parent" />
 
     <TextView
-        android:id="@+id/textView7"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:text="Date and Time"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/connectionStatusText" />
-
-    <TextView
-        android:id="@+id/textView8"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="24dp"
-        android:text="@string/gps"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/usePhoneTimeSwitch" />
-
-    <TextView
-        android:id="@+id/textView9"
+        android:id="@+id/attenuationHeading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginTop="24dp"
         android:text="Attenuation"
+        android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/useThisPhoneGPSSwitch" />
 
-    <SeekBar
-        android:id="@+id/attenuationSeekBar"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
-        android:layout_marginEnd="8dp"
-        android:splitTrack="false"
-        app:layout_constraintEnd_toStartOf="@+id/attenuationValueOutput"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/textView9" />
-
-    <ImageView
-        android:id="@+id/connectionStatusImageView"
+    <Button
+        android:id="@+id/configureAttenuatorsButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="8dp"
-        app:layout_constraintBottom_toBottomOf="@+id/connectionStatusText"
-        app:layout_constraintStart_toEndOf="@+id/connectionStatusText"
-        app:layout_constraintTop_toTopOf="@+id/connectionStatusText"
-        app:srcCompat="@drawable/baseline_wifi_black_24" />
-
-    <TextView
-        android:id="@+id/attenuationValueOutput"
-        android:layout_width="36dp"
-        android:layout_height="wrap_content"
-        android:layout_marginEnd="16dp"
-        android:gravity="right"
-        android:text="TextView"
-        app:layout_constraintBottom_toBottomOf="@+id/attenuationSeekBar"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="8dp"
+        android:text="Configure attenuators"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/attenuationSeekBar" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/attenuationHeading" />
 
 </android.support.constraint.ConstraintLayout>

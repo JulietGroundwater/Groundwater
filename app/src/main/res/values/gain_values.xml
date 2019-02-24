@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer-array name="gain_values">
+        <item>-14</item>
+        <item>-4</item>
+        <item>6</item>
+    </integer-array>
+</resources>

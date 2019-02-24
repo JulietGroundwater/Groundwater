@@ -24,7 +24,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import com.microsoft.graph.concurrency.ICallback;
 import com.microsoft.graph.core.ClientException;
 import com.microsoft.graph.extensions.DriveItem;
@@ -33,13 +32,11 @@ import com.microsoft.identity.client.MsalClientException;
 import com.microsoft.identity.client.MsalException;
 import com.microsoft.identity.client.PublicClientApplication;
 import com.microsoft.identity.client.User;
-
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
