@@ -104,6 +104,10 @@ public class AttenuatorConfigurationView extends ConstraintLayout {
                 });
     }
 
+    public void setAttenuation(int attenuation) {
+        attenuationSeekBar.setProgress(attenuation - ATTENUATION_MIN);
+    }
+
     public int getAttenuation() {
         return ATTENUATION_MIN + attenuationSeekBar.getProgress();
     }
@@ -111,6 +115,15 @@ public class AttenuatorConfigurationView extends ConstraintLayout {
     private String getFormattedAttenuationValue() {
         //        return (new DecimalFormat("#.00").format(getAttenuation())) + "dB";
         return Integer.toString(getAttenuation()) + "dB";
+    }
+
+    public void setGain(int gain) {
+        // TODO: See if this can be done better!
+        for (int i = 0; i < possibleGainValues.length; i++) {
+            if (possibleGainValues[i] == gain) {
+                gainSpinner.setSelection(i);
+            }
+        }
     }
 
     public int getGain() {

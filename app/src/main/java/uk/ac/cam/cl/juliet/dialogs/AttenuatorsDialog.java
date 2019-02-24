@@ -12,6 +12,7 @@ import android.widget.LinearLayout;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.data.AttenuatorSettings;
 import uk.ac.cam.cl.juliet.views.AttenuatorConfigurationView;
 
 /**
@@ -21,14 +22,14 @@ import uk.ac.cam.cl.juliet.views.AttenuatorConfigurationView;
  */
 public class AttenuatorsDialog extends DialogFragment implements View.OnClickListener {
 
+    public static final String ATTENUATOR_SETTINGS = "attenuator_settings";
+
     private Button closeButton;
     private Button doneButton;
     private Button addAttenuatorButton;
     private Button removeAttenuatorButton;
-
     private LinearLayout attenuatorsContainer;
     private List<AttenuatorConfigurationView> attenuatorsList;
-
     private OnAttenuatorsSelectedListener listener;
 
     public void setOnAttenuatorsSelectedListener(OnAttenuatorsSelectedListener listener) {
@@ -40,7 +41,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NORMAL, R.style.FullscreenDialogTheme);
         // TODO: find a way to pass in the existing settings
-        attenuatorsList = new ArrayList<>();
+        //        attenuatorsList = new ArrayList<>();
     }
 
     @Nullable
@@ -59,8 +60,59 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         removeAttenuatorButton = view.findViewById(R.id.removeAttenuatorButton);
         removeAttenuatorButton.setOnClickListener(this);
         attenuatorsContainer = view.findViewById(R.id.attenuatorsContainer);
-        addAttenuator();
+        attenuatorsList = generateAttenuatorUIs();
+        for (View v : attenuatorsList) {
+            attenuatorsContainer.addView(v);
+        }
         return view;
+    }
+
+    /**
+     * Builds a list of <code>AttenuatorConfigurationView</code> objects from the list of attenuator
+     * and gain values passed to this fragment.
+     *
+     * <p>If invalid or no arguments were passed, then a single new view will be initialised
+     * instead.
+     *
+     * @return A list of Views, one for each attenuator/gain setting pair.
+     */
+    private List<AttenuatorConfigurationView> generateAttenuatorUIs() {
+        List<AttenuatorConfigurationView> result = new ArrayList<>();
+        Bundle arguments = getArguments();
+        if (arguments == null || !arguments.containsKey(ATTENUATOR_SETTINGS)) {
+            return generateSingleAttenuator();
+        }
+        Object attenuatorSettingsObj = arguments.get(ATTENUATOR_SETTINGS);
+        if (!(attenuatorSettingsObj instanceof AttenuatorSettings)) {
+            return generateSingleAttenuator();
+        }
+        AttenuatorSettings settings = (AttenuatorSettings) attenuatorSettingsObj;
+        List<Integer> attenuatorValues = settings.getAttenuatorValues();
+        List<Integer> gainValues = settings.getGainValues();
+        if (attenuatorValues == null
+                || attenuatorValues.isEmpty()
+                || gainValues == null
+                || gainValues.isEmpty()) {
+            return generateSingleAttenuator();
+        }
+        for (int i = 0; i < Math.min(attenuatorValues.size(), gainValues.size()); i++) {
+            AttenuatorConfigurationView view = new AttenuatorConfigurationView(getContext());
+            view.setAttenuation(attenuatorValues.get(i));
+            view.setGain(gainValues.get(i));
+            result.add(view);
+        }
+        return result;
+    }
+
+    /**
+     * Generates a single <code>View</code> for one attenuator/gain value pair.
+     *
+     * @return A list containing a single <code>AttenuatorConfigurationView</code>
+     */
+    private List<AttenuatorConfigurationView> generateSingleAttenuator() {
+        List<AttenuatorConfigurationView> result = new ArrayList<>();
+        result.add(new AttenuatorConfigurationView(getContext()));
+        return result;
     }
 
     @Override
@@ -89,7 +141,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         List<Integer> gains = new ArrayList<>();
         for (AttenuatorConfigurationView v : attenuatorsList) {
             attenuators.add(v.getAttenuation());
-            attenuators.add(v.getGain());
+            gains.add(v.getGain());
         }
         listener.onAttenuatorsSelected(attenuators, gains);
         dismiss();
@@ -138,6 +190,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         removeAttenuatorButton.setEnabled(removeButtonEnabled);
     }
 
+    /** Ensures that a listener has an <code>onAttenuatorsSelected</code> callback. */
     public interface OnAttenuatorsSelectedListener {
         void onAttenuatorsSelected(List<Integer> attenuators, List<Integer> gains);
     }

@@ -10,14 +10,14 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageView;
-import android.widget.SeekBar;
 import android.widget.Switch;
 import android.widget.TextView;
-import java.text.DecimalFormat;
+import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.Config;
 import uk.ac.cam.cl.juliet.computationengine.InvalidConfigException;
+import uk.ac.cam.cl.juliet.data.AttenuatorSettings;
 import uk.ac.cam.cl.juliet.dialogs.AttenuatorsDialog;
 
 /**
@@ -26,20 +26,20 @@ import uk.ac.cam.cl.juliet.dialogs.AttenuatorsDialog;
  * @author Ben Cole
  */
 public class SettingsFragment extends Fragment
-        implements AttenuatorsDialog.OnAttenuatorsSelectedListener {
+        implements AttenuatorsDialog.OnAttenuatorsSelectedListener, Button.OnClickListener {
 
     private static double ATTENUATION_MIN = 2;
     private static double ATTENUATION_MAX = 10;
 
-    private Switch usePhoneDateSwitch;
-    private Switch usePhoneTimeSwitch;
     private Switch usePhoneGPSSwitch;
     private TextView connectionStatusText;
     private ImageView connectionStatusIcon;
-    private SeekBar attenuationSeekBar;
-    private TextView attenuationValueOutput;
-
+    private Button setDateButton;
+    private Button setTimeButton;
     private Button configureAttenuatorsButton;
+
+    private List<Integer> attenuators;
+    private List<Integer> gains;
 
     @Override
     public View onCreateView(
@@ -47,28 +47,6 @@ public class SettingsFragment extends Fragment
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
 
-        //        usePhoneDateSwitch = view.findViewById(R.id.usePhoneDateSwitch);
-        //        usePhoneDateSwitch.setOnCheckedChangeListener(
-        //                new CompoundButton.OnCheckedChangeListener() {
-        //                    @Override
-        //                    public void onCheckedChanged(CompoundButton buttonView, boolean
-        // isChecked) {
-        //                        if (!isChecked) {
-        //                            showSetDateDialog();
-        //                        }
-        //                    }
-        //                });
-        //        usePhoneTimeSwitch = view.findViewById(R.id.usePhoneTimeSwitch);
-        //        usePhoneTimeSwitch.setOnCheckedChangeListener(
-        //                new CompoundButton.OnCheckedChangeListener() {
-        //                    @Override
-        //                    public void onCheckedChanged(CompoundButton buttonView, boolean
-        // isChecked) {
-        //                        if (!isChecked) {
-        //                            showSetTimeDialog();
-        //                        }
-        //                    }
-        //                });
         usePhoneGPSSwitch = view.findViewById(R.id.useThisPhoneGPSSwitch);
         usePhoneGPSSwitch.setOnCheckedChangeListener(
                 new CompoundButton.OnCheckedChangeListener() {
@@ -83,32 +61,16 @@ public class SettingsFragment extends Fragment
         connectionStatusText = view.findViewById(R.id.connectionStatusText);
         connectionStatusIcon = view.findViewById(R.id.connectionStatusImageView);
 
-        //        attenuationSeekBar = view.findViewById(R.id.attenuationSeekBar);
-        //        attenuationValueOutput = view.findViewById(R.id.attenuationValueOutput);
-        //        attenuationSeekBar.setOnSeekBarChangeListener(
-        //                new SeekBar.OnSeekBarChangeListener() {
-        //                    @Override
-        //                    public void onProgressChanged(SeekBar seekBar, int progress, boolean
-        // fromUser) {
-        //                        attenuationValueOutput.setText(getFormattedAttenuationValue());
-        //                    }
-        //
-        //                    @Override
-        //                    public void onStartTrackingTouch(SeekBar seekBar) {}
-        //
-        //                    @Override
-        //                    public void onStopTrackingTouch(SeekBar seekBar) {}
-        //                });
-        //        attenuationSeekBar.setProgress(attenuationSeekBar.getMax() / 2);
-
+        // Find the buttons and set this class as the click listener
+        setDateButton = view.findViewById(R.id.setDateButton);
+        setDateButton.setOnClickListener(this);
+        setTimeButton = view.findViewById(R.id.setTimeButton);
+        setTimeButton.setOnClickListener(this);
         configureAttenuatorsButton = view.findViewById(R.id.configureAttenuatorsButton);
-        configureAttenuatorsButton.setOnClickListener(
-                new View.OnClickListener() {
-                    @Override
-                    public void onClick(View v) {
-                        showAttenuatorsDialog();
-                    }
-                });
+        configureAttenuatorsButton.setOnClickListener(this);
+
+        attenuators = new ArrayList<>();
+        gains = new ArrayList<>();
 
         setConnectedStatus(getConnectionStatus());
         return view;
@@ -131,23 +93,7 @@ public class SettingsFragment extends Fragment
         return true;
     }
 
-    /**
-     * Computes the currently selected attenuation value, from <code>ATTENUATION_MAX</code> to
-     * <code>ATTENUATION_MAX</code> as determined by the seek bar.
-     *
-     * @return The currently selected attenuation value
-     */
-    private double getAttenuationValue() {
-        double r = (double) attenuationSeekBar.getProgress() / attenuationSeekBar.getMax();
-        return ATTENUATION_MIN + r * (ATTENUATION_MAX - ATTENUATION_MIN);
-    }
-
-    private String getFormattedAttenuationValue() {
-        return new DecimalFormat("#.00").format(getAttenuationValue());
-    }
-
     private void setConnectedStatus(boolean connected) {
-        // TODO: Colour the message with success/fail
         if (connected) {
             connectionStatusText.setText(R.string.connected);
             connectionStatusText.setTextColor(getResources().getColor(R.color.success));
@@ -178,13 +124,17 @@ public class SettingsFragment extends Fragment
         if (fragmentManager == null) return;
         AttenuatorsDialog dialog = new AttenuatorsDialog();
         dialog.setOnAttenuatorsSelectedListener(this);
+        AttenuatorSettings attenuatorSettings = new AttenuatorSettings(attenuators, gains);
+        Bundle arguments = new Bundle();
+        arguments.putSerializable(AttenuatorsDialog.ATTENUATOR_SETTINGS, attenuatorSettings);
+        dialog.setArguments(arguments);
         dialog.show(fragmentManager, "AttenuatorsDialog");
     }
 
     private Config generateConfig() {
         // TODO: Implement this
-        // TODO: we need a way to build a config file by setting params, then let IT write those
-        //       params to a file.
+        // TODO: we need a way to build a config file by setting params, then let the Config class
+        //       write those params to a file.
         try {
             Config config = new Config(null);
         } catch (InvalidConfigException e) {
@@ -196,6 +146,21 @@ public class SettingsFragment extends Fragment
 
     @Override
     public void onAttenuatorsSelected(List<Integer> attenuators, List<Integer> gains) {
-        // TODO: implement
+        this.attenuators = attenuators;
+        this.gains = gains;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.setDateButton:
+                showSetDateDialog();
+                break;
+            case R.id.setTimeButton:
+                showSetTimeDialog();
+                break;
+            case R.id.configureAttenuatorsButton:
+                showAttenuatorsDialog();
+        }
     }
 }
