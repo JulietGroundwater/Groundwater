@@ -38,4 +38,5 @@
     <string name="set_date">Set date</string>
     <string name="time_colon">Time:</string>
     <string name="set_time">Set time</string>
+    <string name="invalid_gps_coords">Invalid GPS coordinates</string>
 </resources>

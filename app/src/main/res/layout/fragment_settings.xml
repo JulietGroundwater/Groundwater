@@ -43,12 +43,12 @@
         android:id="@+id/dateLabel"
         android:layout_width="50dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
         android:text="@string/date_colon"
         android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
-        app:layout_constraintBottom_toBottomOf="@+id/setDateButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/setDateButton" />
+        app:layout_constraintTop_toBottomOf="@+id/dateAndTimeHeading" />
 
     <TextView
         android:id="@+id/selectedDateText"
@@ -63,23 +63,24 @@
     <Button
         android:id="@+id/setDateButton"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+        android:layout_height="48dp"
         android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginEnd="8dp"
         android:text="@string/set_date"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/dateAndTimeHeading" />
+        app:layout_constraintBottom_toBottomOf="@+id/selectedTimeText"
+        app:layout_constraintEnd_toStartOf="@+id/setTimeButton"
+        app:layout_constraintTop_toTopOf="@+id/selectedDateText" />
 
     <TextView
         android:id="@+id/timeLabel"
         android:layout_width="50dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
         android:text="@string/time_colon"
         android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
-        app:layout_constraintBottom_toBottomOf="@+id/setTimeButton"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="@+id/setTimeButton" />
+        app:layout_constraintTop_toBottomOf="@+id/dateLabel" />
 
     <TextView
         android:id="@+id/selectedTimeText"
@@ -95,36 +96,22 @@
         android:id="@+id/setTimeButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:layout_marginEnd="16dp"
         android:text="@string/set_time"
+        app:layout_constraintBottom_toBottomOf="@+id/setDateButton"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/setDateButton" />
+        app:layout_constraintTop_toTopOf="@+id/setDateButton" />
 
     <TextView
         android:id="@+id/gpsHeading"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="24dp"
         android:text="@string/gps"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/setTimeButton" />
-
-    <Switch
-        android:id="@+id/useThisPhoneGPSSwitch"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginTop="8dp"
-        android:layout_marginEnd="16dp"
-        android:checked="true"
-        android:text="@string/use_this_phone_s_gps_position"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gpsHeading" />
 
     <Button
         android:id="@+id/sendToDeviceButton"
@@ -148,7 +135,7 @@
         android:text="Attenuation"
         android:textAppearance="@style/TextAppearance.AppCompat.Subhead"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/useThisPhoneGPSSwitch" />
+        app:layout_constraintTop_toBottomOf="@+id/longitudeText" />
 
     <Button
         android:id="@+id/configureAttenuatorsButton"
@@ -161,5 +148,58 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/attenuationHeading" />
+
+    <TextView
+        android:id="@+id/latitudeLabel"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="16dp"
+        android:text="Latitude:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/gpsHeading" />
+
+    <TextView
+        android:id="@+id/longitudeLabel"
+        android:layout_width="80dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginTop="8dp"
+        android:text="Longitude:"
+        android:textAppearance="@style/TextAppearance.AppCompat.Tooltip"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/latitudeLabel" />
+
+    <TextView
+        android:id="@+id/latitudeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="@+id/latitudeLabel"
+        app:layout_constraintStart_toEndOf="@+id/latitudeLabel"
+        app:layout_constraintTop_toTopOf="@+id/latitudeLabel" />
+
+    <TextView
+        android:id="@+id/longitudeText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:text="TextView"
+        app:layout_constraintBottom_toBottomOf="@+id/longitudeLabel"
+        app:layout_constraintStart_toEndOf="@+id/longitudeLabel"
+        app:layout_constraintTop_toTopOf="@+id/longitudeLabel" />
+
+    <Button
+        android:id="@+id/setGPSButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="16dp"
+        android:text="Set GPS"
+        app:layout_constraintBottom_toBottomOf="@+id/longitudeText"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/latitudeText" />
 
 </android.support.constraint.ConstraintLayout>
