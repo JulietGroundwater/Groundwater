@@ -40,8 +40,6 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
     public void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setStyle(DialogFragment.STYLE_NORMAL, R.style.FullscreenDialogTheme);
-        // TODO: find a way to pass in the existing settings
-        //        attenuatorsList = new ArrayList<>();
     }
 
     @Nullable
@@ -173,10 +171,6 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
      * disabled: this prevents creating a configuration with no attenuator values.
      */
     private void removeAttenuator() {
-        // TODO: implement
-        // check there are more than 1
-        // remove entry from lists
-        // check if we need to disable the remove button
 
         // Prevent having fewer than one attenuator value
         if (attenuatorsList.size() <= 1) return;

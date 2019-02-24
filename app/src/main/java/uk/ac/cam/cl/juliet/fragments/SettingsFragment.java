@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.app.DatePickerDialog;
+import android.app.TimePickerDialog;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -9,10 +11,13 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.DatePicker;
 import android.widget.ImageView;
 import android.widget.Switch;
 import android.widget.TextView;
+import android.widget.TimePicker;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.Config;
@@ -34,7 +39,9 @@ public class SettingsFragment extends Fragment
     private Switch usePhoneGPSSwitch;
     private TextView connectionStatusText;
     private ImageView connectionStatusIcon;
+    private TextView selectedDateOutput;
     private Button setDateButton;
+    private TextView selectedTimeOutput;
     private Button setTimeButton;
     private Button configureAttenuatorsButton;
 
@@ -60,6 +67,10 @@ public class SettingsFragment extends Fragment
 
         connectionStatusText = view.findViewById(R.id.connectionStatusText);
         connectionStatusIcon = view.findViewById(R.id.connectionStatusImageView);
+
+        // Find the text views
+        selectedDateOutput = view.findViewById(R.id.selectedDateText);
+        selectedTimeOutput = view.findViewById(R.id.selectedTimeText);
 
         // Find the buttons and set this class as the click listener
         setDateButton = view.findViewById(R.id.setDateButton);
@@ -109,10 +120,64 @@ public class SettingsFragment extends Fragment
 
     private void showSetTimeDialog() {
         // TODO: implement
+
+        // Get current time
+        Calendar calendar = Calendar.getInstance();
+        int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
+        int minute = calendar.get(Calendar.MINUTE);
+
+        TimePickerDialog dialog =
+                new TimePickerDialog(
+                        getContext(),
+                        new TimePickerDialog.OnTimeSetListener() {
+                            @Override
+                            public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
+                                onNewTimeSet(hourOfDay, minute);
+                            }
+                        },
+                        hourOfDay,
+                        minute,
+                        false);
+
+        dialog.show();
+    }
+
+    private void onNewTimeSet(int hour, int minute) {
+        // TODO: actually save these numbers!
+        // TODO: handle string formatting properly
+        selectedTimeOutput.setText(hour + ":" + minute);
     }
 
     private void showSetDateDialog() {
         // TODO: implement
+
+        // Get current date
+        Calendar calendar = Calendar.getInstance();
+        int year = calendar.get(Calendar.YEAR);
+        int month = calendar.get(Calendar.MONTH);
+        int day = calendar.get(Calendar.DAY_OF_MONTH);
+
+        DatePickerDialog dialog =
+                new DatePickerDialog(
+                        getContext(),
+                        new DatePickerDialog.OnDateSetListener() {
+                            @Override
+                            public void onDateSet(
+                                    DatePicker view, int year, int month, int dayOfMonth) {
+                                onNewDateSet(year, month, dayOfMonth);
+                            }
+                        },
+                        year,
+                        month,
+                        day);
+
+        dialog.show();
+    }
+
+    private void onNewDateSet(int year, int month, int day) {
+        // TODO: actually save these numbers!
+        // TODO: handle string formatting properly
+        selectedDateOutput.setText(day + "/" + month + "/" + year);
     }
 
     private void showSetLocationDialog() {
