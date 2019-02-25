@@ -52,6 +52,7 @@ public class SettingsFragment extends Fragment
     private int day;
     private int month;
     private int year;
+    private boolean locationSet;
     private double latitude;
     private double longitude;
     private List<Integer> attenuators;
@@ -136,6 +137,10 @@ public class SettingsFragment extends Fragment
         attenuators.add(15);
         gains = new ArrayList<>();
         gains.add(-14);
+        locationSet = false;
+        // TODO: look up device location and initialise to that
+        latitudeOutput.setText(R.string.not_set);
+        longitudeOutput.setText(R.string.not_set);
     }
 
     /** Displays a dialog for setting the time of the radar device. */
@@ -268,6 +273,8 @@ public class SettingsFragment extends Fragment
             Toast.makeText(getContext(), R.string.invalid_gps_coords, Toast.LENGTH_SHORT).show();
         }
     }
+
+    private void showInvalidLocationDialog() {}
 
     private void showAttenuatorsDialog() {
         FragmentManager fragmentManager = getFragmentManager();
