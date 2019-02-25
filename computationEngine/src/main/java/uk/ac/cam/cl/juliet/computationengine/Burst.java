@@ -318,18 +318,6 @@ public class Burst {
     }
 
     /**
-     * Returns V parameter
-     *
-     * <p>implemented as {@code List<Double>} since in the original MATLAB it was a matrix with a
-     * height of 1
-     *
-     * @return V parameter
-     */
-    public List<Double> getV() {
-        return v;
-    }
-
-    /**
      * Returns StartInd parameter
      *
      * <p>implemented as {@code List<Integer>} since in the original MATLAB it was a matrix with a *
