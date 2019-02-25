@@ -8,7 +8,6 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -126,8 +125,6 @@ public class Burst {
             attSet.add(new Complex(attenuator1.get(i), attenuator2.get(i)));
 
         double chirpInterval = 1.6384; // 1.6384 / (24 * 3600)
-        Calendar cal = Calendar.getInstance();
-        cal.set(2000, Calendar.JANUARY, 1);
 
         for (int chirp = 0; chirp < chirpsInBurst; chirp++) {
             ArrayList<Double> temp =
