@@ -484,6 +484,7 @@ public class DataFragment extends Fragment
             } catch (IOException io) {
                 io.printStackTrace();
             }
+            //TODO: Not this
             return true;
         }
 

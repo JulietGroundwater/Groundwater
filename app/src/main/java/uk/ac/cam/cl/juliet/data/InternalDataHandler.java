@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -89,9 +91,11 @@ public class InternalDataHandler {
      */
     public void addFileToDirectory(String dirName, File file) {
         File newFile = new File(root.getAbsolutePath() + "/" + dirName, file.getName());
-        try {
-            FileOutputStream fos = new FileOutputStream(newFile);
-            fos.close();
+        try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(newFile)){
+            byte[] buffer = new byte[(int) file.length()];
+            fis.read(buffer);
+            fos.write(buffer);
+            fos.flush();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {

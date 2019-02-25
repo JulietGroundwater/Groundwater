@@ -1,6 +1,6 @@
 // set the dimensions and margins of the graph
 var margin = {top: 40, right: 10, bottom: 40, left: 50},
-width = 2 * window.outerWidth - margin.left - margin.right,
+width = window.outerWidth - margin.left - margin.right,
 height = window.outerHeight - margin.top - margin.bottom;
 
 function initGraph(dataset) {
