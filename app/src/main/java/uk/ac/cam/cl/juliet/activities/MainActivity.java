@@ -20,6 +20,7 @@ import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.fragments.DataFragment;
+import uk.ac.cam.cl.juliet.fragments.DataFragmentWrapper;
 import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
 import uk.ac.cam.cl.juliet.fragments.ToggleableSwipeViewPager;
@@ -34,7 +35,7 @@ public class MainActivity extends AppCompatActivity
 
     private BottomNavigationView bottomNavigation;
     private DisplayFragment displayFragment;
-    private DataFragment dataFragment;
+    private DataFragmentWrapper dataFragment;
     private SettingsFragment settingsFragment;
     private final int READ_CONSTANT = 1;
     private FragmentManager fragmentManager;
@@ -51,7 +52,7 @@ public class MainActivity extends AppCompatActivity
         displayFragment = new DisplayFragment();
         Bundle dataFragmentArgs = new Bundle();
         dataFragmentArgs.putBoolean(DataFragment.TOP_LEVEL, true);
-        dataFragment = new DataFragment();
+        dataFragment = new DataFragmentWrapper();
         dataFragment.setArguments(dataFragmentArgs);
         settingsFragment = new SettingsFragment();
 

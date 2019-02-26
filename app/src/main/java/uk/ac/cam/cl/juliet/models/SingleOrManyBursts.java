@@ -1,8 +1,10 @@
 package uk.ac.cam.cl.juliet.models;
 
+import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 
 /**
  * Encapsulates both single Bursts and lists of Bursts as a single data type to be displayed in a
@@ -29,6 +31,7 @@ public class SingleOrManyBursts implements Serializable {
     private boolean syncedToOneDrive;
     private String fileName;
     private String directoryName;
+    private File file;
 
     /**
      * Creates an instance for a single Burst object.
@@ -53,6 +56,14 @@ public class SingleOrManyBursts implements Serializable {
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
         this.directoryName = dirName;
+    }
+
+    public SingleOrManyBursts(File file, boolean isSyncedToOneDrive) throws InvalidBurstException {
+        this.file = file;
+        type = file.isFile() ? Type.SINGLE : Type.MANY;
+        if (type == Type.SINGLE) {
+            singleBurst = new Burst(file);
+        }
     }
 
     /**
@@ -142,7 +153,8 @@ public class SingleOrManyBursts implements Serializable {
      */
     public String getGPSToDisplay() {
         // TODO: Generate something meaningful here
-        return "GPS coordinates or something here...";
+        //        return "GPS coordinates or something here...";
+        return "No GPS information.";
     }
 
     /**

@@ -55,6 +55,7 @@ public class SettingsFragment extends Fragment
     private boolean locationSet;
     private double latitude;
     private double longitude;
+    private boolean attenuatorsSet;
     private List<Integer> attenuators;
     private List<Integer> gains;
 
@@ -86,8 +87,8 @@ public class SettingsFragment extends Fragment
         sendToDeviceButton.setOnClickListener(this);
 
         setDefaultValues();
-
         setConnectedStatus(getConnectionStatus());
+        updateSendToDeviceButtonEnabled();
         return view;
     }
 
@@ -138,6 +139,7 @@ public class SettingsFragment extends Fragment
         gains = new ArrayList<>();
         gains.add(-14);
         locationSet = false;
+        attenuatorsSet = false;
         // TODO: look up device location and initialise to that
         latitudeOutput.setText(R.string.not_set);
         longitudeOutput.setText(R.string.not_set);
@@ -238,12 +240,10 @@ public class SettingsFragment extends Fragment
                         new View.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                double latitude =
-                                        Double.parseDouble(latitudeInput.getText().toString());
-                                double longitude =
-                                        Double.parseDouble(longitudeInput.getText().toString());
                                 dialog.cancel();
-                                onNewLocationSet(latitude, longitude);
+                                processResultFromLocationDialog(
+                                        latitudeInput.getText().toString(),
+                                        longitudeInput.getText().toString());
                             }
                         });
         dialog.findViewById(R.id.cancelButton)
@@ -258,24 +258,38 @@ public class SettingsFragment extends Fragment
     }
 
     /**
-     * Callback for when a new location is selected.
+     * Processes the values entered by the user into the location selection dialog.
      *
-     * @param latitude The latitude that was selected
-     * @param longitude The longitude that was selected
+     * <p>If the values are valid then the changes will be saved: otherwise an error message will be
+     * displayed.
+     *
+     * @param latitudeStr The string containing the latitude input from the user
+     * @param longitudeStr The string containing the longitude input from the user
      */
-    private void onNewLocationSet(double latitude, double longitude) {
+    private void processResultFromLocationDialog(String latitudeStr, String longitudeStr) {
+        if (latitudeStr.isEmpty() || longitudeStr.isEmpty()) {
+            showInvalidLocationDialog();
+            return;
+        }
+        double latitude = Double.valueOf(latitudeStr);
+        double longitude = Double.valueOf(longitudeStr);
         if ((-90 <= latitude) && (latitude <= 90) && (-180 <= longitude) && (longitude <= 180)) {
             this.latitude = latitude;
             this.longitude = longitude;
             latitudeOutput.setText(String.format(Locale.getDefault(), "%f", latitude));
             longitudeOutput.setText(String.format(Locale.getDefault(), "%f", longitude));
+            locationSet = true;
         } else {
-            Toast.makeText(getContext(), R.string.invalid_gps_coords, Toast.LENGTH_SHORT).show();
+            showInvalidLocationDialog();
         }
     }
 
-    private void showInvalidLocationDialog() {}
+    /** Displays an error message to inform the user that that entered an invalid location. */
+    private void showInvalidLocationDialog() {
+        Toast.makeText(getContext(), R.string.invalid_gps_coords, Toast.LENGTH_SHORT).show();
+    }
 
+    /** Shows the dialog for setting the attenuators. */
     private void showAttenuatorsDialog() {
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager == null) return;
@@ -299,6 +313,10 @@ public class SettingsFragment extends Fragment
     public void onAttenuatorsSelected(List<Integer> attenuators, List<Integer> gains) {
         this.attenuators = attenuators;
         this.gains = gains;
+        if (this.attenuators != null && this.gains != null) {
+            attenuatorsSet = true;
+            updateSendToDeviceButtonEnabled();
+        }
     }
 
     @Override
@@ -319,5 +337,15 @@ public class SettingsFragment extends Fragment
             case R.id.sendToDeviceButton:
                 sendToDevice();
         }
+    }
+
+    /**
+     * Recalculates whether or not the 'send to device' button is allowed to be enabled.
+     *
+     * <p>The button should be enabled when the device is connected and the location and attenuators
+     * have all been set.
+     */
+    private void updateSendToDeviceButtonEnabled() {
+        sendToDeviceButton.setEnabled(getConnectionStatus() && locationSet && attenuatorsSet);
     }
 }

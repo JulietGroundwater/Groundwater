@@ -69,6 +69,8 @@ public class DataFragment extends Fragment
     private List<SingleOrManyBursts> files;
     private User user;
 
+    OnInnerFolderClickedListener listener;
+
     /**
      * If this is the fragment displaying the top level then it will load its files globally.
      * Otherwise, this fragment will display a list of files passed to it.
@@ -210,6 +212,7 @@ public class DataFragment extends Fragment
         if (context == null) return;
         if (file.getIsSingleBurst()) {
             Toast.makeText(context, "Display the file.", Toast.LENGTH_SHORT).show();
+            // TODO: automatically switch to the "display" screen
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
             displayNestedFolder(file);
@@ -219,20 +222,15 @@ public class DataFragment extends Fragment
         idh.setSelectedData(file);
     }
 
-    private void displayNestedFolder(SingleOrManyBursts file) {
-        // TODO: Integrate with other code and just display this file instead if this happens
-        if (file.getIsSingleBurst()) return; // Should not happen...
-
-        DataFragment innerFragment = new DataFragment();
-        Bundle arguments = new Bundle();
-        arguments.putBoolean(TOP_LEVEL, false);
-        arguments.putSerializable(FILES_LIST, file);
-        innerFragment.setArguments(arguments);
-        getChildFragmentManager()
-                .beginTransaction()
-                .replace(R.id.dataFragmentContainer, innerFragment)
-                .addToBackStack("Test") // TODO: Make sure this is unique!
-                .commit();
+    /**
+     * Handles displaying the UI for an inner folder in place of this fragment.
+     *
+     * @param folder The folder to display
+     */
+    private void displayNestedFolder(SingleOrManyBursts folder) {
+        if (listener != null) {
+            listener.onInnerFolderClicked(folder);
+        }
     }
 
     @Override
@@ -281,36 +279,45 @@ public class DataFragment extends Fragment
      *
      * @return an ArrayList of data files stored on the device
      */
-    private ArrayList<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
+    private List<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
+        // TODO: Redo this so that it returns a SingleOrManyBursts for the root, rather than
+        // a list of files.
+
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        ArrayList<SingleOrManyBursts> files = new ArrayList<>();
-        // Hardcoded groundwater SDCard Directory
-        if (!idh.isRootEmpty()) {
-            File[] groundwater = idh.getRoot().listFiles();
-            // Iterate over files in the directory
-            if (ContextCompat.checkSelfPermission(
-                            getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                    == PackageManager.PERMISSION_GRANTED) {
-                for (File file : groundwater) {
-                    // If it is a file then it is a single burst
-                    Burst burst = null;
-                    if (file.isFile()) {
-                        // TODO: Check one drive sync
-                        files.add(new SingleOrManyBursts(burst, false, file.getName()));
-                    } else {
-                        List<SingleOrManyBursts> list = new ArrayList<>();
-                        // Otherwise it is a collection
-                        for (File innerFile : file.listFiles()) {
-                            list.add(new SingleOrManyBursts(burst, false, file.getName()));
-                        }
-                        SingleOrManyBursts many =
-                                new SingleOrManyBursts(list, false, file.getName());
-                        files.add(many);
-                    }
-                }
+        List<SingleOrManyBursts> files = new ArrayList<>();
+
+        if (ContextCompat.checkSelfPermission(
+                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
+                == PackageManager.PERMISSION_GRANTED) {
+
+            File groundwater = idh.getRoot();
+            try {
+                files = getDataFiles(groundwater).getListOfBursts();
+            } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+                e.printStackTrace();
             }
         }
         return files;
+    }
+
+    /**
+     * Recursively searches the file structure, starting at the passed file, finding all data
+     * folders and files that can be displayed.
+     *
+     * @param folder The folder from which to start the searc
+     * @return A SingleOrManyBursts instance containing the tree of files
+     */
+    private SingleOrManyBursts getDataFiles(File folder) {
+        if (folder.isFile()) {
+            return new SingleOrManyBursts((Burst) null, false, folder.getAbsolutePath());
+        } else {
+            List<SingleOrManyBursts> values = new ArrayList<>();
+            for (File innerFile : folder.listFiles()) {
+                SingleOrManyBursts singleOrManyBursts = getDataFiles(innerFile);
+                values.add(singleOrManyBursts);
+            }
+            return new SingleOrManyBursts(values, false, folder.getName());
+        }
     }
 
     /** Displays a dialog for syncing the files with the server. */
@@ -559,5 +566,23 @@ public class DataFragment extends Fragment
             viewHolder.setSyncStatusVisibility(true);
             parent.notifyFilesChanged();
         }
+    }
+
+    /**
+     * Sets hte listener for when a folder is clicked.
+     *
+     * @param listener The listener that will handle displaying the inner folder in place of this
+     *     fragment
+     */
+    public void setOnInnerFolderClickedListener(OnInnerFolderClickedListener listener) {
+        this.listener = listener;
+    }
+
+    /**
+     * Used by a wrapper class so that this instance can be replaced with another instance to
+     * display the contents of the folder that was selected.
+     */
+    public interface OnInnerFolderClickedListener {
+        void onInnerFolderClicked(SingleOrManyBursts innerFolder);
     }
 }
