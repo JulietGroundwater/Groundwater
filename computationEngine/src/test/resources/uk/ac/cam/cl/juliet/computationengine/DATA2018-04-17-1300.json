@@ -9,7 +9,7 @@
   "burst": 1,
   "fileFormat": 5,
   "fs": 40000.0,
-  "dateTime": "Apr 17, 2018 2:00:20 PM",
+  "dateTime": "2018-04-17 14:00:20 +0100",
   "temperature1": 41.4219,
   "temperature2": 48.6875,
   "batteryVoltage": 12.5764,
@@ -14844,7 +14844,7 @@
     }
   ],
   "chirpTime": [
-    "Apr 17, 2018 2:00:20 PM"
+    "2018-04-17 14:00:20 +0100"
   ],
   "startInd": [
     0,

@@ -59,7 +59,11 @@ public class BurstTest {
     public void burst_created_withCorrectParameters() throws Exception {
         Burst burst = new Burst(file);
 
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Gson gson =
+                new GsonBuilder()
+                        .setPrettyPrinting()
+                        .setDateFormat("yyyy-MM-dd HH:mm:ss Z")
+                        .create();
 
         String burstJson = gson.toJson(burst);
 
