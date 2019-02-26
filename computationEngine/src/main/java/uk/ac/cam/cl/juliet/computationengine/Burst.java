@@ -578,7 +578,7 @@ public class Burst {
             f0 = regDecode(Reg0B, 9, 17) * fSysClk / Math.pow(2, 32);
 
             double tStepUp = regDecode(Reg0D, 5, 9) * 4 / fSysClk;
-            double freqDiff = regDecode(Reg0B, 1, 9)  - regDecode(Reg0B, 9, 17);
+            double freqDiff = regDecode(Reg0B, 1, 9) - regDecode(Reg0B, 9, 17);
             double rampUpStep = regDecode(Reg0C, 9, 17);
             double chirpLength = Math.round(Math.abs(freqDiff / rampUpStep)) * tStepUp;
 
