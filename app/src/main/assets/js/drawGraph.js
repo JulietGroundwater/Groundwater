@@ -30,7 +30,7 @@ function showGraph(data, svg, height, width) {
   svg.append("g")
     .style("font-size", 15)
     .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x).tickFormat(d3.formatPrefix(".1", 1e1)).tickValues(x.domain().filter(function(d,i){ return !(i%3)})))
+    .call(d3.axisBottom(x).tickFormat(d3.formatPrefix(".1", 1e1)).tickValues(x.domain().filter(function(d,i){ return !(i%15)})))
     .select(".domain").remove()
 
   // Build Y scales and axis - bit messy

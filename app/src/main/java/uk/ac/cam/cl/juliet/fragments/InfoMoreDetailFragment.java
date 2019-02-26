@@ -220,7 +220,8 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
                         // TODO: Perhaps sleep the thread instead of spinning and wake it
 
                         while (simulator.getConnecitonLive()) {
-                            while (!simulator.getTransientFiles().isEmpty() || simulator.getDataReady()) {
+                            while (!simulator.getTransientFiles().isEmpty()
+                                    || simulator.getDataReady()) {
                                 List<File> batch = new ArrayList<>();
                                 batch.add(simulator.pollData());
                                 if (batch.size() > 0) {
@@ -247,7 +248,11 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
         List<IProcessingCallback> listeners = new ArrayList<>();
         listeners.add(this);
         // TODO: This is undoubtedly a hack and should be fixed in the future...
-        listeners.add((IProcessingCallback) getParentFragment().getFragmentManager().findFragmentByTag("android:switcher:" + 2131230781 + ":1"));
+        listeners.add(
+                (IProcessingCallback)
+                        getParentFragment()
+                                .getFragmentManager()
+                                .findFragmentByTag("android:switcher:" + 2131230781 + ":1"));
         LiveProcessingTask task = new LiveProcessingTask(listeners, batch, lastFile);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -266,7 +271,11 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
         simulator.disconnect();
         idh.setProcessingLiveData(false);
         // TODO: Same hack as above - communication between fragments is difficult
-        DataFragment dataFragment = (DataFragment) getParentFragment().getFragmentManager().findFragmentByTag("android:switcher:" + 2131230781 + ":1");
+        DataFragment dataFragment =
+                (DataFragment)
+                        getParentFragment()
+                                .getFragmentManager()
+                                .findFragmentByTag("android:switcher:" + 2131230781 + ":1");
         dataFragment.notifyFilesChanged(this.currentLiveBursts);
         toggleMenuItems();
     }
@@ -283,7 +292,8 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
     }
 
     @Override
-    public void onTaskCompleted(List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast) {
+    public void onTaskCompleted(
+            List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast) {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         // If we are drawing live data then we need to be updating the cached values because we
         // don't yet have them all
@@ -305,7 +315,11 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
             this.connected = false;
             idh.setProcessingLiveData(false);
             // TODO: Same hack as above - communication between fragments is difficult
-            DataFragment dataFragment = (DataFragment) getParentFragment().getFragmentManager().findFragmentByTag("android:switcher:" + 2131230781 + ":1");
+            DataFragment dataFragment =
+                    (DataFragment)
+                            getParentFragment()
+                                    .getFragmentManager()
+                                    .findFragmentByTag("android:switcher:" + 2131230781 + ":1");
             dataFragment.notifyFilesChanged(this.currentLiveBursts);
             toggleMenuItems();
         }
@@ -376,8 +390,9 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
     }
 
     /**
-     * When computing live data we need to keep track of this in order to update
-     * the Internal Data Handler correctly.
+     * When computing live data we need to keep track of this in order to update the Internal Data
+     * Handler correctly.
+     *
      * @param bursts - the few bursts that are computed at a time
      */
     @Override

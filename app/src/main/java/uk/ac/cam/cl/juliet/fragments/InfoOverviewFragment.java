@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -12,6 +13,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -105,6 +107,8 @@ public class InfoOverviewFragment extends Fragment {
 
                 // Create a line data set and then the line data
                 LineDataSet dataset = new LineDataSet(entries, "Two Dim. Data");
+                dataset.setCircleColor(Color.LTGRAY);
+                dataset.setColor(ColorTemplate.MATERIAL_COLORS[0]);
                 LineData data = new LineData(dataset);
 
                 // Set the data and invalidate the chart (re-render)

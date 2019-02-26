@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
-import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,7 +90,8 @@ public class InternalDataHandler {
      */
     public void addFileToDirectory(String dirName, File file) {
         File newFile = new File(root.getAbsolutePath() + "/" + dirName, file.getName());
-        try (FileInputStream fis = new FileInputStream(file); FileOutputStream fos = new FileOutputStream(newFile)){
+        try (FileInputStream fis = new FileInputStream(file);
+                FileOutputStream fos = new FileOutputStream(newFile)) {
             byte[] buffer = new byte[(int) file.length()];
             fis.read(buffer);
             fos.write(buffer);
@@ -159,9 +158,13 @@ public class InternalDataHandler {
         return rootEmpty;
     }
 
-    public static void setProcessingLiveData(boolean value) { processingLiveData = value; }
+    public static void setProcessingLiveData(boolean value) {
+        processingLiveData = value;
+    }
 
-    public static boolean getProcessingLiveData() { return processingLiveData; }
+    public static boolean getProcessingLiveData() {
+        return processingLiveData;
+    }
 
     public static List<FileListener> getListeners() {
         return listeners;

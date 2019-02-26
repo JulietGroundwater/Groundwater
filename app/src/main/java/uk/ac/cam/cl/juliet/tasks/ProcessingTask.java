@@ -95,7 +95,7 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
         for (int set = 0; set < datasets.size(); set++) {
             PlotData3D current = datasets.get(set);
             for (int x = 0; x < current.getXValues().size(); x++) {
-                for (int y = 0; y < current.getYValues().size(); y++) {
+                for (int y = current.getYValues().size() - 1; y >= 0; y--) {
                     datapoints.add(
                             new Datapoint(
                                     converter.get(current.getXValues().get(x)),

@@ -60,7 +60,8 @@ import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener,
                 IAuthenticationCallback,
-                MainActivity.PermissionListener, IProcessingCallback {
+                MainActivity.PermissionListener,
+                IProcessingCallback {
 
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
@@ -168,12 +169,14 @@ public class DataFragment extends Fragment
         } else {
             Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
         }
-        // Set the selected data to the correct file - check if we are currently processing live data
+        // Set the selected data to the correct file - check if we are currently processing live
+        // data
         InternalDataHandler idh = InternalDataHandler.getInstance();
         if (!idh.getProcessingLiveData()) {
             idh.setSelectedData(file);
         } else {
-            Toast.makeText(context, "Currently processing data please wait.", Toast.LENGTH_SHORT).show();
+            Toast.makeText(context, "Currently processing data please wait.", Toast.LENGTH_SHORT)
+                    .show();
         }
     }
 
@@ -331,6 +334,7 @@ public class DataFragment extends Fragment
 
     /**
      * A method for adding new files (live processing for example)
+     *
      * @param newBursts - the new bursts to be added
      */
     public void notifyFilesChanged(SingleOrManyBursts newBursts) {
@@ -444,7 +448,8 @@ public class DataFragment extends Fragment
     }
 
     @Override
-    public void onTaskCompleted(List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast) {
+    public void onTaskCompleted(
+            List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast) {
         // This will most likely not do anything
         if (isLive) {
             notifyFilesChanged();
@@ -507,7 +512,7 @@ public class DataFragment extends Fragment
             } catch (IOException io) {
                 io.printStackTrace();
             }
-            //TODO: Not this
+            // TODO: Not this
             return true;
         }
 
