@@ -12,7 +12,7 @@ import org.junit.Test;
 
 public class HeaderTest {
 
-    File file, file2, jsonFile;
+    private File file, file2, jsonFile;
 
     @Before
     public void initialise() {
