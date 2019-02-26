@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.computationengine.range;
 
+import java.awt.image.renderable.RenderContext;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.complex.Complex;
@@ -25,6 +26,10 @@ public class RangeResult {
         this.Rfine = Rfine;
         this.spec = spec;
         this.specCor = specCor;
+    }
+
+    public int getSize() {
+        return Rcoarse.size();
     }
 
     public List<Double> getRcoarse() {

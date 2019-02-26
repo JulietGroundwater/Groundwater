@@ -3,11 +3,12 @@ package uk.ac.cam.cl.juliet.computationengine.plotdata;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.complex.Complex;
+import org.apache.commons.math3.util.FastMath;
+
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.range.Range;
 import uk.ac.cam.cl.juliet.computationengine.range.RangeResult;
 import uk.ac.cam.cl.juliet.computationengine.utility.BlackmanWindow;
-import uk.ac.cam.cl.juliet.computationengine.utility.ComplexVector;
 import uk.ac.cam.cl.juliet.computationengine.utility.IWindowFunction;
 
 /**
@@ -95,7 +96,9 @@ public class PlotDataGenerator3D {
         List<List<Double>> phaseValues = new ArrayList<>();
         List<List<Double>> powerValues = new ArrayList<>();
         RangeResult rangeResult = null;
-        RangeResult lastResult = null;
+
+        Complex[] specCor = null;
+        Complex[] lastSpecCor = null;
 
         for (Burst burst : bursts) {
             rangeResult =
@@ -104,23 +107,15 @@ public class PlotDataGenerator3D {
                             padding,
                             (maxDepth * nCoef / SCALE_CONSTANT_1) + SCALE_CONSTANT_2,
                             win);
-            ComplexVector specCor = new ComplexVector();
 
-            for (Complex c : rangeResult.getSpecCor().get(0)) {
-                specCor.add(c);
-            }
+            specCor = rangeResult.getSpecCor().get(0).toArray(new Complex[0]);
 
             List<Double> zValues = new ArrayList<>();
 
             // Compute power
-            ComplexVector powerVector =
-                    specCor.absElements()
-                            .logElements()
-                            .divideByConstant(Math.log(10.0))
-                            .multiplyByConstant(20.0);
-
-            for (int i = 0; i < powerVector.size(); i++) {
-                zValues.add(powerVector.getReal(i));
+            for (int i = 0; i < specCor.length; i++) {
+                double value = FastMath.log(10.0, specCor[i].abs()) * 20.0;
+                zValues.add(value);
             }
 
             powerValues.add(zValues);
@@ -128,23 +123,21 @@ public class PlotDataGenerator3D {
             // Compute phase difference
             zValues = new ArrayList<>();
 
-            if (lastResult == null) {
-                for (int i = 0; i < rangeResult.getSpecCor().get(0).size(); i++) {
+            if (lastSpecCor == null) {
+                for (int i = 0; i < specCor.length; i++) {
                     zValues.add(0.0);
                 }
             } else {
-                for (int i = 0; i < rangeResult.getSpecCor().get(0).size(); i++) {
-                    Complex curPhase = rangeResult.getSpecCor().get(0).get(i);
-                    Complex lastPhase = lastResult.getSpecCor().get(0).get(i);
-
-                    zValues.add((curPhase.multiply(lastPhase.conjugate())).log().getImaginary());
+                for (int i = 0; i < specCor.length; i++) {
+                    zValues.add((specCor[i].multiply(lastSpecCor[i].conjugate())).log().getImaginary());
                 }
             }
 
             phaseValues.add(zValues);
 
             xValues.add((double) burst.getChirpTime().get(0).getTime());
-            lastResult = rangeResult;
+
+            lastSpecCor = specCor;
         }
 
         for (Double y : rangeResult.getRcoarse()) {
