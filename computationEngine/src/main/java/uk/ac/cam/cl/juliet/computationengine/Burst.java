@@ -8,7 +8,6 @@ import java.nio.ByteOrder;
 import java.nio.channels.FileChannel;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -126,9 +125,6 @@ public class Burst {
             attSet.add(new Complex(attenuator1.get(i), attenuator2.get(i)));
 
         double chirpInterval = 1.6384; // 1.6384 / (24 * 3600)
-        Calendar cal = Calendar.getInstance();
-        cal.set(2000, Calendar.JANUARY, 1);
-        Date date2000 = cal.getTime();
 
         for (int chirp = 0; chirp < chirpsInBurst; chirp++) {
             ArrayList<Double> temp =
@@ -316,18 +312,6 @@ public class Burst {
      */
     public double getBatteryVoltage() {
         return batteryVoltage;
-    }
-
-    /**
-     * Returns V parameter
-     *
-     * <p>implemented as {@code List<Double>} since in the original MATLAB it was a matrix with a
-     * height of 1
-     *
-     * @return V parameter
-     */
-    public List<Double> getV() {
-        return new ArrayList<>(v);
     }
 
     /**
@@ -597,6 +581,10 @@ public class Burst {
 
         long fileLength;
 
+        if (file == null) {
+            throw new InvalidBurstException("file cannot be null");
+        }
+
         fileLength = file.length();
 
         try (FileInputStream f = new FileInputStream(file)) {
@@ -621,11 +609,10 @@ public class Burst {
             WperChirpCycle = nSamples;
             subBurstsInBurst = parseInt(A, "NSubBursts=");
 
-            int[] searchind = strFind(A, "Average=");
-            if (searchind.length == 0) {
-                average = 0;
-            } else {
+            if (A.contains("Average=")) {
                 average = parseInt(A, "Average=");
+            } else {
+                average = 0;
             }
 
             nAttenuators = parseInt(A, "nAttenuators=");
@@ -657,9 +644,7 @@ public class Burst {
             }
 
             String searchString = "*** End Header ***";
-            searchind = strFind(A, searchString);
-
-            burstpointer += searchind[0] + searchString.length();
+            burstpointer += A.indexOf(searchString) + searchString.length();
 
             // Extract remaining information from header
             SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
@@ -776,32 +761,10 @@ public class Burst {
         }
     }
 
-    private int[] strFind(String original, String substring) {
-        ArrayList<Integer> list = new ArrayList<>();
-        int lastIndex = 0;
-        while (lastIndex != -1) {
-
-            lastIndex = original.indexOf(substring, lastIndex);
-
-            if (lastIndex != -1) {
-                list.add(lastIndex);
-                lastIndex += 1;
-            }
-        }
-
-        int[] ret = new int[list.size()];
-        for (int i = 0; i < list.size(); i++) {
-            ret[i] = list.get(i);
-        }
-
-        return ret;
-    }
-
     private String parseString(String mainString, String searchString) {
-        int[] searchInd = strFind(mainString, searchString);
-        int[] searchCR = strFind(mainString.substring(searchInd[0]), "\r\n");
-        return mainString.substring(
-                searchInd[0] + searchString.length(), searchCR[0] + searchInd[0]);
+        int searchInd = mainString.indexOf(searchString);
+        int searchCR = mainString.indexOf("\r\n", searchInd);
+        return mainString.substring(searchInd + searchString.length(), searchCR);
     }
 
     private int parseInt(String mainString, String searchString) {
@@ -836,11 +799,6 @@ public class Burst {
 
             // Read from Reg01
             // noDwellHigh at bit 18
-            boolean noDwellHigh =
-                    ((Long.decode("0x" + header.getReg01().replace("\"", "")) >> 18) & 1) == 1;
-            // noDwellLow at bit 17
-            boolean noDwellLow =
-                    ((Long.decode("0x" + header.getReg01().replace("\"", "")) >> 17) & 1) == 1;
 
             // Read from Reg0B
             double fsysclk = 1e9;
@@ -865,7 +823,6 @@ public class Burst {
 
             // Read from Reg0D
             double tStepUp = Long.decode("0x" + header.getReg0D().substring(5, 9)) * 4 / fsysclk;
-            double tStepDn = Long.decode("0x" + header.getReg0D().substring(1, 5)) * 4 / fsysclk;
 
             int nChirpSamples = header.getNADCSamples();
             long nStepsDDS = Math.round(Math.abs((stopFreq - startFreq) / rampUpStep));
@@ -874,11 +831,6 @@ public class Burst {
             if (chirpLength * fs > nChirpSamples) chirpLength = nChirpSamples / fs;
 
             double hk = 2 * Math.PI * (rampDnStep / tStepUp);
-            String rampDir = (stopFreq > 400e6) ? "down" : "up";
-            if (noDwellHigh && noDwellLow) {
-                rampDir = "upDown";
-                double nChirpsPerPeriod = Double.NaN; // blah
-            }
 
             k = hk;
             f0 = startFreq;
