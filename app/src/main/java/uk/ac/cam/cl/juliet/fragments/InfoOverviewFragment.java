@@ -6,9 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -25,6 +29,7 @@ import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData2D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator2D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
+import uk.ac.cam.cl.juliet.models.BurstDataTypes;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
@@ -32,11 +37,12 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  *
  * @author Ben Cole
  */
-public class InfoOverviewFragment extends Fragment {
+public class InfoOverviewFragment extends Fragment implements AdapterView.OnItemSelectedListener {
 
     private LineChart exampleChart;
+    private Spinner overviewSpinner;
     private InternalDataHandler idh;
-    private Map<String, PlotData2D> cache;
+    private Map<String, PlotDataGenerator2D> cache;
 
     @Nullable
     @Override
@@ -50,6 +56,21 @@ public class InfoOverviewFragment extends Fragment {
         exampleChart = (LineChart) view.findViewById(R.id.twoD_chart);
         exampleChart.setPinchZoom(true);
         exampleChart.setDragEnabled(true);
+
+        // Create the spinner and set values
+        overviewSpinner = view.findViewById(R.id.overview_spinner);
+        String[] datatypes =
+                new String[] {
+                    BurstDataTypes.AMPLITUDE.getDisplayableName(),
+                    BurstDataTypes.PHASE.getDisplayableName(),
+                    BurstDataTypes.TIME.getDisplayableName()
+                };
+
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<>(
+                        getContext(), R.layout.support_simple_spinner_dropdown_item, datatypes);
+        overviewSpinner.setAdapter(adapter);
+        overviewSpinner.setOnItemSelectedListener(this);
 
         // Initialise the cache
         cache = new HashMap<>();
@@ -88,12 +109,22 @@ public class InfoOverviewFragment extends Fragment {
                 // Check the cache in case the same file was selected again and it is already
                 // computed
                 if (cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
-                    twoDimData = cache.get(idh.getSelectedData().getNameToDisplay());
+                    twoDimDataGen = cache.get(idh.getSelectedData().getNameToDisplay());
                 } else {
                     twoDimDataGen = new PlotDataGenerator2D(idh.getSelectedData().getSingleBurst());
-                    twoDimData = twoDimDataGen.getAmpPlotData();
                     // Add to the cache
-                    cache.put(idh.getSelectedData().getNameToDisplay(), twoDimData);
+                    cache.put(idh.getSelectedData().getNameToDisplay(), twoDimDataGen);
+                }
+
+                // Choose the correct data to visualise
+                BurstDataTypes selected =
+                        BurstDataTypes.fromString((String) overviewSpinner.getSelectedItem());
+                if (selected == BurstDataTypes.AMPLITUDE) {
+                    twoDimData = twoDimDataGen.getAmpPlotData();
+                } else if (selected == BurstDataTypes.PHASE) {
+                    twoDimData = twoDimDataGen.getPhasePlotData();
+                } else {
+                    twoDimData = twoDimDataGen.getTimePlotData();
                 }
 
                 // Generate entries for the chart
@@ -130,5 +161,21 @@ public class InfoOverviewFragment extends Fragment {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         if (idh.getSelectedData() == null) return false;
         return idh.getSelectedData().getIsSingleBurst();
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        AsyncTask.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        updateChart();
+                    }
+                });
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        Log.d("Spinner", "Nothing selected");
     }
 }
