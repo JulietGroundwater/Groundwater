@@ -1,0 +1,53 @@
+{
+  "alwaysAttended": false,
+  "checkEthernet": true,
+  "samplingFrequencyMode": true,
+  "intervalMode": false,
+  "logOn": true,
+  "sleepMode": false,
+  "gpsOn": false,
+  "housekeeping": false,
+  "syncGPS": false,
+  "iridium": false,
+  "maxDepthToGraph": 200,
+  "nADCSamples": 0,
+  "nData": 0,
+  "watchDogTaskSecs": 3600,
+  "interChirpDelay": 50,
+  "settleCycles": 0,
+  "nSubBursts": 20,
+  "average": 0,
+  "repSecs": 300,
+  "maxDataFileLength": 100000,
+  "nAttenuators": 1,
+  "triples": [
+    70,
+    10,
+    200,
+    200,
+    20,
+    600,
+    600,
+    5,
+    630,
+    5
+  ],
+  "attenuator1": [
+    10,
+    25,
+    30,
+    30
+  ],
+  "afGain": [
+    -4,
+    6,
+    -4,
+    -10
+  ],
+  "reg00": "00000008",
+  "reg01": "000C0820",
+  "reg02": "0D1F41C8",
+  "reg0B": "6666666633333333",
+  "reg0C": "0000E2D20000E2D2",
+  "reg0D": "0C350C35"
+}

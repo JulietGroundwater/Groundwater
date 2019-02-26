@@ -101,8 +101,8 @@ public class Burst {
      * @throws InvalidBurstException if there are errors when reading the file
      */
     public Burst(File file, int burstNum, boolean mean) throws InvalidBurstException {
-        this.filename = file.getName();
         loadBurstRMB5(burstNum, file);
+        this.filename = file.getName();
 
         if (temperature1 > 300) {
             temperature1 -= 512;
@@ -131,7 +131,7 @@ public class Burst {
                     new ArrayList<>(v.subList(startInd.get(chirp), endInd.get(chirp)));
             vif.add(temp);
             chirpNum.add(chirp);
-            chirpAtt.add(attSet.get((chirp) % attSet.size())); // TODO check for off by 1 error
+            chirpAtt.add(attSet.get((chirp) % attSet.size()));
             chirpTime.add(new Date(dateTime.getTime() + (long) (chirp * chirpInterval)));
         }
 
