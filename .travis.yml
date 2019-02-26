@@ -55,4 +55,4 @@ before_script:
 
 # Use gradle for builds
 script:
-- ./gradlew build connectedCheck --stacktrace
+- ./gradlew build connectedCheck --stacktrace --info
