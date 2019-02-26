@@ -22,6 +22,7 @@ public class InternalDataHandler {
     private static List<FileListener> listeners;
     private static boolean rootEmpty;
     private static String currentLiveData;
+    private static boolean processingLiveData = false;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
@@ -157,6 +158,10 @@ public class InternalDataHandler {
     public static boolean isRootEmpty() {
         return rootEmpty;
     }
+
+    public static void setProcessingLiveData(boolean value) { processingLiveData = value; }
+
+    public static boolean getProcessingLiveData() { return processingLiveData; }
 
     public static List<FileListener> getListeners() {
         return listeners;

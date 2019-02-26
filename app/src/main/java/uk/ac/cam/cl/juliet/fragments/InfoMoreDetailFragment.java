@@ -28,6 +28,8 @@ import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.Datapoint;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
+import uk.ac.cam.cl.juliet.tasks.ILiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 import uk.ac.cam.cl.juliet.tasks.LiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
@@ -37,7 +39,7 @@ import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
  *
  * @author Ben Cole
  */
-public class InfoMoreDetailFragment extends Fragment implements IProcessingCallback {
+public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingTask {
 
     private WebView webview;
     private TextView webviewText;
@@ -50,6 +52,7 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     private ConnectionSimulator simulator;
     private boolean connected;
     private boolean gatheringData;
+    private SingleOrManyBursts currentLiveBursts;
 
     @Nullable
     @Override
@@ -195,8 +198,17 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
         toggleMenuItems();
 
         simulator = ConnectionSimulator.getInstance();
-        System.out.println(simulator.getConnecitonLive());
-        System.out.println(simulator.getDataReady());
+
+        // Create a new directory in groundwater for the incoming data
+        String name = new Date().toString();
+        idh.setCurrentLiveData(name);
+        idh.addNewDirectory(idh.getCurrentLiveData());
+        idh.setProcessingLiveData(true);
+
+        // Create store for the bursts
+        List<SingleOrManyBursts> singles = new ArrayList<>();
+        this.currentLiveBursts = new SingleOrManyBursts(singles, false, idh.getCurrentLiveData());
+
         AsyncTask.execute(
                 new Runnable() {
                     @Override
@@ -205,22 +217,17 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
                         InternalDataHandler idh = InternalDataHandler.getInstance();
                         simulator.connect();
 
-                        // Create a new directory in groundwater for the incoming data
-                        String name = new Date().toString();
-                        idh.setCurrentLiveData(name);
-                        idh.addNewDirectory(idh.getCurrentLiveData());
+                        // TODO: Perhaps sleep the thread instead of spinning and wake it
 
-                        // TODO: Perhaps sleep the thread instead of spinning and wake it on measure
-                        // button click
                         while (simulator.getConnecitonLive()) {
-                            while (simulator.getDataReady()) {
+                            while (!simulator.getTransientFiles().isEmpty() || simulator.getDataReady()) {
                                 List<File> batch = new ArrayList<>();
                                 batch.add(simulator.pollData());
                                 if (batch.size() > 0) {
                                     for (File file : batch) {
                                         if (file != null) {
-                                            idh.addFileToDirectory(name, file);
-                                            processLiveData(batch);
+                                            idh.addFileToDirectory(idh.getCurrentLiveData(), file);
+                                            processLiveData(batch, !simulator.getDataReady());
                                         }
                                     }
                                 }
@@ -236,8 +243,12 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
      *
      * @param batch - the list of files to process
      */
-    private void processLiveData(List<File> batch) {
-        LiveProcessingTask task = new LiveProcessingTask(this, batch);
+    private void processLiveData(List<File> batch, boolean lastFile) {
+        List<IProcessingCallback> listeners = new ArrayList<>();
+        listeners.add(this);
+        // TODO: This is undoubtedly a hack and should be fixed in the future...
+        listeners.add((IProcessingCallback) getParentFragment().getFragmentManager().findFragmentByTag("android:switcher:" + 2131230781 + ":1"));
+        LiveProcessingTask task = new LiveProcessingTask(listeners, batch, lastFile);
         task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
@@ -253,6 +264,10 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     private void destroyConnection() {
         this.connected = false;
         simulator.disconnect();
+        idh.setProcessingLiveData(false);
+        // TODO: Same hack as above - communication between fragments is difficult
+        DataFragment dataFragment = (DataFragment) getParentFragment().getFragmentManager().findFragmentByTag("android:switcher:" + 2131230781 + ":1");
+        dataFragment.notifyFilesChanged(this.currentLiveBursts);
         toggleMenuItems();
     }
 
@@ -268,9 +283,8 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     }
 
     @Override
-    public void onTaskCompleted(List<Datapoint> result, List<PlotData3D> dataset, boolean isLive) {
+    public void onTaskCompleted(List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast) {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-
         // If we are drawing live data then we need to be updating the cached values because we
         // don't yet have them all
         if (isLive) {
@@ -286,9 +300,13 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
             updateWebview(result);
         }
 
-        // At some point we get the last data value and we can destroy the connection
-        if (!simulator.getConnecitonLive()) {
+        // For live processing we need to check for the last file received
+        if (isLast) {
             this.connected = false;
+            idh.setProcessingLiveData(false);
+            // TODO: Same hack as above - communication between fragments is difficult
+            DataFragment dataFragment = (DataFragment) getParentFragment().getFragmentManager().findFragmentByTag("android:switcher:" + 2131230781 + ":1");
+            dataFragment.notifyFilesChanged(this.currentLiveBursts);
             toggleMenuItems();
         }
     }
@@ -354,6 +372,21 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
             disconnect.setEnabled(true);
             measure.setVisible(true);
             measure.setEnabled(true);
+        }
+    }
+
+    /**
+     * When computing live data we need to keep track of this in order to update
+     * the Internal Data Handler correctly.
+     * @param bursts - the few bursts that are computed at a time
+     */
+    @Override
+    public void receiveSingleOrManyBursts(List<SingleOrManyBursts> bursts) {
+        try {
+            // Adding the small list (usually of one) to the current live bursts session
+            this.currentLiveBursts.getListOfBursts().addAll(bursts);
+        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+            e.printStackTrace();
         }
     }
 }

@@ -111,6 +111,6 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
     protected void onPostExecute(List<Datapoint> datapoint) {
         super.onPostExecute(datapoint);
         // Notify listener that the execution has returned
-        listener.onTaskCompleted(datapoint, datasets, false);
+        listener.onTaskCompleted(datapoint, datasets, false, false);
     }
 }

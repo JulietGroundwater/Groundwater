@@ -37,6 +37,8 @@ public class ConnectionSimulator implements IConnection {
 
     @Override
     public void disconnect() {
+        this.connectionLive.set(false);
+        this.dataReady.set(false);
         if (device != null) {
             device.destoryConnection(this);
         }
@@ -59,11 +61,6 @@ public class ConnectionSimulator implements IConnection {
     }
 
     public File pollData() {
-        if (transientFiles.isEmpty()) {
-            this.dataReady.set(false);
-        } else {
-            this.dataReady.set(true);
-        }
         return transientFiles.poll();
     }
 
@@ -80,7 +77,6 @@ public class ConnectionSimulator implements IConnection {
     @Override
     public void dataFinished() {
         disconnect();
-        this.connectionLive.set(false);
     }
 
     public ConcurrentLinkedQueue<File> getTransientFiles() {

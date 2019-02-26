@@ -13,15 +13,17 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /** A task for handling the live processing of data */
 public class LiveProcessingTask extends AsyncTask<Void, Void, List<PlotData3D>> {
-    private IProcessingCallback listener;
+    private List<IProcessingCallback> listeners;
     private List<File> fileBatch;
     private List<Datapoint> datapoints = new ArrayList<>();
     private List<SingleOrManyBursts> singles = new ArrayList<>();
     private final int BATCH_SIZE = 1;
+    private boolean lastFile;
 
-    public LiveProcessingTask(IProcessingCallback task, List<File> batch) {
-        this.listener = task;
+    public LiveProcessingTask(List<IProcessingCallback> tasks, List<File> batch, boolean lastFile) {
+        this.listeners = tasks;
         this.fileBatch = batch;
+        this.lastFile = lastFile;
     }
 
     @Override
@@ -63,6 +65,13 @@ public class LiveProcessingTask extends AsyncTask<Void, Void, List<PlotData3D>> 
     @Override
     protected void onPostExecute(List<PlotData3D> datasets) {
         super.onPostExecute(datasets);
-        listener.onTaskCompleted(datapoints, datasets, true);
+        for (IProcessingCallback listener : this.listeners) {
+            listener.onTaskCompleted(datapoints, datasets, true, this.lastFile);
+
+            // Also notify to do this task of accumulating the bursts over time
+            if (listener instanceof ILiveProcessingTask) {
+                ((ILiveProcessingTask) listener).receiveSingleOrManyBursts(singles);
+            }
+        }
     }
 }

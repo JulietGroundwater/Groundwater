@@ -16,6 +16,7 @@ public class DeviceSimulator {
     private String deviceName;
     private List<IConnection> connections;
     private Config configuration;
+    private boolean finished;
 
     /**
      * Constructor for the simulated device
@@ -29,6 +30,7 @@ public class DeviceSimulator {
         this.deviceName = name;
         this.delay = delay;
         this.connections = new ArrayList<>();
+        this.finished = true;
     }
 
     /**
@@ -67,6 +69,7 @@ public class DeviceSimulator {
      *     writes to
      */
     public void takeMeasurement(final ConcurrentLinkedQueue<File> queue) {
+        this.finished = false;
         if (root.listFiles() == null) {
             System.out.println("NO FILES PLEASE ADD A FOLDER CALLED DATA_FILES");
             // Notify all connections that we are done after reading all files
@@ -89,18 +92,19 @@ public class DeviceSimulator {
                                     if (connections.isEmpty()) {
                                         return;
                                     }
-
                                     // Otherwise add a file to the queue and notify the connections
                                     queue.add(root.listFiles()[fileIndex]);
                                     for (IConnection connection : connections) {
                                         connection.notifyDataReady();
                                     }
 
-                                    // Mimic dath gathering by sleeping for a specified time
-                                    try {
-                                        Thread.sleep(delay);
-                                    } catch (InterruptedException e) {
-                                        e.printStackTrace();
+                                    // Mimic data gathering by sleeping for a specified time
+                                    if (fileIndex != root.listFiles().length - 1) {
+                                        try {
+                                            Thread.sleep(delay);
+                                        } catch (InterruptedException e) {
+                                            e.printStackTrace();
+                                        }
                                     }
                                 }
 
