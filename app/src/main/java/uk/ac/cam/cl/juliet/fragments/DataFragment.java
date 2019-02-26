@@ -211,15 +211,13 @@ public class DataFragment extends Fragment
         Context context = getContext();
         if (context == null) return;
         if (file.getIsSingleBurst()) {
-            Toast.makeText(context, "Display the file.", Toast.LENGTH_SHORT).show();
             // TODO: automatically switch to the "display" screen
+            // Set the selected data to the correct file
+            InternalDataHandler idh = InternalDataHandler.getInstance();
+            idh.setSelectedData(file);
         } else {
-            Toast.makeText(context, "Display folder contents.", Toast.LENGTH_SHORT).show();
             displayNestedFolder(file);
         }
-        // Set the selected data to the correct file
-        InternalDataHandler idh = InternalDataHandler.getInstance();
-        idh.setSelectedData(file);
     }
 
     /**
@@ -308,16 +306,21 @@ public class DataFragment extends Fragment
      * @return A SingleOrManyBursts instance containing the tree of files
      */
     private SingleOrManyBursts getDataFiles(File folder) {
+        SingleOrManyBursts result;
         if (folder.isFile()) {
-            return new SingleOrManyBursts((Burst) null, false, folder.getAbsolutePath());
+            result = new SingleOrManyBursts((Burst) null, false, folder.getName(), null);
+            result.setFile(folder);
         } else {
             List<SingleOrManyBursts> values = new ArrayList<>();
+            result = new SingleOrManyBursts(values, false, folder.getName(), null);
             for (File innerFile : folder.listFiles()) {
                 SingleOrManyBursts singleOrManyBursts = getDataFiles(innerFile);
+                singleOrManyBursts.setParent(result);
                 values.add(singleOrManyBursts);
             }
-            return new SingleOrManyBursts(values, false, folder.getName());
+            result.setFile(folder);
         }
+        return result;
     }
 
     /** Displays a dialog for syncing the files with the server. */
@@ -531,7 +534,7 @@ public class DataFragment extends Fragment
                 AuthenticationManager auth = AuthenticationManager.getInstance();
                 InternalDataHandler idh = InternalDataHandler.getInstance();
                 if (auth.isUserLoggedIn()) {
-                    File datafile = idh.getFileByName(file.getNameToDisplay());
+                    File datafile = idh.getSelectedDataFile();
                     gsc.uploadDatafile(
                             file.getNameToDisplay(),
                             "dat",

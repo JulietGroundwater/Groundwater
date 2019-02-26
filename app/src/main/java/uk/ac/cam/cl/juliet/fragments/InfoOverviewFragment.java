@@ -12,6 +12,7 @@ import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -81,17 +82,19 @@ public class InfoOverviewFragment extends Fragment {
 
                 // Compute burst
                 SingleOrManyBursts file = idh.getSelectedData();
-                file.setSingleBurst(new Burst(idh.getFileByName(file.getNameToDisplay()), 1));
+                File fileToProcess = idh.getSelectedDataFile();
+                Burst burst = new Burst(fileToProcess);
+                file.setSingleBurst(burst); // getting an invalid burst exception here
 
                 // Check the cache in case the same file was selected again and it is already
                 // computed
-                if (cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
-                    twoDimData = cache.get(idh.getSelectedData().getNameToDisplay());
+                if (cache.containsKey(idh.getSelectedDataFile().getAbsolutePath())) {
+                    twoDimData = cache.get(idh.getSelectedDataFile().getAbsolutePath());
                 } else {
                     twoDimDataGen = new PlotDataGenerator2D(idh.getSelectedData().getSingleBurst());
                     twoDimData = twoDimDataGen.getAmpPlotData();
                     // Add to the cache
-                    cache.put(idh.getSelectedData().getNameToDisplay(), twoDimData);
+                    cache.put(idh.getSelectedDataFile().getAbsolutePath(), twoDimData);
                 }
 
                 // Generate entries for the chart

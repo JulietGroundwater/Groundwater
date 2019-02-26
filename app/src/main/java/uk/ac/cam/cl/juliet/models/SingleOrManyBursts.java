@@ -4,7 +4,6 @@ import java.io.File;
 import java.io.Serializable;
 import java.util.List;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
-import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 
 /**
  * Encapsulates both single Bursts and lists of Bursts as a single data type to be displayed in a
@@ -31,6 +30,7 @@ public class SingleOrManyBursts implements Serializable {
     private boolean syncedToOneDrive;
     private String fileName;
     private String directoryName;
+    private SingleOrManyBursts parent;
     private File file;
 
     /**
@@ -38,11 +38,13 @@ public class SingleOrManyBursts implements Serializable {
      *
      * @param burst The Burst to be contained
      */
-    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive, String fileName) {
+    public SingleOrManyBursts(
+            Burst burst, boolean isSyncedToOneDrive, String fileName, SingleOrManyBursts parent) {
         this.singleBurst = burst;
         type = Type.SINGLE;
         this.fileName = fileName;
         syncedToOneDrive = isSyncedToOneDrive;
+        this.parent = parent;
     }
 
     /**
@@ -51,19 +53,15 @@ public class SingleOrManyBursts implements Serializable {
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
     public SingleOrManyBursts(
-            List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
+            List<SingleOrManyBursts> listOfBursts,
+            boolean isSyncedToOneDrive,
+            String dirName,
+            SingleOrManyBursts parent) {
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
         this.directoryName = dirName;
-    }
-
-    public SingleOrManyBursts(File file, boolean isSyncedToOneDrive) throws InvalidBurstException {
-        this.file = file;
-        type = file.isFile() ? Type.SINGLE : Type.MANY;
-        if (type == Type.SINGLE) {
-            singleBurst = new Burst(file);
-        }
+        this.parent = parent;
     }
 
     /**
@@ -173,5 +171,25 @@ public class SingleOrManyBursts implements Serializable {
      */
     public boolean getSyncStatus() {
         return syncedToOneDrive;
+    }
+
+    public boolean getIsRootNode() {
+        return (parent == null);
+    }
+
+    public SingleOrManyBursts getParent() {
+        return parent;
+    }
+
+    public void setParent(SingleOrManyBursts parent) {
+        this.parent = parent;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public File getFile() {
+        return file;
     }
 }

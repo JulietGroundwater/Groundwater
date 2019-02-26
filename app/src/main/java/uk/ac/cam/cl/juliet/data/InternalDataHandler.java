@@ -14,21 +14,24 @@ public class InternalDataHandler {
 
     private static InternalDataHandler INSTANCE;
     private static final String ROOT_NAME = "groundwater";
-    private static File root;
-    private static SingleOrManyBursts selectedData;
-    private static List<FileListener> listeners;
-    private static boolean rootEmpty;
+    private File root;
+    private SingleOrManyBursts selectedData;
+    private List<FileListener> listeners;
+    private boolean rootEmpty;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
             INSTANCE = new InternalDataHandler();
-            root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
-            rootEmpty = (root.listFiles() == null);
-            if (listeners == null) {
-                listeners = new ArrayList<>();
-            }
         }
         return INSTANCE;
+    }
+
+    public InternalDataHandler() {
+        root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
+        rootEmpty = (root.listFiles() == null);
+        if (listeners == null) {
+            listeners = new ArrayList<>();
+        }
     }
 
     /**
@@ -96,6 +99,10 @@ public class InternalDataHandler {
         return new File(root.getAbsolutePath(), filename);
     }
 
+    public File getSelectedDataFile() {
+        return getSelectedData().getFile();
+    }
+
     public File getFileByNameIn(String dirName, String filename) {
         return new File(root.getAbsolutePath() + "/" + dirName, filename);
     }
@@ -108,15 +115,15 @@ public class InternalDataHandler {
         return selectedData;
     }
 
-    public static void setRootEmpty(boolean emptyValue) {
+    public void setRootEmpty(boolean emptyValue) {
         rootEmpty = emptyValue;
     }
 
-    public static boolean isRootEmpty() {
+    public boolean isRootEmpty() {
         return rootEmpty;
     }
 
-    public static List<FileListener> getListeners() {
+    public List<FileListener> getListeners() {
         return listeners;
     }
 
