@@ -22,20 +22,9 @@ import org.apache.commons.math3.complex.Complex;
 public class Burst {
 
     private String filename;
-    private int subBurstsInBurst,
-            average,
-            nAttenuators,
-            nSamples,
-            chirpsInBurst,
-            burst;
+    private int subBurstsInBurst, average, nAttenuators, nSamples, chirpsInBurst, burst;
     private Date dateTime;
-    private double temperature1,
-            temperature2,
-            batteryVoltage,
-            samplesPerChirp,
-            f0,
-            k,
-            t;
+    private double temperature1, temperature2, batteryVoltage, samplesPerChirp, f0, k, t;
     private List<Double> attenuator1, attenuator2;
     private List<String> processing = new ArrayList<>();
     private List<Complex> chirpAtt = new ArrayList<>();
@@ -285,8 +274,7 @@ public class Burst {
         } catch (Exception e) {
             e.printStackTrace();
             throw new InvalidBurstException(
-                    String.format(
-                            "Failed to parse file\nError Message: %s\n", e.toString()));
+                    String.format("Failed to parse file\nError Message: %s\n", e.toString()));
         }
     }
 
