@@ -1,5 +1,7 @@
 package uk.ac.cam.cl.juliet.models;
 
+import java.io.File;
+import java.io.Serializable;
 import java.util.List;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 
@@ -9,7 +11,7 @@ import uk.ac.cam.cl.juliet.computationengine.Burst;
  *
  * @author Ben Cole
  */
-public class SingleOrManyBursts {
+public class SingleOrManyBursts implements Serializable {
 
     /** Internally used to specify which type an instance contains. */
     private enum Type {
@@ -28,17 +30,21 @@ public class SingleOrManyBursts {
     private boolean syncedToOneDrive;
     private String fileName;
     private String directoryName;
+    private SingleOrManyBursts parent;
+    private File file;
 
     /**
      * Creates an instance for a single Burst object.
      *
      * @param burst The Burst to be contained
      */
-    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive, String fileName) {
+    public SingleOrManyBursts(
+            Burst burst, boolean isSyncedToOneDrive, String fileName, SingleOrManyBursts parent) {
         this.singleBurst = burst;
         type = Type.SINGLE;
         this.fileName = fileName;
         syncedToOneDrive = isSyncedToOneDrive;
+        this.parent = parent;
     }
 
     /**
@@ -47,11 +53,15 @@ public class SingleOrManyBursts {
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
     public SingleOrManyBursts(
-            List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
+            List<SingleOrManyBursts> listOfBursts,
+            boolean isSyncedToOneDrive,
+            String dirName,
+            SingleOrManyBursts parent) {
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
         this.directoryName = dirName;
+        this.parent = parent;
     }
 
     /**
@@ -141,7 +151,8 @@ public class SingleOrManyBursts {
      */
     public String getGPSToDisplay() {
         // TODO: Generate something meaningful here
-        return "GPS coordinates or something here...";
+        //        return "GPS coordinates or something here...";
+        return "No GPS information.";
     }
 
     /**
@@ -160,5 +171,25 @@ public class SingleOrManyBursts {
      */
     public boolean getSyncStatus() {
         return syncedToOneDrive;
+    }
+
+    public boolean getIsRootNode() {
+        return (parent == null);
+    }
+
+    public SingleOrManyBursts getParent() {
+        return parent;
+    }
+
+    public void setParent(SingleOrManyBursts parent) {
+        this.parent = parent;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public File getFile() {
+        return file;
     }
 }

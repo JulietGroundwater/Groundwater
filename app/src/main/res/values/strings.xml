@@ -25,4 +25,20 @@
     <string name="sign_in">Sign in</string>
     <string name="sign_out">Sign out</string>
     <string name="no_files_to_display">No files to display</string>
+    <string name="use_this_phone_s_time">Use this phone\'s time?</string>
+    <string name="use_this_phone_s_date">Use this phone\'s date?</string>
+    <string name="send_to_device">Send to device</string>
+    <string name="use_this_phone_s_gps_position">Use this phone\'s GPS position?</string>
+    <string name="gps">GPS</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="connection_symbol">Connection symbol</string>
+    <string name="date_and_time">Date and Time</string>
+    <string name="date_colon">Date:</string>
+    <string name="set_date">Set date</string>
+    <string name="time_colon">Time:</string>
+    <string name="set_time">Set time</string>
+    <string name="invalid_gps_coords">Invalid GPS coordinates</string>
+    <string name="not_set">Not set</string>
+    <string name="generating_plot">Generating plot...</string>
 </resources>

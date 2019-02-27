@@ -37,7 +37,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, List<Datapoint>> {
         // Generate the bursts (done here so load time is quicker)
         InternalDataHandler idh = InternalDataHandler.getInstance();
         List<SingleOrManyBursts> list = new ArrayList<>();
-        File file = idh.getFileByName(idh.getSelectedData().getNameToDisplay());
+        //        File file = idh.getFileByName(idh.getSelectedData().getNameToDisplay());
+        File file = idh.getSelectedDataFile();
         SingleOrManyBursts many = idh.getSelectedData();
         for (int i = 0; i < file.listFiles().length; i++) {
             File innerFile = file.listFiles()[i];
