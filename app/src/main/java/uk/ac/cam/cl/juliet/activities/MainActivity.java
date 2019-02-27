@@ -108,7 +108,6 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
                 viewPager.setCurrentItem(0, false);

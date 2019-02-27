@@ -26,7 +26,7 @@ public class InternalDataHandler {
         return INSTANCE;
     }
 
-    public InternalDataHandler() {
+    private InternalDataHandler() {
         root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
         rootEmpty = (root.listFiles() == null);
         if (listeners == null) {

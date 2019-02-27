@@ -8,6 +8,8 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
@@ -37,6 +39,9 @@ public class InfoOverviewFragment extends Fragment {
     private InternalDataHandler idh;
     private Map<String, PlotData2D> cache;
 
+    private TextView generatingPlotText;
+    private ProgressBar generatingPlotSpinner;
+
     @Nullable
     @Override
     public View onCreateView(
@@ -46,7 +51,7 @@ public class InfoOverviewFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_info_overview, container, false);
 
         // Create the example chart
-        exampleChart = (LineChart) view.findViewById(R.id.twoD_chart);
+        exampleChart = view.findViewById(R.id.twoD_chart);
         exampleChart.setPinchZoom(true);
         exampleChart.setDragEnabled(true);
 
@@ -61,21 +66,20 @@ public class InfoOverviewFragment extends Fragment {
                 new InternalDataHandler.FileListener() {
                     @Override
                     public void onChange() {
-                        AsyncTask.execute(
-                                new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        updateChart();
-                                    }
-                                });
+                        new AsyncUpdateChartTask(InfoOverviewFragment.this).execute();
                     }
                 });
+
+        generatingPlotSpinner = view.findViewById(R.id.generatingPlotSpinner);
+        generatingPlotSpinner.setVisibility(View.INVISIBLE);
+        generatingPlotText = view.findViewById(R.id.generatingPlotText);
+        generatingPlotText.setVisibility(View.INVISIBLE);
+
         return view;
     }
 
     private void updateChart() {
         if (checkFile()) {
-            showProcessing();
             try {
                 PlotDataGenerator2D twoDimDataGen = null;
                 PlotData2D twoDimData = null;
@@ -121,13 +125,53 @@ public class InfoOverviewFragment extends Fragment {
         }
     }
 
-    private void showProcessing() {
-        // TODO: Add a spinny wheel or something
+    /**
+     * Shows or hides the spinner and text that indicate that the application is currently
+     * processing the data and generating a plot.
+     *
+     * @param processing true to show the spinner; false to hide it
+     */
+    private void setShowProcessing(boolean processing) {
+        int chartVisibility = processing ? View.INVISIBLE : View.VISIBLE;
+        int spinnerVisibility = processing ? View.VISIBLE : View.INVISIBLE;
+        exampleChart.setVisibility(chartVisibility);
+        generatingPlotSpinner.setVisibility(spinnerVisibility);
+        generatingPlotText.setVisibility(spinnerVisibility);
     }
 
     private boolean checkFile() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         if (idh.getSelectedData() == null) return false;
         return idh.getSelectedData().getIsSingleBurst();
+    }
+
+    /**
+     * Updates the chart with the newly selected data file, and also shows and then hides a spinner
+     * to inform the user that processing is underway.
+     */
+    private static class AsyncUpdateChartTask extends AsyncTask<Void, Void, Void> {
+
+        private InfoOverviewFragment fragment;
+
+        public AsyncUpdateChartTask(InfoOverviewFragment fragment) {
+            super();
+            this.fragment = fragment;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            fragment.setShowProcessing(true);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            fragment.updateChart();
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            fragment.setShowProcessing(false);
+        }
     }
 }

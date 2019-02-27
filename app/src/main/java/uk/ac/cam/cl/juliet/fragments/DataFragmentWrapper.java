@@ -4,6 +4,7 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,10 +28,10 @@ public class DataFragmentWrapper extends Fragment
         DataFragment dataFragment = new DataFragment();
         dataFragment.setArguments(getArguments());
         dataFragment.setOnInnerFolderClickedListener(this);
-        getFragmentManager()
-                .beginTransaction()
-                .add(R.id.dataFragmentContent, dataFragment)
-                .commit();
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager != null) {
+            fragmentManager.beginTransaction().add(R.id.dataFragmentContent, dataFragment).commit();
+        }
         return view;
     }
 
@@ -43,10 +44,13 @@ public class DataFragmentWrapper extends Fragment
         arguments.putBoolean(DataFragment.TOP_LEVEL, false);
         arguments.putSerializable(DataFragment.FILES_LIST, innerFolder);
         innerFragment.setArguments(arguments);
-        getFragmentManager()
-                .beginTransaction()
-                .replace(R.id.dataFragmentContent, innerFragment, innerFragment.getTag())
-                .addToBackStack(null)
-                .commit();
+        FragmentManager fragmentManager = getFragmentManager();
+        if (fragmentManager != null) {
+            fragmentManager
+                    .beginTransaction()
+                    .replace(R.id.dataFragmentContent, innerFragment, innerFragment.getTag())
+                    .addToBackStack(null)
+                    .commit();
+        }
     }
 }
