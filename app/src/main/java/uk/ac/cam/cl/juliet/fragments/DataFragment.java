@@ -1,6 +1,7 @@
 package uk.ac.cam.cl.juliet.fragments;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
@@ -136,10 +137,17 @@ public class DataFragment extends Fragment
         Context context = getContext();
         if (context == null) return;
         if (file.getIsSingleBurst()) {
-            // TODO: automatically switch to the "display" screen
+
             // Set the selected data to the correct file
             InternalDataHandler idh = InternalDataHandler.getInstance();
             idh.setSelectedData(file);
+
+            // Show the plot of the data that the user just selected
+            Activity activity = getActivity();
+            if (activity instanceof MainActivity) {
+                ((MainActivity) activity).showChartScreen();
+            }
+
         } else {
             displayNestedFolder(file);
         }

@@ -125,6 +125,11 @@ public class MainActivity extends AppCompatActivity
         return false;
     }
 
+    /** Displays the info screen containing charts. */
+    public void showChartScreen() {
+        bottomNavigation.setSelectedItemId(R.id.action_info);
+    }
+
     /**
      * Adds a listener to the list
      *
