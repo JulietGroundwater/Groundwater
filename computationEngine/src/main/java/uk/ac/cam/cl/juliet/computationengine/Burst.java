@@ -94,13 +94,235 @@ public class Burst {
      * Constructor for a burst that takes both the filename and the number of the burst to load
      *
      * @param file name of the {code .DAT} file to read from
-     * @param burstNum number of the burst to load (starts from 1)
+     * @param totalNumberOfBursts number of the burst to load (starts from 1)
      * @param mean whether to find the mean of the Burst's data or not
      * @throws InvalidBurstException if there are errors when reading the file
      */
-    public Burst(File file, int burstNum, boolean mean) throws InvalidBurstException {
-        burst = burstNum;
-        loadBurstRMB5(burstNum, file, mean);
+    public Burst(File file, int totalNumberOfBursts, boolean mean) throws InvalidBurstException {
+        burst = totalNumberOfBursts;
+        processing = new ArrayList<>();
+
+        if (file == null) {
+            throw new InvalidBurstException("file cannot be null");
+        }
+
+        filename = file.getName();
+
+        if (!filename.contains(".DAT")) {
+            throw new InvalidBurstException("file must be a .DAT file");
+        }
+        long fileLength = file.length();
+
+        try (FileInputStream f = new FileInputStream(file)) {
+            FileChannel fChannel = f.getChannel();
+            int burstCount = 1;
+            int burstPointer = 0;
+            int wordSize; // Number of bytes per data word. Either 4 or 2 depending on format.
+
+            String A = new String(readFile(f, MaxHeaderLen));
+
+            // Read in all of the simple parameters.
+            nSamples = parseInt(A, "N_ADC_SAMPLES=");
+            subBurstsInBurst = parseInt(A, "NSubBursts=");
+            nAttenuators = parseInt(A, "nAttenuators=");
+            attenuator1 = parseDoubleArray(A, "Attenuator1=");
+            attenuator2 = parseDoubleArray(A, "AFGain=");
+            TxAnt = parseIntArray(A, "TxAnt=", 8);
+            RxAnt = parseIntArray(A, "RxAnt=", 8);
+
+            // This normally ends up only having 1 value left for each of TxAnt and RxAnt.
+            while (TxAnt.contains(0)) {
+                TxAnt.remove((Integer) 0);
+            }
+
+            while (RxAnt.contains(0)) {
+                RxAnt.remove((Integer) 0);
+            }
+
+            // Average determines what format the file is in.
+            if (A.contains("Average=")) {
+                average = parseInt(A, "Average=");
+            } else {
+                average = 0;
+            }
+
+            if (average != 0) {
+                wordSize = 4;
+                chirpsInBurst = 1;
+            } else {
+                wordSize = 2;
+                chirpsInBurst = subBurstsInBurst * TxAnt.size() * RxAnt.size() * nAttenuators;
+            }
+
+            // Extract remaining information from header
+            SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
+            ft.setTimeZone(TimeZone.getTimeZone("GMT"));
+            dateTime = ft.parse(parseString(A, "Time stamp="));
+
+            temperature1 = parseDouble(A, "Temp1=");
+            temperature2 = parseDouble(A, "Temp2=");
+            if (temperature1 > 300) {
+                temperature1 -= 512;
+            }
+            if (temperature2 > 300) {
+                temperature2 -= 512;
+            }
+
+            batteryVoltage = parseDouble(A, "BatteryVoltage=");
+
+            String Reg0B = parseString(A, "Reg0B=");
+            String Reg0C = parseString(A, "Reg0C=");
+            String Reg0D = parseString(A, "Reg0D=");
+
+            f0 = regDecode(Reg0B, 9, 17) * fSysClk / Math.pow(2, 32);
+
+            double tStepUp = regDecode(Reg0D, 5, 9) * 4 / fSysClk;
+            double freqDiff = regDecode(Reg0B, 1, 9) - regDecode(Reg0B, 9, 17);
+            double rampUpStep = regDecode(Reg0C, 9, 17);
+            double chirpLength = Math.round(Math.abs(freqDiff / rampUpStep)) * tStepUp;
+            chirpLength = Math.min(chirpLength, nSamples / fs);
+
+            double rampDnStep = regDecode(Reg0C, 1, 9) * fSysClk / Math.pow(2, 32);
+            k = 2 * Math.PI * (rampDnStep / tStepUp);
+
+            b = (chirpLength * k) / (2 * Math.PI);
+
+            samplesPerChirp = chirpLength * fs;
+            t = chirpLength;
+            dt = 1 / fs;
+
+            tList = new ArrayList<>();
+            fList = new ArrayList<>();
+
+            for (int i = 0; i < samplesPerChirp; i++) {
+                double tempT = dt * i;
+                tList.add(tempT);
+                fList.add(f0 + tempT * (k / (2 * Math.PI)));
+            }
+
+            String searchString = "*** End Header ***";
+            burstPointer += A.indexOf(searchString) + searchString.length();
+
+            int wordsPerBurst = chirpsInBurst * nSamples;
+
+            while ((burstCount < totalNumberOfBursts)
+                    && (burstPointer <= fileLength - MaxHeaderLen)) {
+                burstPointer += (wordsPerBurst * wordSize);
+                burstCount++;
+            }
+
+            if (burstPointer != 0) {
+                fChannel.position(burstPointer);
+            }
+
+            if (burstCount != totalNumberOfBursts) {
+                throw new InvalidBurstException("Incorrect number of bursts in the file");
+            }
+
+            startInd = new ArrayList<>();
+            endInd = new ArrayList<>();
+            for (int i = 0; i < nSamples * chirpsInBurst; i += nSamples) {
+                startInd.add(i);
+                endInd.add(i + nSamples - 1);
+            }
+
+            List<Complex> attSet = new ArrayList<>();
+            for (int i = 0; i < attenuator1.size(); i++)
+                attSet.add(new Complex(attenuator1.get(i), attenuator2.get(i)));
+
+            double chirpInterval = 1.6384; // 1.6384 / (24 * 3600)
+
+            if (average == 1) {
+                fChannel.position(burstPointer + 1);
+            }
+
+            ByteBuffer bb = ByteBuffer.wrap(readFile(f, wordsPerBurst * wordSize));
+            bb.order(ByteOrder.LITTLE_ENDIAN);
+            double d;
+            vif = new ArrayList<>();
+
+            for (int chirp = 0; chirp < chirpsInBurst; chirp++) {
+                ArrayList<Double> temp = new ArrayList<>();
+                for (int i = 0; i < nSamples; i++) {
+                    switch (average) {
+                        case 2:
+                            d = bb.getInt();
+                            break;
+                        case 1:
+                            d = bb.getFloat();
+                            break;
+                        default:
+                            d = bb.getShort();
+                            break;
+                    }
+
+                    if (d < 0) {
+                        d += Math.pow(2, 16);
+                    }
+                    d = (d * 2.5 / Math.pow(2, 16));
+
+                    if (average == 2) {
+                        d = d / (subBurstsInBurst * nAttenuators);
+                    }
+
+                    temp.add(d);
+                }
+                vif.add(temp);
+                chirpNum.add(chirp);
+                chirpAtt.add(attSet.get((chirp) % attSet.size())); // TODO check for off by 1 error
+                chirpTime.add(new Date(dateTime.getTime() + (long) (chirp * chirpInterval)));
+            }
+
+            for (int i = 0; i < vif.size(); i++) {
+                vif.set(i, vif.get(i).subList(0, (int) samplesPerChirp));
+            }
+
+            if (mean) {
+                ArrayList<Double> chirpAverage = new ArrayList<>();
+
+                for (int i = 0; i < vif.get(0).size(); i++) {
+                    double value = 0;
+                    for (int j = 0; j < vif.size(); j++) {
+                        value += vif.get(j).get(i);
+                    }
+                    value /= vif.size();
+                    chirpAverage.add(value);
+                }
+
+                vif.clear();
+                vif.add(chirpAverage);
+
+                chirpsInBurst = 1;
+
+                // using BigInteger to avoid value overflow
+                BigInteger total = BigInteger.ZERO;
+                for (Date date : chirpTime) {
+                    total = total.add(BigInteger.valueOf(date.getTime()));
+                }
+                BigInteger averageMillis = total.divide(BigInteger.valueOf(chirpTime.size()));
+                Date averageDate = new Date(averageMillis.longValue());
+
+                chirpTime.clear();
+                chirpTime.add(averageDate);
+
+                Complex averageComplex = new Complex(0);
+                for (Complex c : chirpAtt) {
+                    averageComplex = averageComplex.add(c);
+                }
+                averageComplex = averageComplex.divide(chirpAtt.size());
+                chirpAtt.clear();
+                chirpAtt.add(averageComplex);
+
+                processing.add("burst mean");
+            }
+        } catch (InvalidBurstException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new InvalidBurstException(
+                    String.format(
+                            "Failed to parse file\nError Message: %s\n", e.toString()));
+        }
     }
 
     /**
@@ -491,229 +713,7 @@ public class Burst {
 
     private void loadBurstRMB5(int totalNumberOfBursts, File file, boolean mean)
             throws InvalidBurstException {
-        processing = new ArrayList<>();
 
-        if (file == null) {
-            throw new InvalidBurstException("file cannot be null");
-        }
-
-        filename = file.getName();
-
-        if (!filename.contains(".DAT")) {
-            throw new InvalidBurstException("file must be a .DAT file");
-        }
-        long fileLength = file.length();
-
-        try (FileInputStream f = new FileInputStream(file)) {
-            FileChannel fChannel = f.getChannel();
-            int burstCount = 1;
-            int burstPointer = 0;
-            int wordSize; // Number of bytes per data word. Either 4 or 2 depending on format.
-
-            String A = new String(readFile(f, MaxHeaderLen));
-
-            // Read in all of the simple parameters.
-            nSamples = parseInt(A, "N_ADC_SAMPLES=");
-            subBurstsInBurst = parseInt(A, "NSubBursts=");
-            nAttenuators = parseInt(A, "nAttenuators=");
-            attenuator1 = parseDoubleArray(A, "Attenuator1=");
-            attenuator2 = parseDoubleArray(A, "AFGain=");
-            TxAnt = parseIntArray(A, "TxAnt=", 8);
-            RxAnt = parseIntArray(A, "RxAnt=", 8);
-
-            // This normally ends up only having 1 value left for each of TxAnt and RxAnt.
-            while (TxAnt.contains(0)) {
-                TxAnt.remove((Integer) 0);
-            }
-
-            while (RxAnt.contains(0)) {
-                RxAnt.remove((Integer) 0);
-            }
-
-            // Average determines what format the file is in.
-            if (A.contains("Average=")) {
-                average = parseInt(A, "Average=");
-            } else {
-                average = 0;
-            }
-
-            if (average != 0) {
-                wordSize = 4;
-                chirpsInBurst = 1;
-            } else {
-                wordSize = 2;
-                chirpsInBurst = subBurstsInBurst * TxAnt.size() * RxAnt.size() * nAttenuators;
-            }
-
-            // Extract remaining information from header
-            SimpleDateFormat ft = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.ENGLISH);
-            ft.setTimeZone(TimeZone.getTimeZone("GMT"));
-            dateTime = ft.parse(parseString(A, "Time stamp="));
-
-            temperature1 = parseDouble(A, "Temp1=");
-            temperature2 = parseDouble(A, "Temp2=");
-            if (temperature1 > 300) {
-                temperature1 -= 512;
-            }
-            if (temperature2 > 300) {
-                temperature2 -= 512;
-            }
-
-            batteryVoltage = parseDouble(A, "BatteryVoltage=");
-
-            String Reg0B = parseString(A, "Reg0B=");
-            String Reg0C = parseString(A, "Reg0C=");
-            String Reg0D = parseString(A, "Reg0D=");
-
-            f0 = regDecode(Reg0B, 9, 17) * fSysClk / Math.pow(2, 32);
-
-            double tStepUp = regDecode(Reg0D, 5, 9) * 4 / fSysClk;
-            double freqDiff = regDecode(Reg0B, 1, 9) - regDecode(Reg0B, 9, 17);
-            double rampUpStep = regDecode(Reg0C, 9, 17);
-            double chirpLength = Math.round(Math.abs(freqDiff / rampUpStep)) * tStepUp;
-            chirpLength = Math.min(chirpLength, nSamples / fs);
-
-            double rampDnStep = regDecode(Reg0C, 1, 9) * fSysClk / Math.pow(2, 32);
-            k = 2 * Math.PI * (rampDnStep / tStepUp);
-
-            b = (chirpLength * k) / (2 * Math.PI);
-
-            samplesPerChirp = chirpLength * fs;
-            t = chirpLength;
-            dt = 1 / fs;
-
-            tList = new ArrayList<>();
-            fList = new ArrayList<>();
-
-            for (int i = 0; i < samplesPerChirp; i++) {
-                double tempT = dt * i;
-                tList.add(tempT);
-                fList.add(f0 + tempT * (k / (2 * Math.PI)));
-            }
-
-            String searchString = "*** End Header ***";
-            burstPointer += A.indexOf(searchString) + searchString.length();
-
-            int wordsPerBurst = chirpsInBurst * nSamples;
-
-            while ((burstCount < totalNumberOfBursts)
-                    && (burstPointer <= fileLength - MaxHeaderLen)) {
-                burstPointer += (wordsPerBurst * wordSize);
-                burstCount++;
-            }
-
-            if (burstPointer != 0) {
-                fChannel.position(burstPointer);
-            }
-
-            if (burstCount != totalNumberOfBursts) {
-                throw new InvalidBurstException("Incorrect number of bursts in the file");
-            }
-
-            startInd = new ArrayList<>();
-            endInd = new ArrayList<>();
-            for (int i = 0; i < nSamples * chirpsInBurst; i += nSamples) {
-                startInd.add(i);
-                endInd.add(i + nSamples - 1);
-            }
-
-            List<Complex> attSet = new ArrayList<>();
-            for (int i = 0; i < attenuator1.size(); i++)
-                attSet.add(new Complex(attenuator1.get(i), attenuator2.get(i)));
-
-            double chirpInterval = 1.6384; // 1.6384 / (24 * 3600)
-
-            if (average == 1) {
-                fChannel.position(burstPointer + 1);
-            }
-
-            ByteBuffer bb = ByteBuffer.wrap(readFile(f, wordsPerBurst * wordSize));
-            bb.order(ByteOrder.LITTLE_ENDIAN);
-            double d;
-            vif = new ArrayList<>();
-
-            for (int chirp = 0; chirp < chirpsInBurst; chirp++) {
-                ArrayList<Double> temp = new ArrayList<>();
-                for (int i = 0; i < nSamples; i++) {
-                    switch (average) {
-                        case 2:
-                            d = bb.getInt();
-                            break;
-                        case 1:
-                            d = bb.getFloat();
-                            break;
-                        default:
-                            d = bb.getShort();
-                            break;
-                    }
-
-                    if (d < 0) {
-                        d += Math.pow(2, 16);
-                    }
-                    d = (d * 2.5 / Math.pow(2, 16));
-
-                    if (average == 2) {
-                        d = d / (subBurstsInBurst * nAttenuators);
-                    }
-
-                    temp.add(d);
-                }
-                vif.add(temp);
-                chirpNum.add(chirp);
-                chirpAtt.add(attSet.get((chirp) % attSet.size())); // TODO check for off by 1 error
-                chirpTime.add(new Date(dateTime.getTime() + (long) (chirp * chirpInterval)));
-            }
-
-            for (int i = 0; i < vif.size(); i++) {
-                vif.set(i, vif.get(i).subList(0, (int) samplesPerChirp));
-            }
-
-            if (mean) {
-                ArrayList<Double> chirpAverage = new ArrayList<>();
-
-                for (int i = 0; i < vif.get(0).size(); i++) {
-                    double value = 0;
-                    for (int j = 0; j < vif.size(); j++) {
-                        value += vif.get(j).get(i);
-                    }
-                    value /= vif.size();
-                    chirpAverage.add(value);
-                }
-
-                vif.clear();
-                vif.add(chirpAverage);
-
-                chirpsInBurst = 1;
-
-                // using BigInteger to avoid value overflow
-                BigInteger total = BigInteger.ZERO;
-                for (Date date : chirpTime) {
-                    total = total.add(BigInteger.valueOf(date.getTime()));
-                }
-                BigInteger averageMillis = total.divide(BigInteger.valueOf(chirpTime.size()));
-                Date averageDate = new Date(averageMillis.longValue());
-
-                chirpTime.clear();
-                chirpTime.add(averageDate);
-
-                Complex averageComplex = new Complex(0);
-                for (Complex c : chirpAtt) {
-                    averageComplex = averageComplex.add(c);
-                }
-                averageComplex = averageComplex.divide(chirpAtt.size());
-                chirpAtt.clear();
-                chirpAtt.add(averageComplex);
-
-                processing.add("burst mean");
-            }
-        } catch (InvalidBurstException e) {
-            throw e;
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new InvalidBurstException(
-                    String.format(
-                            "Failed to parse file\nError Message: %s\n", e.toString()));
-        }
     }
 
     private String parseString(String mainString, String searchString) {
