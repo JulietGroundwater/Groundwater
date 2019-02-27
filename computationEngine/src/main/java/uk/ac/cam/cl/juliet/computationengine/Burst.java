@@ -25,12 +25,9 @@ public class Burst {
     private int subBurstsInBurst;
     private int average;
     private int nAttenuators;
-    private int code = 0;
     private int nSamples = 0;
     private int chirpsInBurst = 0;
-    private int burst = 0;
-    private int fileFormat;
-    private double fs;
+    private int burst;
     private Date dateTime;
     private double temperature1,
             temperature2,
@@ -38,14 +35,9 @@ public class Burst {
             samplesPerChirp,
             f0,
             k,
-            f1,
             t,
             b,
-            fc,
-            dt,
-            er,
-            ci,
-            lambdac;
+            dt;
     private List<Double> attenuator1, attenuator2, tList, fList;
     private List<String> processing;
     private List<Complex> chirpAtt = new ArrayList<>();
@@ -56,6 +48,7 @@ public class Burst {
     // Constants
     private static final double fSysClk = 1e9;
     private static final int MaxHeaderLen = 1500;
+    private static final double fs = 4e4;
 
     /**
      * A default constructor if the number of the burst is not specified.
@@ -106,11 +99,8 @@ public class Burst {
      * @throws InvalidBurstException if there are errors when reading the file
      */
     public Burst(File file, int burstNum, boolean mean) throws InvalidBurstException {
+        burst = burstNum;
         loadBurstRMB5(burstNum, file, mean);
-
-        if (code != 0) {
-            throw new InvalidBurstException("Unable to correctly create burst");
-        }
     }
 
     /**
@@ -119,7 +109,7 @@ public class Burst {
      * @return Code parameter
      */
     public int getCode() {
-        return code;
+        return 0;
     }
 
     /**
@@ -278,7 +268,7 @@ public class Burst {
      * @return FileFormat parameter
      */
     public int getFileFormat() {
-        return fileFormat;
+        return 5;
     }
 
     /**
@@ -394,7 +384,7 @@ public class Burst {
      * @return f1 parameter
      */
     public double getF1() {
-        return f1;
+        return getF0() + getB();
     }
 
     /**
@@ -423,7 +413,7 @@ public class Burst {
      * @return fc parameter
      */
     public double getFc() {
-        return fc;
+        return getF0() + (getB() / 2);
     }
 
     /**
@@ -441,7 +431,7 @@ public class Burst {
      * @return er parameter
      */
     public double getEr() {
-        return er;
+        return 3.18;
     }
 
     /**
@@ -450,7 +440,7 @@ public class Burst {
      * @return ci parameter
      */
     public double getCi() {
-        return ci;
+        return 3e8 / Math.sqrt(getEr());
     }
 
     /**
@@ -459,7 +449,7 @@ public class Burst {
      * @return lambdac parameter
      */
     public double getLambdac() {
-        return lambdac;
+        return getCi() / getFc();
     }
 
     /**
@@ -501,9 +491,6 @@ public class Burst {
 
     private void loadBurstRMB5(int totalNumberOfBursts, File file, boolean mean)
             throws InvalidBurstException {
-        fs = 4e4;
-        code = 0;
-        fileFormat = 5;
         processing = new ArrayList<>();
 
         if (file == null) {
@@ -521,10 +508,11 @@ public class Burst {
             FileChannel fChannel = f.getChannel();
             int burstCount = 1;
             int burstPointer = 0;
-            int wordSize;
+            int wordSize; // Number of bytes per data word. Either 4 or 2 depending on format.
 
             String A = new String(readFile(f, MaxHeaderLen));
 
+            // Read in all of the simple parameters.
             nSamples = parseInt(A, "N_ADC_SAMPLES=");
             subBurstsInBurst = parseInt(A, "NSubBursts=");
             nAttenuators = parseInt(A, "nAttenuators=");
@@ -533,6 +521,7 @@ public class Burst {
             TxAnt = parseIntArray(A, "TxAnt=", 8);
             RxAnt = parseIntArray(A, "RxAnt=", 8);
 
+            // This normally ends up only having 1 value left for each of TxAnt and RxAnt.
             while (TxAnt.contains(0)) {
                 TxAnt.remove((Integer) 0);
             }
@@ -541,6 +530,7 @@ public class Burst {
                 RxAnt.remove((Integer) 0);
             }
 
+            // Average determines what format the file is in.
             if (A.contains("Average=")) {
                 average = parseInt(A, "Average=");
             } else {
@@ -581,23 +571,16 @@ public class Burst {
             double freqDiff = regDecode(Reg0B, 1, 9) - regDecode(Reg0B, 9, 17);
             double rampUpStep = regDecode(Reg0C, 9, 17);
             double chirpLength = Math.round(Math.abs(freqDiff / rampUpStep)) * tStepUp;
-
-            if (chirpLength * fs > nSamples) {
-                chirpLength = nSamples / fs;
-            }
+            chirpLength = Math.min(chirpLength, nSamples / fs);
 
             double rampDnStep = regDecode(Reg0C, 1, 9) * fSysClk / Math.pow(2, 32);
             k = 2 * Math.PI * (rampDnStep / tStepUp);
 
-            f1 = f0 + chirpLength * k / 2 / Math.PI;
+            b = (chirpLength * k) / (2 * Math.PI);
+
             samplesPerChirp = chirpLength * fs;
             t = chirpLength;
-            b = chirpLength * k / 2 / Math.PI;
-            fc = f0 + b / 2;
             dt = 1 / fs;
-            er = 3.18;
-            ci = 3e8 / Math.sqrt(er);
-            lambdac = ci / fc;
 
             tList = new ArrayList<>();
             fList = new ArrayList<>();
@@ -624,9 +607,6 @@ public class Burst {
             }
 
             if (burstCount != totalNumberOfBursts) {
-                // Too few bursts in file
-                burst = burstCount;
-                code = -4;
                 throw new InvalidBurstException("Incorrect number of bursts in the file");
             }
 
@@ -636,8 +616,6 @@ public class Burst {
                 startInd.add(i);
                 endInd.add(i + nSamples - 1);
             }
-
-            burst = totalNumberOfBursts;
 
             List<Complex> attSet = new ArrayList<>();
             for (int i = 0; i < attenuator1.size(); i++)
@@ -731,12 +709,10 @@ public class Burst {
         } catch (InvalidBurstException e) {
             throw e;
         } catch (Exception e) {
-            if (code == 0) code = 1;
             e.printStackTrace();
             throw new InvalidBurstException(
                     String.format(
-                            "Failed to parse file, code %d\nError Message: %s\n",
-                            code, e.toString()));
+                            "Failed to parse file\nError Message: %s\n", e.toString()));
         }
     }
 
