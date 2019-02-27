@@ -36,7 +36,7 @@ public class Burst {
             f0,
             k,
             t;
-    private List<Double> attenuator1, attenuator2, tList, fList;
+    private List<Double> attenuator1, attenuator2;
     private List<String> processing = new ArrayList<>();
     private List<Complex> chirpAtt = new ArrayList<>();
     private List<Date> chirpTime = new ArrayList<>();
@@ -173,14 +173,6 @@ public class Burst {
             double rampDnStep = parseReg(header, "Reg0C=", 1, 9) * fSysClk / Math.pow(2, 32);
             k = (2 * Math.PI * rampDnStep) / (tStepUp);
 
-            tList = new ArrayList<>();
-            fList = new ArrayList<>();
-            for (int i = 0; i < samplesPerChirp; i++) {
-                double tempT = dt * i;
-                tList.add(tempT);
-                fList.add(f0 + tempT * (k / (2 * Math.PI)));
-            }
-
             String searchString = "*** End Header ***";
             int burstPointer = header.indexOf(searchString) + searchString.length();
 
@@ -253,8 +245,9 @@ public class Burst {
             }
 
             if (mean) {
-                ArrayList<Double> chirpAverage = new ArrayList<>();
+                chirpsInBurst = 1;
 
+                ArrayList<Double> chirpAverage = new ArrayList<>();
                 for (int i = 0; i < vif.get(0).size(); i++) {
                     double value = 0;
                     for (int j = 0; j < vif.size(); j++) {
@@ -263,11 +256,8 @@ public class Burst {
                     value /= vif.size();
                     chirpAverage.add(value);
                 }
-
                 vif.clear();
                 vif.add(chirpAverage);
-
-                chirpsInBurst = 1;
 
                 // using BigInteger to avoid value overflow
                 BigInteger total = BigInteger.ZERO;
@@ -659,7 +649,11 @@ public class Burst {
      * @return t parameter
      */
     public List<Double> getTList() {
-        return new ArrayList<>(tList);
+        ArrayList<Double> temp = new ArrayList<>();
+        for (int i = 0; i < getSamplesPerChirp(); i++) {
+            temp.add(getDt() * i);
+        }
+        return temp;
     }
 
     /**
@@ -671,7 +665,11 @@ public class Burst {
      * @return f parameter
      */
     public List<Double> getFList() {
-        return new ArrayList<>(fList);
+        ArrayList<Double> temp = new ArrayList<>();
+        for (int i = 0; i < getSamplesPerChirp(); i++) {
+            temp.add(f0 + (i * dt * k) / (2 * Math.PI));
+        }
+        return temp;
     }
 
     /**
