@@ -20,6 +20,7 @@ public class InternalDataHandler {
     private List<FileListener> listeners;
     private boolean rootEmpty;
     private String currentLiveData;
+    private boolean processingLiveData = false;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
@@ -46,6 +47,15 @@ public class InternalDataHandler {
         for (FileListener listener : listeners) {
             listener.onChange();
         }
+    }
+
+    /**
+     * Set the globally selected data and don't notify listeners
+     *
+     * @param selectedData
+     */
+    public void silentlySelectData(SingleOrManyBursts selectedData) {
+        this.selectedData = selectedData;
     }
 
     /**
@@ -76,23 +86,41 @@ public class InternalDataHandler {
 
     /**
      * Create a new directory with a given name on the external storage
+     *
      * @param dirName - name of the directory
      */
-    public void addNewDirectory(String dirName) {
+    public String addNewDirectory(String dirName) {
         File file = new File(root.getAbsolutePath(), dirName);
         file.mkdir();
+        return file.getAbsolutePath();
     }
 
     /**
      * Creates a file in a given directory
+     *
      * @param dirName - where to place the file
      * @param file - the file
      */
     public void addFileToDirectory(String dirName, File file) {
         File newFile = new File(root.getAbsolutePath() + "/" + dirName, file.getName());
-        try {
-            FileOutputStream fos = new FileOutputStream(newFile);
-            fos.close();
+        try (FileInputStream fis = new FileInputStream(file);
+                FileOutputStream fos = new FileOutputStream(newFile)) {
+            byte[] buffer = new byte[(int) file.length()];
+            fis.read(buffer);
+            fos.write(buffer);
+            fos.flush();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    // REMOVE THIS MEHTOD
+    public void addFileToDirectory(String dirName, byte[] file) {
+        File newFile = new File(root.getAbsolutePath() + "/" + dirName, "tests.json");
+        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+            fos.write(file);
+            fos.flush();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
@@ -146,6 +174,7 @@ public class InternalDataHandler {
     public void setRootEmpty(boolean emptyValue) {
         rootEmpty = emptyValue;
     }
+
     public void setCurrentLiveData(String name) {
         this.currentLiveData = name;
     }
@@ -156,6 +185,14 @@ public class InternalDataHandler {
 
     public boolean isRootEmpty() {
         return rootEmpty;
+    }
+
+    public void setProcessingLiveData(boolean value) {
+        processingLiveData = value;
+    }
+
+    public boolean getProcessingLiveData() {
+        return processingLiveData;
     }
 
     public List<FileListener> getListeners() {

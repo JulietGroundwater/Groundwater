@@ -3,11 +3,10 @@ package uk.ac.cam.cl.juliet.connection;
 import java.io.File;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
-
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
 /** Our simulation for a connection to the radar device */
-public class ConnectionSimulator implements IConnection{
+public class ConnectionSimulator implements IConnection {
     private ConcurrentLinkedQueue<File> transientFiles;
     private AtomicBoolean connectionLive;
     private AtomicBoolean dataReady;
@@ -38,6 +37,8 @@ public class ConnectionSimulator implements IConnection{
 
     @Override
     public void disconnect() {
+        this.connectionLive.set(false);
+        this.dataReady.set(false);
         if (device != null) {
             device.destoryConnection(this);
         }
@@ -60,17 +61,12 @@ public class ConnectionSimulator implements IConnection{
     }
 
     public File pollData() {
-        if (transientFiles.isEmpty()) {
-            this.dataReady.set(false);
-        } else {
-            this.dataReady.set(true);
-        }
         return transientFiles.poll();
     }
 
     @Override
     public void interruptDataGathering() {
-        //TODO: Implement interruption
+        // TODO: Implement interruption
     }
 
     @Override
@@ -81,7 +77,6 @@ public class ConnectionSimulator implements IConnection{
     @Override
     public void dataFinished() {
         disconnect();
-        this.connectionLive.set(false);
     }
 
     public ConcurrentLinkedQueue<File> getTransientFiles() {
@@ -93,6 +88,6 @@ public class ConnectionSimulator implements IConnection{
     }
 
     public boolean getConnecitonLive() {
-       return this.connectionLive.get();
+        return this.connectionLive.get();
     }
 }

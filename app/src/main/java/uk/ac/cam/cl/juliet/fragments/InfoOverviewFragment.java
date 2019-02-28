@@ -1,19 +1,25 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.Spinner;
 import android.widget.TextView;
 import com.github.mikephil.charting.charts.LineChart;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
+import com.github.mikephil.charting.utils.ColorTemplate;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,6 +32,7 @@ import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData2D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator2D;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
+import uk.ac.cam.cl.juliet.models.BurstDataTypes;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /**
@@ -33,11 +40,12 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  *
  * @author Ben Cole
  */
-public class InfoOverviewFragment extends Fragment {
+public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSelectedListener {
 
     private LineChart exampleChart;
+    private Spinner overviewSpinner;
     private InternalDataHandler idh;
-    private Map<String, PlotData2D> cache;
+    private Map<String, PlotDataGenerator2D> cache;
 
     private TextView generatingPlotText;
     private ProgressBar generatingPlotSpinner;
@@ -51,9 +59,24 @@ public class InfoOverviewFragment extends Fragment {
         View view = inflater.inflate(R.layout.fragment_info_overview, container, false);
 
         // Create the example chart
-        exampleChart = view.findViewById(R.id.twoD_chart);
+        exampleChart = (LineChart) view.findViewById(R.id.twoD_chart);
         exampleChart.setPinchZoom(true);
         exampleChart.setDragEnabled(true);
+
+        // Create the spinner and set values
+        overviewSpinner = view.findViewById(R.id.overview_spinner);
+        String[] datatypes =
+                new String[] {
+                    BurstDataTypes.AMPLITUDE.getDisplayableName(),
+                    BurstDataTypes.PHASE.getDisplayableName(),
+                    BurstDataTypes.TIME.getDisplayableName()
+                };
+
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<>(
+                        getContext(), R.layout.support_simple_spinner_dropdown_item, datatypes);
+        overviewSpinner.setAdapter(adapter);
+        overviewSpinner.setOnItemSelectedListener(this);
 
         // Initialise the cache
         cache = new HashMap<>();
@@ -93,12 +116,22 @@ public class InfoOverviewFragment extends Fragment {
                 // Check the cache in case the same file was selected again and it is already
                 // computed
                 if (cache.containsKey(idh.getSelectedDataFile().getAbsolutePath())) {
-                    twoDimData = cache.get(idh.getSelectedDataFile().getAbsolutePath());
+                    twoDimDataGen = cache.get(idh.getSelectedDataFile().getAbsolutePath());
                 } else {
                     twoDimDataGen = new PlotDataGenerator2D(idh.getSelectedData().getSingleBurst());
-                    twoDimData = twoDimDataGen.getAmpPlotData();
                     // Add to the cache
-                    cache.put(idh.getSelectedDataFile().getAbsolutePath(), twoDimData);
+                    cache.put(idh.getSelectedDataFile().getAbsolutePath(), twoDimDataGen);
+                }
+
+                // Choose the correct data to visualise
+                BurstDataTypes selected =
+                        BurstDataTypes.fromString((String) overviewSpinner.getSelectedItem());
+                if (selected == BurstDataTypes.AMPLITUDE) {
+                    twoDimData = twoDimDataGen.getAmpPlotData();
+                } else if (selected == BurstDataTypes.PHASE) {
+                    twoDimData = twoDimDataGen.getPhasePlotData();
+                } else {
+                    twoDimData = twoDimDataGen.getTimePlotData();
                 }
 
                 // Generate entries for the chart
@@ -111,7 +144,10 @@ public class InfoOverviewFragment extends Fragment {
                 }
 
                 // Create a line data set and then the line data
-                LineDataSet dataset = new LineDataSet(entries, "Two Dim. Data");
+                LineDataSet dataset =
+                        new LineDataSet(entries, idh.getSelectedData().getNameToDisplay());
+                dataset.setCircleColor(Color.LTGRAY);
+                dataset.setColor(ColorTemplate.MATERIAL_COLORS[0]);
                 LineData data = new LineData(dataset);
 
                 // Set the data and invalidate the chart (re-render)
@@ -143,6 +179,22 @@ public class InfoOverviewFragment extends Fragment {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         if (idh.getSelectedData() == null) return false;
         return idh.getSelectedData().getIsSingleBurst();
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        AsyncTask.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        updateChart();
+                    }
+                });
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        Log.d("Spinner", "Nothing selected");
     }
 
     /**
