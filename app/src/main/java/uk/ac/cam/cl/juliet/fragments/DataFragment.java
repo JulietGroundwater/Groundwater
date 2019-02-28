@@ -15,6 +15,7 @@ import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
@@ -33,7 +34,7 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  * @author Ben Cole
  */
 public class DataFragment extends Fragment
-        implements FilesListAdapter.OnDataFileSelectedListener, MainActivity.PermissionListener {
+        implements FilesListAdapter.OnDataFileSelectedListener, MainActivity.PermissionListener, View.OnClickListener {
 
     public static String TOP_LEVEL = "top_level";
     public static String FILES_LIST = "files_list";
@@ -42,6 +43,7 @@ public class DataFragment extends Fragment
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
     private List<SingleOrManyBursts> files;
+    private Button plotAllFilesButton;
 
     DataFragmentListener listener;
 
@@ -85,6 +87,13 @@ public class DataFragment extends Fragment
         noFilesToDisplayText = view.findViewById(R.id.noFilesText);
         int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
         noFilesToDisplayText.setVisibility(visibility);
+
+        // Set up and potentially disable the "plot all files" button
+        plotAllFilesButton = view.findViewById(R.id.displayAllFilesButton);
+        if (!getEligibleForPlottingAllFiles()) {
+            plotAllFilesButton.setEnabled(false);
+        }
+        plotAllFilesButton.setOnClickListener(this);
 
         // Subscribe for permission updates
         MainActivity main = (MainActivity) getActivity();
@@ -256,6 +265,24 @@ public class DataFragment extends Fragment
         return result;
     }
 
+    /**
+     * Determines whether the folder we are current looking at is appropriate for plotting all
+     * files.
+     *
+     * This will be true if the current folder is both non-empty and contains only files (no
+     * folders). Otherwise, this will be false.
+     *
+     * @return
+     */
+    private boolean getEligibleForPlottingAllFiles() {
+        if (files.isEmpty()) return false;
+        boolean eligible = true;
+        for (SingleOrManyBursts file : files) {
+            eligible &= file.getIsSingleBurst();
+        }
+        return eligible;
+    }
+
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
     private void showConfirmDeleteDialog(SingleOrManyBursts file) {
         Context context = getContext();
@@ -332,6 +359,15 @@ public class DataFragment extends Fragment
      */
     public void setDataFragmentListener(DataFragmentListener listener) {
         this.listener = listener;
+    }
+
+    @Override
+    public void onClick(View v) {
+        switch (v.getId()) {
+            case R.id.displayAllFilesButton:
+                // TODO
+//                onDataFileClicked(file, );
+        }
     }
 
     /**
