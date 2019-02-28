@@ -43,14 +43,11 @@ import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
-import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.GraphServiceController;
 import uk.ac.cam.cl.juliet.data.IAuthenticationCallback;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
-import uk.ac.cam.cl.juliet.models.Datapoint;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
-import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 
 /**
  * Fragment for the 'data' screen.
@@ -60,8 +57,7 @@ import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener,
                 IAuthenticationCallback,
-                MainActivity.PermissionListener,
-                IProcessingCallback {
+                MainActivity.PermissionListener {
 
     private RecyclerView filesList;
     private TextView noFilesToDisplayText;
@@ -445,15 +441,6 @@ public class DataFragment extends Fragment
 
         // Notify the adapter
         adapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onTaskCompleted(
-            List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast) {
-        // This will most likely not do anything
-        if (isLive) {
-            notifyFilesChanged();
-        }
     }
 
     /** Asynchronously uploads a file to OneDrive. */

@@ -9,68 +9,67 @@ import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator3D;
 import uk.ac.cam.cl.juliet.models.Datapoint;
+import uk.ac.cam.cl.juliet.models.MultipleBurstsDataTypes;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /** A task for handling the live processing of data */
 public class LiveProcessingTask extends AsyncTask<Void, Void, List<PlotData3D>> {
+    // REMOVE BATCHES - last file and current file
     private List<IProcessingCallback> listeners;
-    private List<File> fileBatch;
+    private File previousFile;
+    private File currentFile;
+    private List<PlotDataGenerator3D> generators = new ArrayList<>();
     private List<Datapoint> datapoints = new ArrayList<>();
-    private List<SingleOrManyBursts> singles = new ArrayList<>();
-    private final int BATCH_SIZE = 1;
+    private List<SingleOrManyBursts> singleOrManyBurstsList = new ArrayList<>();
     private boolean lastFile;
+    private MultipleBurstsDataTypes type;
 
-    public LiveProcessingTask(List<IProcessingCallback> tasks, List<File> batch, boolean lastFile) {
+    public LiveProcessingTask(
+            List<IProcessingCallback> tasks,
+            File previousFile,
+            File currentFile,
+            boolean lastFile,
+            MultipleBurstsDataTypes type) {
         this.listeners = tasks;
-        this.fileBatch = batch;
+        this.previousFile = previousFile;
+        this.currentFile = currentFile;
         this.lastFile = lastFile;
+        this.type = type;
     }
 
     @Override
     protected List<PlotData3D> doInBackground(Void... voids) {
-        generateSingleOrManyBurstsFromFiles();
-        PlotDataGenerator3D pdg;
-        List<Burst> batchList = new ArrayList<>();
+        // Files will not have any SingleOrManyBurst object associated with them so need to be
+        // generated
+        PlotDataGenerator3D pdg = null;
+        List<Burst> burstList = new ArrayList<>();
         List<PlotData3D> datasets = new ArrayList<>();
-        int batches = (int) Math.floor(((double) singles.size()) / ((double) BATCH_SIZE));
-
-        for (int batchNumber = 0; batchNumber < batches; batchNumber++) {
-            for (int burstIndex = 0; burstIndex < BATCH_SIZE; burstIndex++) {
-                try {
-                    batchList.add(
-                            singles.get((batchNumber * BATCH_SIZE) + burstIndex).getSingleBurst());
-                } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
-                    e.printStackTrace();
-                }
-            }
-            pdg = new PlotDataGenerator3D(batchList);
-            datasets.add(pdg.getPowerPlotData());
-            batchList.clear();
+        try {
+            // Add new SingleOrManyBurst to be passed out later for storage
+            Burst prevBurst = new Burst(this.previousFile, 1);
+            singleOrManyBurstsList.add(
+                    new SingleOrManyBursts(prevBurst, false, this.previousFile.getName()));
+            // For phase data we need the previous burst and the current burst to calculate the
+            // difference
+            burstList.add(prevBurst);
+            Burst currBurst = new Burst(this.currentFile, 1);
+            burstList.add(currBurst);
+            pdg = new PlotDataGenerator3D(burstList);
+            generators.add(pdg);
+        } catch (InvalidBurstException e) {
+            e.printStackTrace();
         }
-
         return datasets;
-    }
-
-    /** A function to take the files and generate the bursts and wrapper for the data */
-    private void generateSingleOrManyBurstsFromFiles() {
-        for (File file : this.fileBatch) {
-            try {
-                singles.add(new SingleOrManyBursts(new Burst(file), false, file.getName()));
-            } catch (InvalidBurstException e) {
-                e.printStackTrace();
-            }
-        }
     }
 
     @Override
     protected void onPostExecute(List<PlotData3D> datasets) {
         super.onPostExecute(datasets);
         for (IProcessingCallback listener : this.listeners) {
-            listener.onTaskCompleted(datapoints, datasets, true, this.lastFile);
-
+            listener.onTaskCompleted(generators, true, this.lastFile);
             // Also notify to do this task of accumulating the bursts over time
-            if (listener instanceof ILiveProcessingTask) {
-                ((ILiveProcessingTask) listener).receiveSingleOrManyBursts(singles);
+            if (listener instanceof ILiveProcessingTask && singleOrManyBurstsList.size() > 0) {
+                ((ILiveProcessingTask) listener).receiveSingleOrManyBursts(singleOrManyBurstsList);
             }
         }
     }

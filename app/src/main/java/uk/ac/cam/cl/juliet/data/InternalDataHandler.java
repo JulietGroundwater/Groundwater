@@ -47,6 +47,15 @@ public class InternalDataHandler {
     }
 
     /**
+     * Set the globally selected data and don't notify listeners
+     *
+     * @param selectedData
+     */
+    public void silentlySelectData(SingleOrManyBursts selectedData) {
+        this.selectedData = selectedData;
+    }
+
+    /**
      * For adding new listeners to the selected file changes
      *
      * @param listener
@@ -95,6 +104,18 @@ public class InternalDataHandler {
             byte[] buffer = new byte[(int) file.length()];
             fis.read(buffer);
             fos.write(buffer);
+            fos.flush();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+    // REMOVE THIS MEHTOD
+    public void addFileToDirectory(String dirName, byte[] file) {
+        File newFile = new File(root.getAbsolutePath() + "/" + dirName, "tests.json");
+        try (FileOutputStream fos = new FileOutputStream(newFile)) {
+            fos.write(file);
             fos.flush();
         } catch (FileNotFoundException e) {
             e.printStackTrace();

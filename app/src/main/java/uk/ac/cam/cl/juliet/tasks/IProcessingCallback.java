@@ -1,11 +1,9 @@
 package uk.ac.cam.cl.juliet.tasks;
 
 import java.util.List;
-import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
-import uk.ac.cam.cl.juliet.models.Datapoint;
+import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator3D;
 
 /** Callback interface for the processing task */
 public interface IProcessingCallback {
-    void onTaskCompleted(
-            List<Datapoint> result, List<PlotData3D> dataset, boolean isLive, boolean isLast);
+    void onTaskCompleted(List<PlotDataGenerator3D> generator, boolean isLive, boolean isLast);
 }
