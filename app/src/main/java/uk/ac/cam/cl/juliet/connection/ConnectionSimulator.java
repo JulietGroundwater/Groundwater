@@ -2,22 +2,21 @@ package uk.ac.cam.cl.juliet.connection;
 
 import java.io.File;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.atomic.AtomicBoolean;
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
 /** Our simulation for a connection to the radar device */
 public class ConnectionSimulator implements IConnection {
     private ConcurrentLinkedQueue<File> transientFiles;
-    private AtomicBoolean connectionLive;
-    private AtomicBoolean dataReady;
+    private boolean connectionLive;
+    private boolean dataReady;
     private DeviceSimulator device;
     private static ConnectionSimulator INSTANCE;
 
     private ConnectionSimulator(DeviceSimulator device) {
         this.device = device;
         this.transientFiles = new ConcurrentLinkedQueue<>();
-        this.dataReady = new AtomicBoolean(false);
-        this.connectionLive = new AtomicBoolean(false);
+        this.dataReady = false;
+        this.connectionLive = false;
     }
 
     public static ConnectionSimulator getInstance() {
@@ -30,17 +29,16 @@ public class ConnectionSimulator implements IConnection {
     @Override
     public void connect() {
         if (device != null) {
-            device.addConnection(this);
-            this.connectionLive.set(true);
+            this.connectionLive = device.addConnection(this);
         }
     }
 
     @Override
     public void disconnect() {
-        this.connectionLive.set(false);
-        this.dataReady.set(false);
+        this.connectionLive = false;
+        this.dataReady = false;
         if (device != null) {
-            device.destoryConnection(this);
+            device.destoryConnection();
         }
     }
 
@@ -56,7 +54,7 @@ public class ConnectionSimulator implements IConnection {
 
     @Override
     public void beginDataGathering() {
-        this.connectionLive.set(true);
+        this.connectionLive = true;
         device.takeMeasurement(transientFiles);
     }
 
@@ -71,7 +69,7 @@ public class ConnectionSimulator implements IConnection {
 
     @Override
     public void notifyDataReady() {
-        this.dataReady.set(true);
+        this.dataReady = true;
     }
 
     @Override
@@ -84,10 +82,10 @@ public class ConnectionSimulator implements IConnection {
     }
 
     public boolean getDataReady() {
-        return this.dataReady.get();
+        return this.dataReady;
     }
 
     public boolean getConnecitonLive() {
-        return this.connectionLive.get();
+        return this.connectionLive;
     }
 }

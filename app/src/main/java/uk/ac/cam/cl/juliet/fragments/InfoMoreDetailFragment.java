@@ -235,7 +235,6 @@ public class InfoMoreDetailFragment extends Fragment
 
         // Create store for the bursts
         List<SingleOrManyBursts> singles = new ArrayList<>();
-        String absolutePathToDir = idh.addNewDirectory(idh.getCurrentLiveData());
         this.currentLiveBursts =
                 new SingleOrManyBursts(singles, false, idh.getCurrentLiveData(), null);
         idh.silentlySelectData(this.currentLiveBursts);
@@ -252,6 +251,12 @@ public class InfoMoreDetailFragment extends Fragment
                         while (simulator.getConnecitonLive()) {
                             while (!simulator.getTransientFiles().isEmpty()
                                     || simulator.getDataReady()) {
+
+                                if (firstTime) {
+                                    idh.addNewDirectory(idh.getCurrentLiveData());
+                                    firstTime = false;
+                                }
+
                                 File polledFile = simulator.pollData();
                                 if (polledFile != null) {
                                     prevAndCurrent.add(polledFile);
@@ -310,8 +315,8 @@ public class InfoMoreDetailFragment extends Fragment
 
     /** Destroying the connection and setting the menu items correctly */
     private void destroyConnection() {
-        this.connected = false;
         simulator.disconnect();
+        this.connected = false;
         // Set live data to false and select the correct data from the filesystem
         idh.setProcessingLiveData(false);
         toggleMenuItems();

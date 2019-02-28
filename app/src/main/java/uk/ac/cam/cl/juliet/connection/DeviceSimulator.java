@@ -2,8 +2,6 @@ package uk.ac.cam.cl.juliet.connection;
 
 import android.os.Environment;
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
@@ -14,7 +12,7 @@ public class DeviceSimulator {
     private File root;
     private int delay;
     private String deviceName;
-    private List<IConnection> connections;
+    private IConnection connection;
     private Config configuration;
     private boolean finished;
 
@@ -29,7 +27,6 @@ public class DeviceSimulator {
                 new File(Environment.getExternalStorageDirectory().getAbsolutePath(), DATA_FILE);
         this.deviceName = name;
         this.delay = delay;
-        this.connections = new ArrayList<>();
         this.finished = true;
     }
 
@@ -39,17 +36,17 @@ public class DeviceSimulator {
      * @param connection - the connection which should implement the connection interface <code>
      *     IConnection</code>
      */
-    public void addConnection(IConnection connection) {
-        connections.add(connection);
+    public boolean addConnection(IConnection connection) {
+        if (this.connection == null) {
+            this.connection = connection;
+            return true;
+        }
+        return false;
     }
 
-    /**
-     * Removes the specified listening connection
-     *
-     * @param connection - the connection to remove
-     */
-    public void destoryConnection(IConnection connection) {
-        connections.remove(connection);
+    /** Removes the specified listening connection */
+    public void destoryConnection() {
+        this.connection = null;
     }
 
     /**
@@ -72,10 +69,8 @@ public class DeviceSimulator {
         this.finished = false;
         if (root.listFiles() == null) {
             System.out.println("NO FILES PLEASE ADD A FOLDER CALLED DATA_FILES");
-            // Notify all connections that we are done after reading all files
-            for (IConnection connection : connections) {
-                connection.dataFinished();
-            }
+            // Notify connection that we are done after reading all files
+            connection.dataFinished();
             return;
         }
 
@@ -89,14 +84,12 @@ public class DeviceSimulator {
                                         fileIndex++) {
 
                                     // Return if no more connections
-                                    if (connections.isEmpty()) {
+                                    if (connection == null) {
                                         return;
                                     }
                                     // Otherwise add a file to the queue and notify the connections
                                     queue.add(root.listFiles()[fileIndex]);
-                                    for (IConnection connection : connections) {
-                                        connection.notifyDataReady();
-                                    }
+                                    connection.notifyDataReady();
 
                                     // Mimic data gathering by sleeping for a specified time
                                     if (fileIndex != root.listFiles().length - 1) {
@@ -108,10 +101,8 @@ public class DeviceSimulator {
                                     }
                                 }
 
-                                // Notify all connections that we are done after reading all files
-                                for (IConnection connection : connections) {
-                                    connection.dataFinished();
-                                }
+                                // Notify connection that we are done after reading all files
+                                connection.dataFinished();
                             }
                         });
         thread.start();
