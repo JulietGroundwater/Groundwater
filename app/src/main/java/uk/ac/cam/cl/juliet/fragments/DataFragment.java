@@ -154,7 +154,7 @@ public class DataFragment extends Fragment
 
             // Set the selected data to the correct file
             InternalDataHandler idh = InternalDataHandler.getInstance();
-            idh.setSelectedData(file);
+            idh.setSingleSelected(file);
 
             // Show the plot of the data that the user just selected
             Activity activity = getActivity();

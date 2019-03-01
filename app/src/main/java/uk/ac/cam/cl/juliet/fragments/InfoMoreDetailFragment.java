@@ -105,7 +105,7 @@ public class InfoMoreDetailFragment extends Fragment
         idh = InternalDataHandler.getInstance();
 
         // Listen for file changes
-        idh.addListener(
+        idh.addCollectionListener(
                 new InternalDataHandler.FileListener() {
                     @Override
                     public void onChange() {
@@ -158,15 +158,15 @@ public class InfoMoreDetailFragment extends Fragment
     private void updateChart() {
         if (checkFile()) {
             // Create datapoints, json-ise and pass to Javascript
-            webviewText.setText(idh.getSelectedData().getNameToDisplay());
+            webviewText.setText(idh.getCollectionSelected().getNameToDisplay());
 
             List<Datapoint> datapoints = new ArrayList<>();
-            if (!cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
+            if (!cache.containsKey(idh.getCollectionSelected().getNameToDisplay())) {
                 ProcessingTask task = new ProcessingTask(this);
                 task.execute();
             } else {
                 List<PlotDataGenerator3D> generators =
-                        cache.get(idh.getSelectedData().getNameToDisplay());
+                        cache.get(idh.getCollectionSelected().getNameToDisplay());
                 datapoints = generateDatapoints(generators);
                 updateWebview(datapoints);
             }
@@ -180,8 +180,8 @@ public class InfoMoreDetailFragment extends Fragment
      */
     private boolean checkFile() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        if (idh.getSelectedData() == null) return false;
-        return idh.getSelectedData().getIsManyBursts();
+        if (idh.getCollectionSelected() == null) return false;
+        return idh.getCollectionSelected().getIsManyBursts();
     }
 
     /**
@@ -236,7 +236,7 @@ public class InfoMoreDetailFragment extends Fragment
         // Create store for the bursts
         List<SingleOrManyBursts> singles = new ArrayList<>();
         this.currentLiveBursts = new SingleOrManyBursts(singles, null, false);
-        idh.silentlySelectData(this.currentLiveBursts);
+        idh.silentlySelectCollectionData(this.currentLiveBursts);
 
         AsyncTask.execute(
                 new Runnable() {
@@ -347,8 +347,8 @@ public class InfoMoreDetailFragment extends Fragment
             }
             updateWebview(generateDatapoints(cache.get(idh.getCurrentLiveData())));
         } else {
-            cache.put(idh.getSelectedData().getNameToDisplay(), generators);
-            updateWebview(generateDatapoints(cache.get(idh.getSelectedData().getNameToDisplay())));
+            cache.put(idh.getCollectionSelected().getNameToDisplay(), generators);
+            updateWebview(generateDatapoints(cache.get(idh.getCollectionSelected().getNameToDisplay())));
         }
 
         // For live processing we need to check for the last file received
