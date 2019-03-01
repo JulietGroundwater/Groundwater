@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
-
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.range.Range;
 import uk.ac.cam.cl.juliet.computationengine.range.RangeResult;

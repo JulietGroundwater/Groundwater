@@ -28,7 +28,8 @@ public class Range {
      *
      * @return A {@link RangeResult} containing the results.
      */
-    public static RangeResult computeRange(Burst burst, int padding, double maxrange, IWindowFunction window) {
+    public static RangeResult computeRange(
+            Burst burst, int padding, double maxrange, IWindowFunction window) {
         double B = burst.getB();
         double K = burst.getK();
         double ci = burst.getCi();
@@ -42,7 +43,7 @@ public class Range {
         double[] xvals = new double[nf];
 
         for (int i = 0; i < nf; i++) {
-            xvals[i] = (double)(i) * (ci / (2.0 * B * (double) (padding)));
+            xvals[i] = (double) (i) * (ci / (2.0 * B * (double) (padding)));
         }
 
         int rangeCut = -1;
@@ -56,9 +57,12 @@ public class Range {
         double[] phiref = new double[nf];
 
         for (int i = 0; i < nf; i++) {
-            phiref[i] = (double)(i) * (2.0 * FastMath.PI * fc) / (B * (double)(padding));
+            phiref[i] = (double) (i) * (2.0 * FastMath.PI * fc) / (B * (double) (padding));
 
-            phiref[i] -= (xvals[i] * xvals[i]) * K / (2.0 * B * B * (double) (padding) * (double)(padding));
+            phiref[i] -=
+                    (xvals[i] * xvals[i])
+                            * K
+                            / (2.0 * B * B * (double) (padding) * (double) (padding));
         }
 
         List<List<Complex>> spec = new ArrayList<>();
@@ -73,7 +77,7 @@ public class Range {
                 mean += cv[j];
             }
 
-            mean /= (double)(N);
+            mean /= (double) (N);
 
             for (int j = 0; j < N; j++) {
                 cv[j] -= mean;
@@ -89,14 +93,14 @@ public class Range {
             double[] fftVif = new double[2 * padding * N];
             int p = 0;
             for (int j = xn; j < cv.length; j++) {
-                fftVif[2*p] = cv[j];
-                fftVif[2*p+1] = 0.0;
+                fftVif[2 * p] = cv[j];
+                fftVif[2 * p + 1] = 0.0;
                 p++;
             }
 
             for (int j = 0; j < xn; j++) {
-                fftVif[2*p] = cv[j];
-                fftVif[2*p+1] = 0.0;
+                fftVif[2 * p] = cv[j];
+                fftVif[2 * p + 1] = 0.0;
                 p++;
             }
 
@@ -104,25 +108,25 @@ public class Range {
 
             double rms = 0;
 
-            //Calculate rms
+            // Calculate rms
             for (int j = 0; j < N; j++) {
                 double val = window.evaluate(N, j);
-                rms = rms + (val * val) / (double)(N);
+                rms = rms + (val * val) / (double) (N);
             }
             rms = FastMath.sqrt(rms);
 
             for (int j = 0; j < p; j++) {
-                fftVif[2*j] *= FastMath.sqrt((double)(2 * padding)) / (double)(p);
-                fftVif[2*j + 1] *= FastMath.sqrt((double)(2 * padding)) / (double)(p);
+                fftVif[2 * j] *= FastMath.sqrt((double) (2 * padding)) / (double) (p);
+                fftVif[2 * j + 1] *= FastMath.sqrt((double) (2 * padding)) / (double) (p);
 
-                fftVif[2*j] /= rms;
-                fftVif[2*j + 1] /= rms;
+                fftVif[2 * j] /= rms;
+                fftVif[2 * j + 1] /= rms;
             }
 
             spec.add(new ArrayList<Complex>());
             specCor.add(new ArrayList<Complex>());
             for (int j = 0; j <= rangeCut; j++) {
-                spec.get(i).add(new Complex(fftVif[2*j], fftVif[2*j + 1]));
+                spec.get(i).add(new Complex(fftVif[2 * j], fftVif[2 * j + 1]));
 
                 double r = phiref[j];
                 double im = 0.0;
@@ -138,8 +142,8 @@ public class Range {
                 im = expReal * FastMath.sin(im);
 
                 // * fftVif
-                double nr = r * fftVif[2*j] - im * fftVif[2*j + 1];
-                double nim = r * fftVif[2*j + 1] + im * fftVif[2*j];
+                double nr = r * fftVif[2 * j] - im * fftVif[2 * j + 1];
+                double nim = r * fftVif[2 * j + 1] + im * fftVif[2 * j];
 
                 specCor.get(i).add(new Complex(nr, nim));
             }

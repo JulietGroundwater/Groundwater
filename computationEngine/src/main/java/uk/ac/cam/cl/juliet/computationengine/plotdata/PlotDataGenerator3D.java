@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.complex.Complex;
 import org.apache.commons.math3.util.FastMath;
-
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.computationengine.range.Range;
 import uk.ac.cam.cl.juliet.computationengine.range.RangeResult;
@@ -129,7 +128,8 @@ public class PlotDataGenerator3D {
                 }
             } else {
                 for (int i = 0; i < specCor.length; i++) {
-                    zValues.add((specCor[i].multiply(lastSpecCor[i].conjugate())).log().getImaginary());
+                    zValues.add(
+                            (specCor[i].multiply(lastSpecCor[i].conjugate())).log().getImaginary());
                 }
             }
 
@@ -144,7 +144,7 @@ public class PlotDataGenerator3D {
             yValues.add((y - SCALE_CONSTANT_2) * SCALE_CONSTANT_1 / nCoef);
         }
 
-        //Remove negative values
+        // Remove negative values
         int nonNegativeCutoff = 0;
         for (int i = 0; i < yValues.size(); i++) {
             if (yValues.get(i) >= 0.0) {

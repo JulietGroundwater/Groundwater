@@ -1,6 +1,5 @@
 package uk.ac.cam.cl.juliet.computationengine.range;
 
-import java.awt.image.renderable.RenderContext;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.commons.math3.complex.Complex;

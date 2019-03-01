@@ -1,18 +1,15 @@
 package uk.ac.cam.cl.juliet.computationengine.utility;
 
-import java.util.ArrayList;
-
 /** An implementation of {@link IWindowFunction} that represents the Blackman Window Function. */
 public class BlackmanWindow implements IWindowFunction {
     /**
-     * Evaluates a value of the Blackman Window Function of size n.
-     * Uses the default Blackman Window Function parameter values.
-     * <p>
-     * For k less than (n+1)/2 the value W(k) is evaluted.
-     * </p>
-     * <p>
-     * For k not less than (n+1)/2 the value {@code W(n-k-1)} is evaluated.
-     * </p>
+     * Evaluates a value of the Blackman Window Function of size n. Uses the default Blackman Window
+     * Function parameter values.
+     *
+     * <p>For k less than (n+1)/2 the value W(k) is evaluted.
+     *
+     * <p>For k not less than (n+1)/2 the value {@code W(n-k-1)} is evaluated.
+     *
      * @param n the size of the window
      * @param k the value to compute
      */
