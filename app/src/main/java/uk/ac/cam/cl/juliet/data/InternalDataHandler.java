@@ -115,10 +115,10 @@ public class InternalDataHandler {
      *
      * @param dirName - name of the directory
      */
-    public String addNewDirectory(String dirName) {
+    public File addNewDirectory(String dirName) {
         File file = new File(root.getAbsolutePath(), dirName);
         file.mkdir();
-        return file.getAbsolutePath();
+        return file;
     }
 
     /**

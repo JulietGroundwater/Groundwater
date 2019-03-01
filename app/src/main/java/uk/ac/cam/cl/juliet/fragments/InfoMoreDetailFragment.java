@@ -17,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.gson.Gson;
@@ -44,7 +45,8 @@ import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
  *
  * @author Ben Cole
  */
-public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingTask {
+public class InfoMoreDetailFragment extends Fragment
+        implements ILiveProcessingTask, ConnectionSimulator.ConnectionListener {
 
     private final int BURST_CODE = 1;
     private final int JAVASCRIPT_BATCH_SIZE = 10000;
@@ -53,14 +55,13 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
     private TextView webviewText;
     private InternalDataHandler idh;
     private Map<String, List<PlotDataGenerator3D>> cache;
-    private MenuItem connect;
     private MenuItem measure;
-    private MenuItem disconnect;
     private ConnectionSimulator simulator;
     private boolean connected;
     private boolean gatheringData;
     private SingleOrManyBursts currentLiveBursts;
     private Spinner detailedSpinner;
+    private ProgressBar progressBar;
 
     @Nullable
     @Override
@@ -131,6 +132,13 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
                     }
                 });
 
+        // Get progress bar handle
+        progressBar = view.findViewById(R.id.progressBar);
+
+        // Listener for connection changes
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        simulator.addListener(this);
+
         return view;
     }
 
@@ -140,23 +148,15 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
         menu.clear();
         inflater.inflate(R.menu.menu_data, menu);
         measure = menu.findItem(R.id.take_measurement_button);
-        connect = menu.findItem(R.id.connect_button);
-        disconnect = menu.findItem(R.id.disconnect_button);
         // Only have connect visible if we aren't running any data gathering
-        toggleMenuItems();
+        toggleMeasuringButton();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.connect_button:
-                establishConnection();
-                return true;
             case R.id.take_measurement_button:
                 gatherData();
-                return true;
-            case R.id.disconnect_button:
-                destroyConnection();
                 return true;
         }
         return false;
@@ -234,10 +234,6 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
 
     /** Establishes a connection and waits for the data gathering to commence */
     private void establishConnection() {
-        // We know we will have a good connection so change buttons
-        this.connected = true;
-        toggleMenuItems();
-
         simulator = ConnectionSimulator.getInstance();
 
         // Create a new directory in groundwater for the incoming data
@@ -256,7 +252,6 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
                     public void run() {
                         // Connect to our simulated connection
                         InternalDataHandler idh = InternalDataHandler.getInstance();
-                        simulator.connect();
                         List<File> prevAndCurrent = new ArrayList<>();
                         boolean firstTime = true;
                         while (simulator.getConnecitonLive()) {
@@ -265,7 +260,8 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
 
                                 // New data therefore we can create the folder to store the data in
                                 if (firstTime) {
-                                    idh.addNewDirectory(idh.getCurrentLiveData());
+                                    File file = idh.addNewDirectory(idh.getCurrentLiveData());
+                                    currentLiveBursts.setFile(file);
                                     firstTime = false;
                                 }
 
@@ -304,7 +300,6 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
     private void processLiveData(File previousFile, File currentFile, boolean lastFile) {
         List<IProcessingCallback> listeners = new ArrayList<>();
         listeners.add(this);
-        // TODO: This is undoubtedly a hack and should be fixed in the future...
         LiveProcessingTask task =
                 new LiveProcessingTask(
                         listeners,
@@ -323,15 +318,6 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
         simulator.beginDataGathering();
         this.gatheringData = true;
         toggleMeasuringButton();
-    }
-
-    /** Destroying the connection and setting the menu items correctly */
-    private void destroyConnection() {
-        simulator.disconnect();
-        this.connected = false;
-        // Set live data to false and select the correct data from the filesystem
-        idh.setProcessingLiveData(false);
-        toggleMenuItems();
     }
 
     @Override
@@ -368,8 +354,9 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
         // For live processing we need to check for the last file received
         if (isLast) {
             this.connected = false;
+            this.gatheringData = false;
             idh.setProcessingLiveData(false);
-            toggleMenuItems();
+            toggleMeasuringButton();
         }
     }
 
@@ -444,30 +431,26 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
 
     /** Helper function for measure button toggling */
     private void toggleMeasuringButton() {
-        if (this.gatheringData) {
-            measure.setEnabled(false);
-            measure.setVisible(false);
-        }
-    }
+        if (measure != null) {
 
-    /** Helper function for menu items toggling */
-    private void toggleMenuItems() {
-        if (!connected) {
-            connect.setVisible(true);
-            connect.setEnabled(true);
-            disconnect.setVisible(false);
-            disconnect.setEnabled(false);
-            measure.setVisible(false);
-            measure.setEnabled(false);
-        } else {
-            connect.setVisible(false);
-            connect.setEnabled(false);
-            disconnect.setVisible(true);
-            disconnect.setEnabled(true);
-            measure.setVisible(true);
-            measure.setEnabled(true);
+            // Set progress bar and disable spinner
+            if (this.gatheringData) {
+                progressBar.setVisibility(View.VISIBLE);
+                // detailedSpinner.setEnabled(false);
+            } else {
+                progressBar.setVisibility(View.INVISIBLE);
+                // detailedSpinner.setEnabled(true);
+            }
+
+            // Set measuring action
+            if (this.connected && !this.gatheringData) {
+                measure.setEnabled(true);
+                measure.setVisible(true);
+            } else if (this.gatheringData || !this.connected) {
+                measure.setEnabled(false);
+                measure.setVisible(false);
+            }
         }
-        toggleMeasuringButton();
     }
 
     /**
@@ -483,6 +466,15 @@ public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingT
             this.currentLiveBursts.getListOfBursts().addAll(bursts);
         } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onConnectionChange(boolean isConnected) {
+        this.connected = isConnected;
+        if (isConnected) {
+            establishConnection();
+            toggleMeasuringButton();
         }
     }
 }

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+    <item
+        android:id="@+id/disconnect_button"
+        android:title="@string/disconnect"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/connect_button"
+        android:title="@string/connect"
+        app:showAsAction="always" />
+</menu>

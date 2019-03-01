@@ -5,12 +5,4 @@
             android:id="@+id/take_measurement_button"
             android:title="@string/measure"
             app:showAsAction="always" />
-    <item
-        android:id="@+id/disconnect_button"
-        android:title="@string/disconnect"
-        app:showAsAction="always" />
-    <item
-        android:id="@+id/connect_button"
-        android:title="@string/connect"
-        app:showAsAction="always" />
 </menu>
