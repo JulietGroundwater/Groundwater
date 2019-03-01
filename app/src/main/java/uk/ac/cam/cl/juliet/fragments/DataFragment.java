@@ -169,11 +169,12 @@ public class DataFragment extends Fragment
             final SingleOrManyBursts file, final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return false;
-        int titleRes =
-                (file.getIsSingleBurst()) ? R.string.file_selected : R.string.folder_selected;
+        int titleRes = file.getFile().isFile() ? R.string.file_selected : R.string.folder_selected;
+        int messageRes =
+                file.getFile().isFile() ? R.string.what_do_with_file : R.string.what_do_with_folder;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(titleRes)
-                .setMessage(R.string.what_do_with_file)
+                .setMessage(messageRes)
                 .setPositiveButton(
                         R.string.sync,
                         new DialogInterface.OnClickListener() {

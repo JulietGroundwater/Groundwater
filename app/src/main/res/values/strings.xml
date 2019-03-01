@@ -13,6 +13,7 @@
     <string name="file_selected">File selected</string>
     <string name="folder_selected">Folder selected</string>
     <string name="what_do_with_file">What do you want to do with this file?</string>
+    <string name="what_do_with_folder">What do you want to do with this folder?</string>
     <string name="display">Display</string>
     <string name="delete">Delete</string>
     <string name="overview">Overview</string>
