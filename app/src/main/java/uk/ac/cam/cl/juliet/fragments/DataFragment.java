@@ -17,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
@@ -43,6 +44,7 @@ public class DataFragment extends Fragment
     private RecyclerView filesRecyclerView;
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
+    private ProgressBar loadingFilesSpinner;
 
     private File currentDirectory;
     private SingleOrManyBursts currentNode;
@@ -85,6 +87,10 @@ public class DataFragment extends Fragment
         noFilesToDisplayText = view.findViewById(R.id.noFilesText);
         setNoFilesMessageVisibility(false);
 
+        // Find the files loading spinner
+        loadingFilesSpinner = view.findViewById(R.id.loadingFilesProgressSpinner);
+        loadingFilesSpinner.setVisibility(View.INVISIBLE);
+
         // Set up and potentially disable the "plot all files" button
         plotAllFilesButton = view.findViewById(R.id.displayAllFilesButton);
         if (!getEligibleForPlottingAllFiles()) {
@@ -104,6 +110,9 @@ public class DataFragment extends Fragment
     public void onResume() {
         super.onResume();
         refreshFiles();
+        if (listener != null) {
+            listener.notifyIsActiveFragment(this);
+        }
     }
 
     /**
@@ -391,7 +400,8 @@ public class DataFragment extends Fragment
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            // TODO: Show a "loading" spinner + message
+            dataFragment.loadingFilesSpinner.setVisibility(View.VISIBLE);
+            dataFragment.filesRecyclerView.setVisibility(View.INVISIBLE);
         }
 
         @Override
@@ -422,7 +432,8 @@ public class DataFragment extends Fragment
             dataFragment.updatePlotAllFilesButtonEnabled();
             dataFragment.adapter.notifyDataSetChanged();
             dataFragment.setNoFilesMessageVisibility(dataFragment.filesList.isEmpty());
-            // TODO: Hide "loading" spinner + message
+            dataFragment.loadingFilesSpinner.setVisibility(View.INVISIBLE);
+            dataFragment.filesRecyclerView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -431,11 +442,27 @@ public class DataFragment extends Fragment
      * display the contents of the folder that was selected.
      */
     public interface DataFragmentListener {
+
+        /**
+         * Instructs the container to show the chosen folder.
+         *
+         * @param innerFolder The folder to display
+         */
         void onInnerFolderClicked(SingleOrManyBursts innerFolder);
 
+        /**
+         * Instructs the container to upload the chosen file.
+         *
+         * @param parent The DataFragment containing this fragment // TODO: Why is this here?
+         * @param viewHolder The ViewHolder for the row that was selected
+         * @param file The file that is to be uploaded
+         */
         void uploadFile(
                 DataFragment parent,
                 FilesListAdapter.FilesListViewHolder viewHolder,
                 SingleOrManyBursts file);
+
+        /** Notifies the container that this fragment is now the active one */
+        void notifyIsActiveFragment(DataFragment activeFragment);
     }
 }

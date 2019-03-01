@@ -229,6 +229,11 @@ public class DataFragmentWrapper extends Fragment
         // TODO: implement
     }
 
+    @Override
+    public void notifyIsActiveFragment(DataFragment activeFragment) {
+        currentFragment = activeFragment;
+    }
+
     /** Begins the authentication process with Microsoft */
     private void connect() {
         // Get the Authentication Manager Instance
