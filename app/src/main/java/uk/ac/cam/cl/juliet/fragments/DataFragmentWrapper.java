@@ -1,13 +1,19 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import static uk.ac.cam.cl.juliet.fragments.DataFragment.FOLDER_PATH;
+
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -46,7 +52,7 @@ public class DataFragmentWrapper extends Fragment
 
     private MenuItem signIn;
     private MenuItem signOut;
-
+    private DataFragment currentFragment;
     private User user;
 
     @Nullable
@@ -57,12 +63,17 @@ public class DataFragmentWrapper extends Fragment
             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_data_wrapper, container, false);
         setHasOptionsMenu(true);
-        DataFragment dataFragment = new DataFragment();
-        dataFragment.setArguments(getArguments());
-        dataFragment.setDataFragmentListener(this);
+        Bundle arguments = new Bundle();
+        arguments.putString(DataFragment.FOLDER_PATH, getRootPath());
+        currentFragment = new DataFragment();
+        currentFragment.setArguments(arguments);
+        currentFragment.setDataFragmentListener(this);
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager != null) {
-            fragmentManager.beginTransaction().add(R.id.dataFragmentContent, dataFragment).commit();
+            fragmentManager
+                    .beginTransaction()
+                    .add(R.id.dataFragmentContent, currentFragment)
+                    .commit();
         }
         return view;
     }
@@ -87,6 +98,7 @@ public class DataFragmentWrapper extends Fragment
             case R.id.refresh:
                 // TODO: Update files in the DataFragment
                 Log.d("DataFragmentWrapper", "Update your files!");
+                currentFragment.refreshFiles();
                 return true;
             case R.id.sign_in_button:
                 // Handling Microsoft connection
@@ -104,6 +116,21 @@ public class DataFragmentWrapper extends Fragment
                 signIn.setVisible(true);
         }
         return false;
+    }
+
+    private String getRootPath() {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        Activity activity = getActivity();
+        String path = null;
+        if (activity != null
+                && ContextCompat.checkSelfPermission(
+                                activity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+            path = idh.getRoot().getAbsolutePath();
+        } else {
+            // TODO: Show error message; we failed to get permissions
+        }
+        return path;
     }
 
     /**
@@ -141,17 +168,16 @@ public class DataFragmentWrapper extends Fragment
     public void onInnerFolderClicked(SingleOrManyBursts innerFolder) {
         if (innerFolder.getIsSingleBurst()) return; // Should not happen...
 
-        DataFragment innerFragment = new DataFragment();
+        currentFragment = new DataFragment();
         Bundle arguments = new Bundle();
-        arguments.putBoolean(DataFragment.TOP_LEVEL, false);
-        arguments.putSerializable(DataFragment.FILES_LIST, innerFolder);
-        innerFragment.setArguments(arguments);
-        innerFragment.setDataFragmentListener(this);
+        arguments.putString(FOLDER_PATH, innerFolder.getFile().getAbsolutePath());
+        currentFragment.setArguments(arguments);
+        currentFragment.setDataFragmentListener(this);
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager != null) {
             fragmentManager
                     .beginTransaction()
-                    .replace(R.id.dataFragmentContent, innerFragment, innerFragment.getTag())
+                    .replace(R.id.dataFragmentContent, currentFragment, currentFragment.getTag())
                     .addToBackStack(null)
                     .commit();
         }
@@ -201,6 +227,11 @@ public class DataFragmentWrapper extends Fragment
      */
     private void uploadAllUnsyncedFiles(boolean deleteAfterUploading) {
         // TODO: implement
+    }
+
+    @Override
+    public void notifyIsActiveFragment(DataFragment activeFragment) {
+        currentFragment = activeFragment;
     }
 
     /** Begins the authentication process with Microsoft */

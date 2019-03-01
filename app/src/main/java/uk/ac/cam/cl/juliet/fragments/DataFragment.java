@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -16,6 +17,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 import java.io.File;
 import java.util.ArrayList;
@@ -37,24 +39,19 @@ public class DataFragment extends Fragment
                 MainActivity.PermissionListener,
                 View.OnClickListener {
 
-    public static String TOP_LEVEL = "top_level";
-    public static String FILES_LIST = "files_list";
+    public static final String FOLDER_PATH = "folder_path";
 
     private RecyclerView filesRecyclerView;
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
+    private ProgressBar loadingFilesSpinner;
+
+    private File currentDirectory;
     private SingleOrManyBursts currentNode;
     private List<SingleOrManyBursts> filesList;
     private Button plotAllFilesButton;
 
     DataFragmentListener listener;
-
-    /**
-     * If this is the fragment displaying the top level then it will load its files globally by
-     * exploring the phone's virtual SD card. Otherwise, this fragment will display a list of files
-     * passed to it.
-     */
-    private boolean isTopLevel;
 
     @Override
     public View onCreateView(
@@ -65,40 +62,36 @@ public class DataFragment extends Fragment
         Context context = getContext();
         if (context == null) return null;
 
-        // Determine whether this is a top level or a nested Fragment, which determines where
-        // the data files should be loaded from (global source for top level, passed as argument
-        // for nested)
-        isTopLevel = getIsTopLevel();
-        if (isTopLevel) {
-            currentNode = getRootNode();
-        } else {
-            currentNode = loadPassedFiles();
+        // Extract the folder path for this DataFragment to display
+        Bundle arguments = getArguments();
+        if (arguments == null
+                || !arguments.containsKey(FOLDER_PATH)
+                || !(arguments.get(FOLDER_PATH) instanceof String)) {
+            return null; // TODO: handle this better
         }
+        String folderPath = arguments.getString(FOLDER_PATH);
+        currentDirectory = new File(folderPath);
+        filesList = new ArrayList<>();
+        currentNode =
+                new SingleOrManyBursts(
+                        filesList, currentDirectory, false); // TODO: Detect if uploaded to onedrive
 
-        if (currentNode == null) {
-            // TODO: handle this...
-            // This should never happen!!
-        }
-
-        try {
-            if (currentNode != null) {
-                filesList = currentNode.getListOfBursts();
-            }
-        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
-            e.printStackTrace();
-        }
-
-        // Set up the UI
+        // Set up the files list UI
         filesRecyclerView = view.findViewById(R.id.filesListRecyclerView);
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new FilesListAdapter(filesList);
         adapter.setOnDataFileSelectedListener(this);
         filesRecyclerView.setAdapter(adapter);
-        noFilesToDisplayText = view.findViewById(R.id.noFilesText);
-        int visibility = filesList.isEmpty() ? View.VISIBLE : View.INVISIBLE;
-        noFilesToDisplayText.setVisibility(visibility);
 
-        // Set up and potentially disable the "plot all filesList" button
+        // Find the "no files to display" message
+        noFilesToDisplayText = view.findViewById(R.id.noFilesText);
+        setNoFilesMessageVisibility(false);
+
+        // Find the files loading spinner
+        loadingFilesSpinner = view.findViewById(R.id.loadingFilesProgressSpinner);
+        loadingFilesSpinner.setVisibility(View.INVISIBLE);
+
+        // Set up and potentially disable the "plot all files" button
         plotAllFilesButton = view.findViewById(R.id.displayAllFilesButton);
         if (!getEligibleForPlottingAllFiles()) {
             plotAllFilesButton.setEnabled(false);
@@ -113,31 +106,24 @@ public class DataFragment extends Fragment
         return view;
     }
 
-    /**
-     * Determines whether this fragment is the top level in the file hierarchy.
-     *
-     * @return true if this is the top level; false otherwise
-     */
-    private boolean getIsTopLevel() {
-        Bundle arguments = getArguments();
-        if (arguments == null) return true;
-        return arguments.getBoolean(TOP_LEVEL, true);
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshFiles();
+        if (listener != null) {
+            listener.notifyIsActiveFragment(this);
+        }
     }
 
     /**
-     * Returns the list of files passed to this Fragment.
+     * Updates the visibility of the "no files to display" message.
      *
-     * @return The list of files passed to this Fragment.
+     * <p>If there are no files loaded then the message will be displayed; otherwise it will be
+     * hidden.
      */
-    private SingleOrManyBursts loadPassedFiles() {
-        Bundle arguments = getArguments();
-        if (arguments != null && arguments.containsKey(FILES_LIST)) {
-            Object passedFile = arguments.get(FILES_LIST);
-            if (passedFile instanceof SingleOrManyBursts) {
-                return (SingleOrManyBursts) passedFile;
-            }
-        }
-        return null;
+    private void setNoFilesMessageVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.INVISIBLE;
+        noFilesToDisplayText.setVisibility(visibility);
     }
 
     /**
@@ -183,11 +169,12 @@ public class DataFragment extends Fragment
             final SingleOrManyBursts file, final FilesListAdapter.FilesListViewHolder viewHolder) {
         Context context = getContext();
         if (context == null) return false;
-        int titleRes =
-                (file.getIsSingleBurst()) ? R.string.file_selected : R.string.folder_selected;
+        int titleRes = file.getFile().isFile() ? R.string.file_selected : R.string.folder_selected;
+        int messageRes =
+                file.getFile().isFile() ? R.string.what_do_with_file : R.string.what_do_with_folder;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(titleRes)
-                .setMessage(R.string.what_do_with_file)
+                .setMessage(messageRes)
                 .setPositiveButton(
                         R.string.sync,
                         new DialogInterface.OnClickListener() {
@@ -296,6 +283,7 @@ public class DataFragment extends Fragment
      */
     private boolean getEligibleForPlottingAllFiles() {
         if (filesList.isEmpty()) return false;
+        if (currentNode == null) return false;
         boolean eligible = true;
         for (SingleOrManyBursts file : filesList) {
             eligible &= file.getIsSingleBurst();
@@ -303,19 +291,28 @@ public class DataFragment extends Fragment
         return eligible;
     }
 
+    private void updatePlotAllFilesButtonEnabled() {
+        plotAllFilesButton.setEnabled(getEligibleForPlottingAllFiles());
+    }
+
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
-    private void showConfirmDeleteDialog(SingleOrManyBursts file) {
+    private void showConfirmDeleteDialog(final SingleOrManyBursts file) {
         Context context = getContext();
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.confirm_delete);
-        builder.setMessage(R.string.are_you_sure_delete);
+        int messageResource =
+                file.getFile().isFile()
+                        ? R.string.are_you_sure_delete_file
+                        : R.string.are_you_sure_delete_folder;
+        builder.setMessage(messageResource);
         builder.setPositiveButton(
                 R.string.delete,
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // TODO: delete the file
+                        deleteFileOrFolder(file.getFile());
+                        refreshFiles();
                         dialog.cancel();
                     }
                 });
@@ -328,6 +325,25 @@ public class DataFragment extends Fragment
                     }
                 });
         builder.create().show();
+    }
+
+    /**
+     * Deletes the passed file.
+     *
+     * <p>If the passed file is a folder, then this will recursively delete everything inside the
+     * folder before deleting the folder itself.
+     *
+     * @param fileOrFolder The file (or folder) to delete
+     */
+    private void deleteFileOrFolder(File fileOrFolder) {
+        if (fileOrFolder.isFile()) {
+            fileOrFolder.delete();
+        } else {
+            for (File f : fileOrFolder.listFiles()) {
+                deleteFileOrFolder(f);
+            }
+            fileOrFolder.delete();
+        }
     }
 
     /**
@@ -390,16 +406,88 @@ public class DataFragment extends Fragment
         }
     }
 
+    /** Asynchronously reloads and synchronously redraws the list of files. */
+    public void refreshFiles() {
+        new RefreshFilesTask(currentDirectory, this).execute();
+    }
+
+    /** Handles reloading and redrawing the list of files. */
+    private static class RefreshFilesTask extends AsyncTask<Void, Void, Void> {
+
+        private File folder;
+        private DataFragment dataFragment;
+
+        public RefreshFilesTask(File directory, DataFragment dataFragment) {
+            folder = directory;
+            this.dataFragment = dataFragment;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            dataFragment.loadingFilesSpinner.setVisibility(View.VISIBLE);
+            dataFragment.filesRecyclerView.setVisibility(View.INVISIBLE);
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            dataFragment.filesList.clear();
+            if (!folder.isFile()) {
+                for (File file : folder.listFiles()) {
+                    SingleOrManyBursts inner;
+                    if (file.isFile()) {
+                        inner =
+                                new SingleOrManyBursts(
+                                        (Burst) null,
+                                        file,
+                                        false); // TODO: Detect if synced to OneDrive
+                    } else {
+                        inner =
+                                new SingleOrManyBursts(
+                                        (ArrayList<SingleOrManyBursts>) null, file, false);
+                    }
+                    dataFragment.filesList.add(inner);
+                }
+            } // TODO: Throw exception if attempt to load files from a file??
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            dataFragment.updatePlotAllFilesButtonEnabled();
+            dataFragment.adapter.notifyDataSetChanged();
+            dataFragment.setNoFilesMessageVisibility(dataFragment.filesList.isEmpty());
+            dataFragment.loadingFilesSpinner.setVisibility(View.INVISIBLE);
+            dataFragment.filesRecyclerView.setVisibility(View.VISIBLE);
+        }
+    }
+
     /**
      * Used by a wrapper class so that this instance can be replaced with another instance to
      * display the contents of the folder that was selected.
      */
     public interface DataFragmentListener {
+
+        /**
+         * Instructs the container to show the chosen folder.
+         *
+         * @param innerFolder The folder to display
+         */
         void onInnerFolderClicked(SingleOrManyBursts innerFolder);
 
+        /**
+         * Instructs the container to upload the chosen file.
+         *
+         * @param parent The DataFragment containing this fragment // TODO: Why is this here?
+         * @param viewHolder The ViewHolder for the row that was selected
+         * @param file The file that is to be uploaded
+         */
         void uploadFile(
                 DataFragment parent,
                 FilesListAdapter.FilesListViewHolder viewHolder,
                 SingleOrManyBursts file);
+
+        /** Notifies the container that this fragment is now the active one */
+        void notifyIsActiveFragment(DataFragment activeFragment);
     }
 }
