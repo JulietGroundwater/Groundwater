@@ -24,7 +24,6 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
-import uk.ac.cam.cl.juliet.computationengine.InvalidBurstException;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
@@ -34,22 +33,26 @@ import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
  * @author Ben Cole
  */
 public class DataFragment extends Fragment
-        implements FilesListAdapter.OnDataFileSelectedListener, MainActivity.PermissionListener, View.OnClickListener {
+        implements FilesListAdapter.OnDataFileSelectedListener,
+                MainActivity.PermissionListener,
+                View.OnClickListener {
 
     public static String TOP_LEVEL = "top_level";
     public static String FILES_LIST = "files_list";
 
-    private RecyclerView filesList;
+    private RecyclerView filesRecyclerView;
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
-    private List<SingleOrManyBursts> files;
+    private SingleOrManyBursts currentNode;
+    private List<SingleOrManyBursts> filesList;
     private Button plotAllFilesButton;
 
     DataFragmentListener listener;
 
     /**
-     * If this is the fragment displaying the top level then it will load its files globally.
-     * Otherwise, this fragment will display a list of files passed to it.
+     * If this is the fragment displaying the top level then it will load its files globally by
+     * exploring the phone's virtual SD card. Otherwise, this fragment will display a list of files
+     * passed to it.
      */
     private boolean isTopLevel;
 
@@ -67,28 +70,35 @@ public class DataFragment extends Fragment
         // for nested)
         isTopLevel = getIsTopLevel();
         if (isTopLevel) {
-            try {
-                files = getDataFiles();
-            } catch (InvalidBurstException e) {
-                e.printStackTrace();
-                // TODO: display error message
-                return null;
-            }
+            currentNode = getRootNode();
         } else {
-            files = loadPassedFiles();
+            currentNode = loadPassedFiles();
+        }
+
+        if (currentNode == null) {
+            // TODO: handle this...
+            // This should never happen!!
+        }
+
+        try {
+            if (currentNode != null) {
+                filesList = currentNode.getListOfBursts();
+            }
+        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+            e.printStackTrace();
         }
 
         // Set up the UI
-        filesList = view.findViewById(R.id.filesListRecyclerView);
-        filesList.setLayoutManager(new LinearLayoutManager(getContext()));
-        adapter = new FilesListAdapter(files);
+        filesRecyclerView = view.findViewById(R.id.filesListRecyclerView);
+        filesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
+        adapter = new FilesListAdapter(filesList);
         adapter.setOnDataFileSelectedListener(this);
-        filesList.setAdapter(adapter);
+        filesRecyclerView.setAdapter(adapter);
         noFilesToDisplayText = view.findViewById(R.id.noFilesText);
-        int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+        int visibility = filesList.isEmpty() ? View.VISIBLE : View.INVISIBLE;
         noFilesToDisplayText.setVisibility(visibility);
 
-        // Set up and potentially disable the "plot all files" button
+        // Set up and potentially disable the "plot all filesList" button
         plotAllFilesButton = view.findViewById(R.id.displayAllFilesButton);
         if (!getEligibleForPlottingAllFiles()) {
             plotAllFilesButton.setEnabled(false);
@@ -119,20 +129,15 @@ public class DataFragment extends Fragment
      *
      * @return The list of files passed to this Fragment.
      */
-    private List<SingleOrManyBursts> loadPassedFiles() {
+    private SingleOrManyBursts loadPassedFiles() {
         Bundle arguments = getArguments();
         if (arguments != null && arguments.containsKey(FILES_LIST)) {
-            Object selectedFile = arguments.get(FILES_LIST);
-            if (selectedFile instanceof SingleOrManyBursts) {
-                SingleOrManyBursts singleOrManyBursts = (SingleOrManyBursts) selectedFile;
-                try {
-                    return singleOrManyBursts.getListOfBursts();
-                } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
-                    e.printStackTrace();
-                }
+            Object passedFile = arguments.get(FILES_LIST);
+            if (passedFile instanceof SingleOrManyBursts) {
+                return (SingleOrManyBursts) passedFile;
             }
         }
-        return new ArrayList<>();
+        return null;
     }
 
     /**
@@ -215,36 +220,49 @@ public class DataFragment extends Fragment
     }
 
     /**
-     * Returns a list of all Data Files that are stored on the device.
+     * Triggers all the files in a collection to be plotted, and subsequently the UI to swap from
+     * displaying the list of files to the plot of the collection.
+     */
+    private void plotCollection() {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        idh.setSelectedData(currentNode);
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).showChartScreen();
+        }
+    }
+
+    /**
+     * Returns a list of all data files that are stored on the device.
      *
      * @return an ArrayList of data files stored on the device
      */
-    private List<SingleOrManyBursts> getDataFiles() throws InvalidBurstException {
-        // TODO: Redo this so that it returns a SingleOrManyBursts for the root, rather than
-        // a list of files.
-
+    private SingleOrManyBursts getRootNode() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         List<SingleOrManyBursts> files = new ArrayList<>();
+
+        File groundwater;
 
         if (ContextCompat.checkSelfPermission(
                         getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
                 == PackageManager.PERMISSION_GRANTED) {
 
-            File groundwater = idh.getRoot();
+            groundwater = idh.getRoot();
             try {
                 files = getDataFiles(groundwater).getListOfBursts();
             } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
                 e.printStackTrace();
             }
+        } else {
+            return null;
         }
-        return files;
+        return new SingleOrManyBursts(files, false, groundwater.getAbsolutePath(), null);
     }
 
     /**
      * Recursively searches the file structure, starting at the passed file, finding all data
      * folders and files that can be displayed.
      *
-     * @param folder The folder from which to start the searc
+     * @param folder The folder from which to start the search
      * @return A SingleOrManyBursts instance containing the tree of files
      */
     private SingleOrManyBursts getDataFiles(File folder) {
@@ -269,15 +287,15 @@ public class DataFragment extends Fragment
      * Determines whether the folder we are current looking at is appropriate for plotting all
      * files.
      *
-     * This will be true if the current folder is both non-empty and contains only files (no
+     * <p>This will be true if the current folder is both non-empty and contains only files (no
      * folders). Otherwise, this will be false.
      *
      * @return
      */
     private boolean getEligibleForPlottingAllFiles() {
-        if (files.isEmpty()) return false;
+        if (filesList.isEmpty()) return false;
         boolean eligible = true;
-        for (SingleOrManyBursts file : files) {
+        for (SingleOrManyBursts file : filesList) {
             eligible &= file.getIsSingleBurst();
         }
         return eligible;
@@ -339,12 +357,12 @@ public class DataFragment extends Fragment
     public void onPermissionGranted() {
         // Update the files now we have permission
         try {
-            files.addAll(getDataFiles());
-        } catch (InvalidBurstException e) {
+            filesList.addAll(getRootNode().getListOfBursts());
+        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();
         }
-        // Change visibility of the no files message
-        int visibility = files.isEmpty() ? View.VISIBLE : View.INVISIBLE;
+        // Change visibility of the no filesList message
+        int visibility = filesList.isEmpty() ? View.VISIBLE : View.INVISIBLE;
         noFilesToDisplayText.setVisibility(visibility);
 
         // Notify the adapter
@@ -365,8 +383,7 @@ public class DataFragment extends Fragment
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.displayAllFilesButton:
-                // TODO
-//                onDataFileClicked(file, );
+                plotCollection();
         }
     }
 
