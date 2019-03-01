@@ -15,7 +15,7 @@
         android:icon="@drawable/ic_refresh"
         app:showAsAction="always"/>
     <item
-        android:id="@+id/sync_button"
+        android:id="@+id/sync_all_files_button"
         android:title="@string/sync"
         android:icon="@drawable/baseline_cloud_upload_white_24"
         app:showAsAction="always"/>

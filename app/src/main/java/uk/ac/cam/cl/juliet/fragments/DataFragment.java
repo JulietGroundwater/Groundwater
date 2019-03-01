@@ -19,6 +19,7 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.microsoft.identity.client.MsalClientException;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,6 +27,7 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
@@ -51,7 +53,7 @@ public class DataFragment extends Fragment
     private List<SingleOrManyBursts> filesList;
     private Button plotAllFilesButton;
 
-    DataFragmentListener listener;
+    private DataFragmentListener listener;
 
     @Override
     public View onCreateView(
@@ -173,36 +175,47 @@ public class DataFragment extends Fragment
         int messageRes =
                 file.getFile().isFile() ? R.string.what_do_with_file : R.string.what_do_with_folder;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(titleRes)
-                .setMessage(messageRes)
-                .setPositiveButton(
-                        R.string.sync,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                                uploadFile(file, viewHolder);
-                            }
-                        })
-                .setNeutralButton(
-                        R.string.delete,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                                showConfirmDeleteDialog(file);
-                            }
-                        })
-                .setNegativeButton(
-                        R.string.cancel,
-                        new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialog, int which) {
-                                dialog.cancel();
-                            }
-                        })
-                .create()
-                .show();
+        builder.setTitle(titleRes);
+        builder.setMessage(messageRes);
+        boolean signedIn;
+        try {
+            signedIn = AuthenticationManager.getInstance().isUserLoggedIn();
+        } catch (MsalClientException e) {
+            e.printStackTrace();
+            signedIn = false;
+        }
+        DialogInterface.OnClickListener deleteListener =
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                        showConfirmDeleteDialog(file);
+                    }
+                };
+        DialogInterface.OnClickListener cancelListener =
+                new DialogInterface.OnClickListener() {
+                    @Override
+                    public void onClick(DialogInterface dialog, int which) {
+                        dialog.cancel();
+                    }
+                };
+        if (signedIn) {
+            builder.setPositiveButton(
+                    R.string.sync,
+                    new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            dialog.cancel();
+                            uploadFile(file, viewHolder);
+                        }
+                    });
+            builder.setNeutralButton(R.string.delete, deleteListener);
+            builder.setNegativeButton(R.string.cancel, cancelListener);
+        } else {
+            builder.setPositiveButton(R.string.delete, deleteListener);
+            builder.setNegativeButton(R.string.cancel, cancelListener);
+        }
+        builder.create().show();
         return true;
     }
 
@@ -279,7 +292,7 @@ public class DataFragment extends Fragment
      * <p>This will be true if the current folder is both non-empty and contains only files (no
      * folders). Otherwise, this will be false.
      *
-     * @return
+     * @return true if eligible; false otherwise
      */
     private boolean getEligibleForPlottingAllFiles() {
         if (filesList.isEmpty()) return false;
@@ -291,6 +304,10 @@ public class DataFragment extends Fragment
         return eligible;
     }
 
+    /**
+     * Tests whether it is appropriate to show the "upload all files" button, and updates the UI
+     * accordingly.
+     */
     private void updatePlotAllFilesButtonEnabled() {
         plotAllFilesButton.setEnabled(getEligibleForPlottingAllFiles());
     }
@@ -374,18 +391,7 @@ public class DataFragment extends Fragment
     /** Called on permission granted - refresh file listing */
     @Override
     public void onPermissionGranted() {
-        // Update the files now we have permission
-        try {
-            filesList.addAll(getRootNode().getListOfBursts());
-        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
-            e.printStackTrace();
-        }
-        // Change visibility of the no filesList message
-        int visibility = filesList.isEmpty() ? View.VISIBLE : View.INVISIBLE;
-        noFilesToDisplayText.setVisibility(visibility);
-
-        // Notify the adapter
-        adapter.notifyDataSetChanged();
+        refreshFiles();
     }
 
     /**
