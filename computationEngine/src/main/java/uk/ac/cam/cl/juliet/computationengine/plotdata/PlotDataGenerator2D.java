@@ -86,12 +86,13 @@ public class PlotDataGenerator2D {
 
         yValues = new ArrayList<>();
         for (int i = 0; i < spec.length; i++) {
-            yValues.add(FastMath.atan2(spec[i].getImaginary(), spec[i].getReal()));
+            yValues.add(spec[i].getArgument());
         }
 
         amplitudePlotData = new PlotData2D(xValues, yValues);
 
         // Phase
+        yValues = new ArrayList<>();
         for (int i = 0; i < spec.length; i++) {
             double value = FastMath.log(10.0, spec[i].abs()) * 20.0;
             yValues.add(value);
