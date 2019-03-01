@@ -28,9 +28,6 @@ public class SingleOrManyBursts implements Serializable {
     private List<SingleOrManyBursts> listOfBursts;
     private Burst singleBurst;
     private boolean syncedToOneDrive;
-    private String fileName;
-    private String directoryName;
-    private SingleOrManyBursts parent;
     private File file;
 
     /**
@@ -38,13 +35,11 @@ public class SingleOrManyBursts implements Serializable {
      *
      * @param burst The Burst to be contained
      */
-    public SingleOrManyBursts(
-            Burst burst, boolean isSyncedToOneDrive, String fileName, SingleOrManyBursts parent) {
+    public SingleOrManyBursts(Burst burst, File file, boolean isSyncedToOneDrive) {
+        this.file = file;
         this.singleBurst = burst;
-        type = Type.SINGLE;
-        this.fileName = fileName;
         syncedToOneDrive = isSyncedToOneDrive;
-        this.parent = parent;
+        type = Type.SINGLE;
     }
 
     /**
@@ -53,15 +48,11 @@ public class SingleOrManyBursts implements Serializable {
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
     public SingleOrManyBursts(
-            List<SingleOrManyBursts> listOfBursts,
-            boolean isSyncedToOneDrive,
-            String dirName,
-            SingleOrManyBursts parent) {
+            List<SingleOrManyBursts> listOfBursts, File folder, boolean isSyncedToOneDrive) {
+        this.file = folder;
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
-        this.directoryName = dirName;
-        this.parent = parent;
     }
 
     /**
@@ -87,10 +78,11 @@ public class SingleOrManyBursts implements Serializable {
      *
      * @param burst The burst to set it to
      */
-    public void setSingleBurst(Burst burst) {
-        if (this.singleBurst == null) {
-            this.singleBurst = burst;
+    public void setSingleBurst(Burst burst) throws AccessManyBurstsAsSingleException {
+        if (type == Type.MANY) {
+            throw new AccessManyBurstsAsSingleException();
         }
+        this.singleBurst = burst;
     }
 
     /**
@@ -108,7 +100,11 @@ public class SingleOrManyBursts implements Serializable {
         }
     }
 
-    public void setListOfBursts(List<SingleOrManyBursts> bursts) {
+    public void setListOfBursts(List<SingleOrManyBursts> bursts)
+            throws AccessSingleBurstAsManyException {
+        if (type == Type.SINGLE) {
+            throw new AccessSingleBurstAsManyException();
+        }
         this.listOfBursts = bursts;
     }
 
@@ -133,14 +129,7 @@ public class SingleOrManyBursts implements Serializable {
      * @return the name of this file or collection of files
      */
     public String getNameToDisplay() {
-        switch (type) {
-            case SINGLE:
-                return this.fileName;
-            case MANY:
-                return this.directoryName;
-            default:
-                return "Something went wrong lol";
-        }
+        return file.getName();
     }
 
     /**
@@ -159,18 +148,6 @@ public class SingleOrManyBursts implements Serializable {
      */
     public boolean getSyncStatus() {
         return syncedToOneDrive;
-    }
-
-    public boolean getIsRootNode() {
-        return (parent == null);
-    }
-
-    public SingleOrManyBursts getParent() {
-        return parent;
-    }
-
-    public void setParent(SingleOrManyBursts parent) {
-        this.parent = parent;
     }
 
     public void setFile(File file) {

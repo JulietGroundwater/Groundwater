@@ -235,8 +235,7 @@ public class InfoMoreDetailFragment extends Fragment
 
         // Create store for the bursts
         List<SingleOrManyBursts> singles = new ArrayList<>();
-        this.currentLiveBursts =
-                new SingleOrManyBursts(singles, false, idh.getCurrentLiveData(), null);
+        this.currentLiveBursts = new SingleOrManyBursts(singles, null, false);
         idh.silentlySelectData(this.currentLiveBursts);
 
         AsyncTask.execute(

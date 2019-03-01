@@ -255,7 +255,9 @@ public class DataFragment extends Fragment
         } else {
             return null;
         }
-        return new SingleOrManyBursts(files, false, groundwater.getAbsolutePath(), null);
+
+        // TODO: Check for OneDrive sync
+        return new SingleOrManyBursts(files, groundwater, false);
     }
 
     /**
@@ -268,14 +270,14 @@ public class DataFragment extends Fragment
     private SingleOrManyBursts getDataFiles(File folder) {
         SingleOrManyBursts result;
         if (folder.isFile()) {
-            result = new SingleOrManyBursts((Burst) null, false, folder.getName(), null);
-            result.setFile(folder);
+            result =
+                    new SingleOrManyBursts(
+                            (Burst) null, folder, false); // TODO: Check for OneDrive sync
         } else {
             List<SingleOrManyBursts> values = new ArrayList<>();
-            result = new SingleOrManyBursts(values, false, folder.getName(), null);
+            result = new SingleOrManyBursts(values, folder, false);
             for (File innerFile : folder.listFiles()) {
                 SingleOrManyBursts singleOrManyBursts = getDataFiles(innerFile);
-                singleOrManyBursts.setParent(result);
                 values.add(singleOrManyBursts);
             }
             result.setFile(folder);
