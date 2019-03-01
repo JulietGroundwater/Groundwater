@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -45,8 +44,7 @@ import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
  *
  * @author Ben Cole
  */
-public class InfoMoreDetailFragment extends Fragment
-        implements ILiveProcessingTask, AdapterView.OnItemSelectedListener {
+public class InfoMoreDetailFragment extends Fragment implements ILiveProcessingTask {
 
     private final int BURST_CODE = 1;
     private final int JAVASCRIPT_BATCH_SIZE = 10000;
@@ -100,7 +98,21 @@ public class InfoMoreDetailFragment extends Fragment
                 new ArrayAdapter<>(
                         getContext(), R.layout.support_simple_spinner_dropdown_item, datatypes);
         detailedSpinner.setAdapter(adapter);
-        detailedSpinner.setOnItemSelectedListener(this);
+
+        // Set the spinners listener
+        detailedSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent, View view, int position, long id) {
+                        updateChart();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        System.out.println("Nothing selected!");
+                    }
+                });
 
         idh = InternalDataHandler.getInstance();
 
@@ -251,6 +263,7 @@ public class InfoMoreDetailFragment extends Fragment
                             while (!simulator.getTransientFiles().isEmpty()
                                     || simulator.getDataReady()) {
 
+                                // New data therefore we can create the folder to store the data in
                                 if (firstTime) {
                                     idh.addNewDirectory(idh.getCurrentLiveData());
                                     firstTime = false;
@@ -348,14 +361,14 @@ public class InfoMoreDetailFragment extends Fragment
             updateWebview(generateDatapoints(cache.get(idh.getCurrentLiveData())));
         } else {
             cache.put(idh.getCollectionSelected().getNameToDisplay(), generators);
-            updateWebview(generateDatapoints(cache.get(idh.getCollectionSelected().getNameToDisplay())));
+            updateWebview(
+                    generateDatapoints(cache.get(idh.getCollectionSelected().getNameToDisplay())));
         }
 
         // For live processing we need to check for the last file received
         if (isLast) {
             this.connected = false;
             idh.setProcessingLiveData(false);
-            // TODO: Same hack as above - communication between fragments is difficult
             toggleMenuItems();
         }
     }
@@ -471,15 +484,5 @@ public class InfoMoreDetailFragment extends Fragment
         } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();
         }
-    }
-
-    @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        updateChart();
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        Log.d("Spinner", "Nothing selected on detailed spinner");
     }
 }

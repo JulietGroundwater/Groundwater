@@ -118,7 +118,8 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
                 if (cache.containsKey(idh.getSingleSelectedDataFile().getAbsolutePath())) {
                     twoDimDataGen = cache.get(idh.getSingleSelectedDataFile().getAbsolutePath());
                 } else {
-                    twoDimDataGen = new PlotDataGenerator2D(idh.getSingleSelected().getSingleBurst());
+                    twoDimDataGen =
+                            new PlotDataGenerator2D(idh.getSingleSelected().getSingleBurst());
                     // Add to the cache
                     cache.put(idh.getSingleSelectedDataFile().getAbsolutePath(), twoDimDataGen);
                 }

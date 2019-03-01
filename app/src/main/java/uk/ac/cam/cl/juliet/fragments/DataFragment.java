@@ -225,7 +225,7 @@ public class DataFragment extends Fragment
      */
     private void plotCollection() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        idh.setSelectedData(currentNode);
+        idh.setCollectionSelected(currentNode);
         if (getActivity() instanceof MainActivity) {
             ((MainActivity) getActivity()).showChartScreen();
         }

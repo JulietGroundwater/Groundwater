@@ -20,7 +20,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
     public ProcessingTask(IProcessingCallback task) {
         try {
             generateBursts();
-            listOfBursts = InternalDataHandler.getInstance().getCollectionSelected().getListOfBursts();
+            listOfBursts =
+                    InternalDataHandler.getInstance().getCollectionSelected().getListOfBursts();
             listener = task;
         } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();

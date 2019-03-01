@@ -10,6 +10,8 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -65,7 +67,6 @@ public class SettingsFragment extends Fragment
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
-        this.setHasOptionsMenu(true);
         connectionStatusText = view.findViewById(R.id.connectionStatusText);
         connectionStatusIcon = view.findViewById(R.id.connectionStatusImageView);
 
@@ -90,7 +91,14 @@ public class SettingsFragment extends Fragment
         setDefaultValues();
         setConnectedStatus(getConnectionStatus());
         updateSendToDeviceButtonEnabled();
+        this.setHasOptionsMenu(true);
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
     }
 
     @Override
