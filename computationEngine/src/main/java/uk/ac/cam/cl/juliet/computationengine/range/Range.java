@@ -109,10 +109,11 @@ public class Range {
                 double val = window.evaluate(N, j);
                 rms = rms + (val * val) / (double)(N);
             }
+            rms = FastMath.sqrt(rms);
 
             for (int j = 0; j < p; j++) {
-                fftVif[2*j] *= FastMath.sqrt((double)(2 * padding) / (double)(p));
-                fftVif[2*j + 1] *= FastMath.sqrt((double)(2 * padding) / (double)(p));
+                fftVif[2*j] *= FastMath.sqrt((double)(2 * padding)) / (double)(p);
+                fftVif[2*j + 1] *= FastMath.sqrt((double)(2 * padding)) / (double)(p);
 
                 fftVif[2*j] /= rms;
                 fftVif[2*j + 1] /= rms;
