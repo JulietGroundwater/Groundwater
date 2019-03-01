@@ -295,18 +295,23 @@ public class DataFragment extends Fragment
     }
 
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
-    private void showConfirmDeleteDialog(SingleOrManyBursts file) {
+    private void showConfirmDeleteDialog(final SingleOrManyBursts file) {
         Context context = getContext();
         if (context == null) return;
         AlertDialog.Builder builder = new AlertDialog.Builder(context);
         builder.setTitle(R.string.confirm_delete);
-        builder.setMessage(R.string.are_you_sure_delete);
+        int messageResource =
+                file.getFile().isFile()
+                        ? R.string.are_you_sure_delete_file
+                        : R.string.are_you_sure_delete_folder;
+        builder.setMessage(messageResource);
         builder.setPositiveButton(
                 R.string.delete,
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-                        // TODO: delete the file
+                        deleteFileOrFolder(file.getFile());
+                        refreshFiles();
                         dialog.cancel();
                     }
                 });
@@ -319,6 +324,25 @@ public class DataFragment extends Fragment
                     }
                 });
         builder.create().show();
+    }
+
+    /**
+     * Deletes the passed file.
+     *
+     * <p>If the passed file is a folder, then this will recursively delete everything inside the
+     * folder before deleting the folder itself.
+     *
+     * @param fileOrFolder The file (or folder) to delete
+     */
+    private void deleteFileOrFolder(File fileOrFolder) {
+        if (fileOrFolder.isFile()) {
+            fileOrFolder.delete();
+        } else {
+            for (File f : fileOrFolder.listFiles()) {
+                deleteFileOrFolder(f);
+            }
+            fileOrFolder.delete();
+        }
     }
 
     /**
