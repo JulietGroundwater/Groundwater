@@ -37,8 +37,7 @@ public class DataFragment extends Fragment
                 MainActivity.PermissionListener,
                 View.OnClickListener {
 
-    public static String TOP_LEVEL = "top_level";
-    public static String FILES_LIST = "files_list";
+    public static final String FOLDER_PATH = "folder_path";
 
     private RecyclerView filesRecyclerView;
     private TextView noFilesToDisplayText;
@@ -49,13 +48,6 @@ public class DataFragment extends Fragment
 
     DataFragmentListener listener;
 
-    /**
-     * If this is the fragment displaying the top level then it will load its files globally by
-     * exploring the phone's virtual SD card. Otherwise, this fragment will display a list of files
-     * passed to it.
-     */
-    private boolean isTopLevel;
-
     @Override
     public View onCreateView(
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -65,25 +57,18 @@ public class DataFragment extends Fragment
         Context context = getContext();
         if (context == null) return null;
 
-        // Determine whether this is a top level or a nested Fragment, which determines where
-        // the data files should be loaded from (global source for top level, passed as argument
-        // for nested)
-        isTopLevel = getIsTopLevel();
-        if (isTopLevel) {
-            currentNode = getRootNode();
-        } else {
-            currentNode = loadPassedFiles();
+        // Extract the folder path for this DataFragment to display
+        Bundle arguments = getArguments();
+        if (arguments == null
+                || !arguments.containsKey(FOLDER_PATH)
+                || !(arguments.get(FOLDER_PATH) instanceof String)) {
+            return null; // TODO: handle this better
         }
-
-        if (currentNode == null) {
-            // TODO: handle this...
-            // This should never happen!!
-        }
-
+        String folderPath = arguments.getString(FOLDER_PATH);
+        File folder = new File(folderPath);
+        currentNode = getDataFiles(folder);
         try {
-            if (currentNode != null) {
-                filesList = currentNode.getListOfBursts();
-            }
+            filesList = currentNode.getListOfBursts();
         } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();
         }
@@ -114,30 +99,30 @@ public class DataFragment extends Fragment
     }
 
     /**
-     * Determines whether this fragment is the top level in the file hierarchy.
+     * Loads all files in the directory that was passed as an argument to the fragment.
      *
-     * @return true if this is the top level; false otherwise
+     * @return A <code>List</code> of all <code>SingleOrManyBursts</code> in this directory.
      */
-    private boolean getIsTopLevel() {
-        Bundle arguments = getArguments();
-        if (arguments == null) return true;
-        return arguments.getBoolean(TOP_LEVEL, true);
-    }
-
-    /**
-     * Returns the list of files passed to this Fragment.
-     *
-     * @return The list of files passed to this Fragment.
-     */
-    private SingleOrManyBursts loadPassedFiles() {
-        Bundle arguments = getArguments();
-        if (arguments != null && arguments.containsKey(FILES_LIST)) {
-            Object passedFile = arguments.get(FILES_LIST);
-            if (passedFile instanceof SingleOrManyBursts) {
-                return (SingleOrManyBursts) passedFile;
+    private SingleOrManyBursts loadFilesInFolder(File folder) {
+        List<SingleOrManyBursts> files = new ArrayList<>();
+        if (!folder.isFile()) {
+            for (File file : folder.listFiles()) {
+                SingleOrManyBursts inner;
+                if (file.isFile()) {
+                    inner =
+                            new SingleOrManyBursts(
+                                    (Burst) null,
+                                    file,
+                                    false); // TODO: Detect if synced to OneDrive
+                } else {
+                    inner =
+                            new SingleOrManyBursts(
+                                    (ArrayList<SingleOrManyBursts>) null, file, false);
+                }
+                files.add(inner);
             }
-        }
-        return null;
+        } // TODO: Throw exception if attempt to load files from a file??
+        return new SingleOrManyBursts(files, folder, false); // TODO: Detect if synced to OneDrive
     }
 
     /**

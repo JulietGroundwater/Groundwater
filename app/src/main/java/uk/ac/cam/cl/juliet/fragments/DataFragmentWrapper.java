@@ -1,13 +1,19 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import static uk.ac.cam.cl.juliet.fragments.DataFragment.FOLDER_PATH;
+
+import android.Manifest;
+import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -57,8 +63,10 @@ public class DataFragmentWrapper extends Fragment
             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_data_wrapper, container, false);
         setHasOptionsMenu(true);
+        Bundle arguments = new Bundle();
+        arguments.putString(DataFragment.FOLDER_PATH, getRootPath());
         DataFragment dataFragment = new DataFragment();
-        dataFragment.setArguments(getArguments());
+        dataFragment.setArguments(arguments);
         dataFragment.setDataFragmentListener(this);
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager != null) {
@@ -106,6 +114,21 @@ public class DataFragmentWrapper extends Fragment
         return false;
     }
 
+    private String getRootPath() {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        Activity activity = getActivity();
+        String path = null;
+        if (activity != null
+                && ContextCompat.checkSelfPermission(
+                                activity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                        == PackageManager.PERMISSION_GRANTED) {
+            path = idh.getRoot().getAbsolutePath();
+        } else {
+            // TODO: Show error message; we failed to get permissions
+        }
+        return path;
+    }
+
     /**
      * A method for checking the current authentication status and setting the correct sign in or
      * out buttons
@@ -143,8 +166,7 @@ public class DataFragmentWrapper extends Fragment
 
         DataFragment innerFragment = new DataFragment();
         Bundle arguments = new Bundle();
-        arguments.putBoolean(DataFragment.TOP_LEVEL, false);
-        arguments.putSerializable(DataFragment.FILES_LIST, innerFolder);
+        arguments.putString(FOLDER_PATH, innerFolder.getFile().getAbsolutePath());
         innerFragment.setArguments(arguments);
         innerFragment.setDataFragmentListener(this);
         FragmentManager fragmentManager = getFragmentManager();

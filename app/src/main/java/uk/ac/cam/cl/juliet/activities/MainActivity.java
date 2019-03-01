@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
-import uk.ac.cam.cl.juliet.fragments.DataFragment;
 import uk.ac.cam.cl.juliet.fragments.DataFragmentWrapper;
 import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
@@ -50,10 +49,7 @@ public class MainActivity extends AppCompatActivity
 
         // Create an instance of each fragment
         displayFragment = new DisplayFragment();
-        Bundle dataFragmentArgs = new Bundle();
-        dataFragmentArgs.putBoolean(DataFragment.TOP_LEVEL, true);
         dataFragment = new DataFragmentWrapper();
-        dataFragment.setArguments(dataFragmentArgs);
         settingsFragment = new SettingsFragment();
 
         // Set up a ViewPager to handle displaying the three Fragments
