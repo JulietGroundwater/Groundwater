@@ -40,7 +40,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
                 File innerFile = file.listFiles()[i];
                 try {
                     many.getListOfBursts().get(i).setSingleBurst(new Burst(innerFile, 1));
-                } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+                } catch (SingleOrManyBursts.AccessSingleBurstAsManyException
+                        | SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
                     e.printStackTrace();
                 }
             }
