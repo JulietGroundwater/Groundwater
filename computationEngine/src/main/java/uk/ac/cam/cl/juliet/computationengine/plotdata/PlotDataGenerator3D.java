@@ -144,6 +144,24 @@ public class PlotDataGenerator3D {
             yValues.add((y - SCALE_CONSTANT_2) * SCALE_CONSTANT_1 / nCoef);
         }
 
+        //Remove negative values
+        int nonNegativeCutoff = 0;
+        for (int i = 0; i < yValues.size(); i++) {
+            if (yValues.get(i) >= 0.0) {
+                nonNegativeCutoff = i;
+                break;
+            }
+        }
+
+        if (nonNegativeCutoff > 0) {
+            yValues.subList(0, nonNegativeCutoff).clear();
+
+            for (int i = 0; i < xValues.size(); i++) {
+                powerValues.get(i).subList(0, nonNegativeCutoff).clear();
+                phaseValues.get(i).subList(0, nonNegativeCutoff).clear();
+            }
+        }
+
         powerPlotData = new PlotData3D(xValues, yValues, powerValues);
         phaseDiffPlotData = new PlotData3D(xValues, yValues, phaseValues);
     }
