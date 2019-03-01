@@ -10,6 +10,11 @@
             android:title="@string/sign_out"
             app:showAsAction="always" />
     <item
+        android:id="@+id/refresh"
+        android:title="@string/sync"
+        android:icon="@drawable/ic_refresh"
+        app:showAsAction="always"/>
+    <item
         android:id="@+id/sync_button"
         android:title="@string/sync"
         android:icon="@drawable/baseline_cloud_upload_white_24"

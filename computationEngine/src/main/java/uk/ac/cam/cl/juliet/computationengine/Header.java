@@ -84,106 +84,231 @@ public class Header {
             txAnt = new ArrayList<>(),
             batteryCheck = new ArrayList<>(); // NOT DEFINED IN MANUAL
 
-    private List<String> headerLines = new ArrayList<>();
-
     public Header(File file) throws ComputationEngineException {
+        boolean startFlag = false;
+        boolean endFlag = false;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
 
             String line;
             while ((line = reader.readLine()) != null) {
-                headerLines.add(line);
 
-                if (line.contains("*** End Header ***")) break;
+                if (line.contains("*** End Header ***")) {
+                    endFlag = true;
+                    break;
+                }
+
+                if (line.contains("*** Burst Header ***")) startFlag = true;
 
                 if (!line.contains("=")) continue;
 
                 String lhs = line.split("=")[0]; // left hand side
                 String rhs = line.split("=")[1]; // right hand side
 
-                // would use a switch statement here, but for Strings it requires java 7
-                if (lhs.equals("Time stamp")) {
-                    DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
-                    try {
-                        timeStamp = format.parse(rhs);
-                    } catch (ParseException e) {
-                        e.printStackTrace();
-                    }
-                } else if (lhs.equals("RMB_Issue")) rmbIssue = rhs;
-                else if (lhs.equals("VAB_Issue")) vabIssue = rhs;
-                else if (lhs.equals("SW_Issue")) swIssue = rhs;
-                else if (lhs.equals("Venom_Issue")) venomIssue = rhs;
-                else if (lhs.equals("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
-                else if (lhs.equals("NData")) nData = Integer.parseInt(rhs);
-                else if (lhs.equals("Triples"))
-                    for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
-                else if (lhs.equals("Average")) average = Integer.parseInt(rhs);
-                else if (lhs.equals("RepSecs")) repSecs = Integer.parseInt(rhs);
-                else if (lhs.equals("CheckEthernet")) checkEthernet = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
-                else if (lhs.equals("MAX_DATA_FILE_LENGTH"))
-                    maxDataFileLength = Integer.parseInt(rhs);
-                else if (lhs.equals("MAX_SAF_FILE_LENGTH"))
-                    maxSafFileLength = Integer.parseInt(rhs);
-                else if (lhs.equals("ANTENNA_SELECT")) antennaSelect = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
-                else if (lhs.equals("Housekeeping")) housekeeping = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("GPSon")) gpsOn = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("WATCHDOG_TASK_SECS")) watchdogTaskSecs = Integer.parseInt(rhs);
-                else if (lhs.equals("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
-                else if (lhs.equals("Attenuator1"))
-                    for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
-                else if (lhs.equals("AFGain"))
-                    for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
-                else if (lhs.equals("TxAnt"))
-                    for (String s : rhs.split(",")) txAnt.add(Integer.parseInt(s));
-                else if (lhs.equals("RxAnt"))
-                    for (String s : rhs.split(",")) rxAnt.add(Integer.parseInt(s));
-                else if (lhs.equals("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
-                else if (lhs.equals("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("LogOn")) logOn = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("Reg00")) reg00 = rhs;
-                else if (lhs.equals("Reg01")) reg01 = rhs;
-                else if (lhs.equals("Reg02")) reg02 = rhs;
-                else if (lhs.equals("Reg0B")) reg0B = rhs;
-                else if (lhs.equals("Reg0C")) reg0C = rhs;
-                else if (lhs.equals("Reg0D")) reg0D = rhs;
-                else if (lhs.equals("Reg0E")) reg0E = rhs;
-                else if (lhs.equals("SamplingFreqMode")) samplingFreqMode = Integer.parseInt(rhs);
-                else if (lhs.equals("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
-                else if (lhs.equals("BatteryCheck"))
-                    for (String s : rhs.split(",")) batteryCheck.add(Integer.parseInt(s));
-                else if (lhs.equals("Latitude")) latitude = Double.parseDouble(rhs);
-                else if (lhs.equals("Longitude")) longitude = Double.parseDouble(rhs);
-                else if (lhs.equals("GPS_Time")) gpsTime = Double.parseDouble(rhs);
-                else if (lhs.equals("VM2_Time")) vm2Time = Double.parseDouble(rhs);
-                else if (lhs.equals("Temp1")) temp1 = Double.parseDouble(rhs);
-                else if (lhs.equals("Temp2")) temp2 = Double.parseDouble(rhs);
-                else if (lhs.equals("BatteryVoltage")) batteryVoltage = Double.parseDouble(rhs);
-                else if (lhs.equals("Ramp")) ramp = Integer.parseInt(rhs);
-                else if (lhs.equals("NoDwell")) noDwell = Integer.parseInt(rhs);
-                else if (lhs.equals("StartFreq")) startFreq = Integer.parseInt(rhs);
-                else if (lhs.equals("StopFreq")) stopFreq = Integer.parseInt(rhs);
-                else if (lhs.equals("FreqStepUp")) freqStepUp = Integer.parseInt(rhs);
-                else if (lhs.equals("FreqStepDn")) freqStepDn = Integer.parseInt(rhs);
-                else if (lhs.equals("TStepUp")) tStepUp = Double.parseDouble(rhs);
-                else if (lhs.equals("TStepDn")) tStepDn = Double.parseDouble(rhs);
-                else if (lhs.equals("BattSleep")) battSleep = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("BurstNo")) burstNo = Integer.parseInt(rhs);
-                else if (lhs.equals("IsEthOn")) isEthOn = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("UpTell")) upTell = Integer.parseInt(rhs);
-                else if (lhs.equals("IsWebServerOn")) isWebServerOn = (Integer.parseInt(rhs) != 0);
-                else if (lhs.equals("IsFTPServerOn")) isFTPServerOn = (Integer.parseInt(rhs) != 0);
+                switch (lhs) {
+                    case "Time stamp":
+                        {
+                            DateFormat format =
+                                    new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
+                            try {
+                                timeStamp = format.parse(rhs);
+                            } catch (ParseException e) {
+                                e.printStackTrace();
+                            }
+                            break;
+                        }
+                    case "RMB_Issue":
+                        rmbIssue = rhs;
+                        break;
+                    case "VAB_Issue":
+                        vabIssue = rhs;
+                        break;
+                    case "SW_Issue":
+                        swIssue = rhs;
+                        break;
+                    case "Venom_Issue":
+                        venomIssue = rhs;
+                        break;
+                    case "NSubBursts":
+                        nSubBursts = Integer.parseInt(rhs);
+                        break;
+                    case "NData":
+                        nData = Integer.parseInt(rhs);
+                        break;
+                    case "Triples":
+                        for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
+                        break;
+                    case "Average":
+                        average = Integer.parseInt(rhs);
+                        break;
+                    case "RepSecs":
+                        repSecs = Integer.parseInt(rhs);
+                        break;
+                    case "CheckEthernet":
+                        checkEthernet = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "N_ADC_SAMPLES":
+                        nADCSamples = Integer.parseInt(rhs);
+                        break;
+                    case "MAX_DATA_FILE_LENGTH":
+                        maxDataFileLength = Integer.parseInt(rhs);
+                        break;
+                    case "MAX_SAF_FILE_LENGTH":
+                        maxSafFileLength = Integer.parseInt(rhs);
+                        break;
+                    case "ANTENNA_SELECT":
+                        antennaSelect = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "nAttenuators":
+                        nAttenuators = Integer.parseInt(rhs);
+                        break;
+                    case "Housekeeping":
+                        housekeeping = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "GPSon":
+                        gpsOn = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "SyncGPS":
+                        syncGPS = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "Iridium":
+                        iridium = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "WATCHDOG_TASK_SECS":
+                        watchdogTaskSecs = Integer.parseInt(rhs);
+                        break;
+                    case "IntervalMode":
+                        intervalMode = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "InterChirpDelay":
+                        interChirpDelay = Integer.parseInt(rhs);
+                        break;
+                    case "Attenuator1":
+                        for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
+                        break;
+                    case "AFGain":
+                        for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
+                        break;
+                    case "TxAnt":
+                        for (String s : rhs.split(",")) txAnt.add(Integer.parseInt(s));
+                        break;
+                    case "RxAnt":
+                        for (String s : rhs.split(",")) rxAnt.add(Integer.parseInt(s));
+                        break;
+                    case "maxDepthToGraph":
+                        maxDepthToGraph = Integer.parseInt(rhs);
+                        break;
+                    case "SleepMode":
+                        sleepMode = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "LogOn":
+                        logOn = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "Reg00":
+                        reg00 = rhs;
+                        break;
+                    case "Reg01":
+                        reg01 = rhs;
+                        break;
+                    case "Reg02":
+                        reg02 = rhs;
+                        break;
+                    case "Reg0B":
+                        reg0B = rhs;
+                        break;
+                    case "Reg0C":
+                        reg0C = rhs;
+                        break;
+                    case "Reg0D":
+                        reg0D = rhs;
+                        break;
+                    case "Reg0E":
+                        reg0E = rhs;
+                        break;
+                    case "SamplingFreqMode":
+                        samplingFreqMode = Integer.parseInt(rhs);
+                        break;
+                    case "Settle_Cycles":
+                        settleCycles = Integer.parseInt(rhs);
+                        break;
+                    case "BatteryCheck":
+                        for (String s : rhs.split(",")) batteryCheck.add(Integer.parseInt(s));
+                        break;
+                    case "Latitude":
+                        latitude = Double.parseDouble(rhs);
+                    case "Longitude":
+                        longitude = Double.parseDouble(rhs);
+                        break;
+                    case "GPS_Time":
+                        gpsTime = Double.parseDouble(rhs);
+                        break;
+                    case "VM2_Time":
+                        vm2Time = Double.parseDouble(rhs);
+                        break;
+                    case "Temp1":
+                        temp1 = Double.parseDouble(rhs);
+                        break;
+                    case "Temp2":
+                        temp2 = Double.parseDouble(rhs);
+                        break;
+                    case "BatteryVoltage":
+                        batteryVoltage = Double.parseDouble(rhs);
+                        break;
+                    case "Ramp":
+                        ramp = Integer.parseInt(rhs);
+                        break;
+                    case "NoDwell":
+                        noDwell = Integer.parseInt(rhs);
+                        break;
+                    case "StartFreq":
+                        startFreq = Integer.parseInt(rhs);
+                        break;
+                    case "StopFreq":
+                        stopFreq = Integer.parseInt(rhs);
+                        break;
+                    case "FreqStepUp":
+                        freqStepUp = Integer.parseInt(rhs);
+                        break;
+                    case "FreqStepDn":
+                        freqStepDn = Integer.parseInt(rhs);
+                        break;
+                    case "TStepUp":
+                        tStepUp = Double.parseDouble(rhs);
+                        break;
+                    case "TStepDn":
+                        tStepDn = Double.parseDouble(rhs);
+                        break;
+                    case "BattSleep":
+                        battSleep = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "BurstNo":
+                        burstNo = Integer.parseInt(rhs);
+                        break;
+                    case "IsEthOn":
+                        isEthOn = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "UpTell":
+                        upTell = Integer.parseInt(rhs);
+                        break;
+                    case "IsWebServerOn":
+                        isWebServerOn = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "IsFTPServerOn":
+                        isFTPServerOn = (Integer.parseInt(rhs) != 0);
+                        break;
+                }
             }
 
         } catch (FileNotFoundException e) {
             throw new ComputationEngineException(e.getMessage());
         } catch (IOException e) {
             throw new ComputationEngineException(e.getMessage());
+        } catch (NullPointerException e) {
+            throw new ComputationEngineException("File can not be null");
         }
+
+        if (!(startFlag && endFlag))
+            throw new ComputationEngineException("File must be of the correct format");
     }
 
     /**
@@ -193,12 +318,197 @@ public class Header {
      * @return ASCII string of the entire header
      */
     public String getASCII() {
-        StringBuilder sb = new StringBuilder();
-        for (String line : headerLines) {
-            sb.append(line);
-            sb.append('\n');
-        }
-        return sb.toString();
+
+        DateFormat format = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.ENGLISH);
+
+        String asciiValue =
+                "*** Burst Header ***\n"
+                        + "Time stamp="
+                        + format.format(timeStamp)
+                        + "\n"
+                        + "RMB_Issue="
+                        + rmbIssue
+                        + "\n"
+                        + "VAB_Issue="
+                        + vabIssue
+                        + "\n"
+                        + "SW_Issue="
+                        + swIssue
+                        + "\n"
+                        + "Venom_Issue="
+                        + venomIssue
+                        + "\n"
+                        + "NSubBursts="
+                        + nSubBursts
+                        + "\n"
+                        + "NData="
+                        + nData
+                        + "\n"
+                        + "Triples="
+                        + triples
+                        + "\n"
+                        + "Average="
+                        + average
+                        + "\n"
+                        + "RepSecs="
+                        + repSecs
+                        + "\n"
+                        + "CheckEthernet="
+                        + checkEthernet
+                        + "\n"
+                        + "N_ADC_SAMPLES="
+                        + nADCSamples
+                        + "\n"
+                        + "MAX_DATA_FILE_LENGTH="
+                        + maxDataFileLength
+                        + "\n"
+                        + "MAX_SAF_FILE_LENGTH="
+                        + maxSafFileLength
+                        + "\n"
+                        + "ANTENNA_SELECT="
+                        + antennaSelect
+                        + "\n"
+                        + "nAttenuators="
+                        + nAttenuators
+                        + "\n"
+                        + "Housekeeping="
+                        + housekeeping
+                        + "\n"
+                        + "GPSon="
+                        + gpsOn
+                        + "\n"
+                        + "SyncGPS="
+                        + syncGPS
+                        + "\n"
+                        + "Iridium="
+                        + iridium
+                        + "\n"
+                        + "WATCHDOG_TASK_SECS="
+                        + watchdogTaskSecs
+                        + "\n"
+                        + "IntervalMode="
+                        + intervalMode
+                        + "\n"
+                        + "InterChirpDelay="
+                        + interChirpDelay
+                        + "\n"
+                        + "Attenuator1="
+                        + attenuator1
+                        + "\n"
+                        + "AFGain="
+                        + afGain
+                        + "\n"
+                        + "TxAnt="
+                        + txAnt
+                        + "\n"
+                        + "RxAnt="
+                        + rxAnt
+                        + "\n"
+                        + "maxDepthToGraph="
+                        + maxDepthToGraph
+                        + "\n"
+                        + "SleepMode="
+                        + sleepMode
+                        + "\n"
+                        + "LogOn="
+                        + logOn
+                        + "\n"
+                        + "Reg00="
+                        + reg00
+                        + "\n"
+                        + "Reg01="
+                        + reg01
+                        + "\n"
+                        + "Reg02="
+                        + reg02
+                        + "\n"
+                        + "Reg0B="
+                        + reg0B
+                        + "\n"
+                        + "Reg0C="
+                        + reg0C
+                        + "\n"
+                        + "Reg0D="
+                        + reg0D
+                        + "\n"
+                        + "Reg0E="
+                        + reg0E
+                        + "\n"
+                        + "SamplingFreqMode="
+                        + samplingFreqMode
+                        + "\n"
+                        + "Settle_Cycles="
+                        + settleCycles
+                        + "\n"
+                        + "BatteryCheck="
+                        + batteryCheck
+                        + "\n"
+                        + "Latitude="
+                        + latitude
+                        + "\n"
+                        + "Longitude="
+                        + longitude
+                        + "\n"
+                        + "GPS_Time="
+                        + gpsTime
+                        + "\n"
+                        + "VM2_Time="
+                        + vm2Time
+                        + "\n"
+                        + "Temp1="
+                        + temp1
+                        + "\n"
+                        + "Temp2="
+                        + temp2
+                        + "\n"
+                        + "BatteryVoltage="
+                        + batteryVoltage
+                        + "\n"
+                        + "Ramp="
+                        + ramp
+                        + "\n"
+                        + "NoDwell="
+                        + noDwell
+                        + "\n"
+                        + "StartFreq="
+                        + startFreq
+                        + "\n"
+                        + "StopFreq="
+                        + stopFreq
+                        + "\n"
+                        + "FreqStepUp="
+                        + freqStepUp
+                        + "\n"
+                        + "FreqStepDn="
+                        + freqStepDn
+                        + "\n"
+                        + "TStepUp="
+                        + tStepUp
+                        + "\n"
+                        + "TStepDn="
+                        + tStepDn
+                        + "\n"
+                        + "BattSleep="
+                        + battSleep
+                        + "\n"
+                        + "BurstNo="
+                        + burstNo
+                        + "\n"
+                        + "IsEthOn="
+                        + isEthOn
+                        + "\n"
+                        + "Uptell="
+                        + upTell
+                        + "\n"
+                        + "IsWebServerOn="
+                        + isWebServerOn
+                        + "\n"
+                        + "IsFTPServerOn="
+                        + isFTPServerOn
+                        + "\n"
+                        + "\n"
+                        + "*** End Header ***";
+        return asciiValue;
     }
 
     /**

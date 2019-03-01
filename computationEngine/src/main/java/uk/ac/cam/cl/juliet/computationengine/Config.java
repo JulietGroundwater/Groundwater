@@ -52,6 +52,8 @@ public class Config {
      */
     public Config(File file) throws InvalidConfigException {
         try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+            if (!(file.getName().equals("Config.ini")))
+                throw new InvalidConfigException("Filename must be Config.ini for radar to accept");
             String line;
             while ((line = reader.readLine()) != null) {
                 if (line.length() == 0) continue;
@@ -63,46 +65,99 @@ public class Config {
                 String lhs = line.split(";")[0].split("=")[0]; // left hand side
                 String rhs = line.split(";")[0].split("=")[1]; // right hand side
 
-                if (lhs.contains("AlwaysAttended")) alwaysAttended = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("CheckEthernet"))
-                    checkEthernet = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("maxDepthToGraph")) maxDepthToGraph = Integer.parseInt(rhs);
-                else if (lhs.contains("N_ADC_SAMPLES")) nADCSamples = Integer.parseInt(rhs);
-                else if (lhs.contains("SamplingFreqMode"))
-                    samplingFrequencyMode = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("NData")) nData = Integer.parseInt(rhs);
-                else if (lhs.contains("Triples"))
-                    for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
-                else if (lhs.contains("WATCHDOG_TASK_SECS"))
-                    watchDogTaskSecs = Integer.parseInt(rhs);
-                else if (lhs.contains("InterChirpDelay")) interChirpDelay = Integer.parseInt(rhs);
-                else if (lhs.contains("Settle_Cycles")) settleCycles = Integer.parseInt(rhs);
-                else if (lhs.contains("NSubBursts")) nSubBursts = Integer.parseInt(rhs);
-                else if (lhs.contains("Average")) average = Integer.parseInt(rhs);
-                else if (lhs.contains("RepSecs")) repSecs = Integer.parseInt(rhs);
-                else if (lhs.contains("IntervalMode")) intervalMode = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("MAX_DATA_FILE_LENGTH"))
-                    maxDataFileLength = Integer.parseInt(rhs);
-                else if (lhs.contains("LOGON")) logOn = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("nAttenuators")) nAttenuators = Integer.parseInt(rhs);
-                else if (lhs.contains("Attenuator1"))
-                    for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
-                else if (lhs.contains("AFGain"))
-                    for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
-                else if (lhs.contains("SleepMode")) sleepMode = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("SyncGPS")) syncGPS = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("Iridium")) iridium = (Integer.parseInt(rhs) != 0);
-                else if (lhs.contains("Reg00")) reg00 = rhs;
-                else if (lhs.contains("Reg01")) reg01 = rhs;
-                else if (lhs.contains("Reg02")) reg02 = rhs;
-                else if (lhs.contains("Reg0B")) reg0B = rhs;
-                else if (lhs.contains("Reg0C")) reg0C = rhs;
-                else if (lhs.contains("Reg0D")) reg0D = rhs;
+                switch (lhs) {
+                    case "AlwaysAttended":
+                        alwaysAttended = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "CheckEthernet":
+                        checkEthernet = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "maxDepthToGraph":
+                        maxDepthToGraph = Integer.parseInt(rhs);
+                        break;
+                    case "N_ADC_SAMPLES":
+                        nADCSamples = Integer.parseInt(rhs);
+                        break;
+                    case "SamplingFreqMode":
+                        samplingFrequencyMode = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "NData":
+                        nData = Integer.parseInt(rhs);
+                        break;
+                    case "Triples":
+                        for (String s : rhs.split(",")) triples.add(Integer.parseInt(s));
+                        break;
+                    case "WATCHDOG_TASK_SECS":
+                        watchDogTaskSecs = Integer.parseInt(rhs);
+                        break;
+                    case "InterChirpDelay":
+                        interChirpDelay = Integer.parseInt(rhs);
+                        break;
+                    case "Settle_Cycles":
+                        settleCycles = Integer.parseInt(rhs);
+                        break;
+                    case "NSubBursts":
+                        nSubBursts = Integer.parseInt(rhs);
+                        break;
+                    case "Average":
+                        average = Integer.parseInt(rhs);
+                        break;
+                    case "RepSecs":
+                        repSecs = Integer.parseInt(rhs);
+                        break;
+                    case "IntervalMode":
+                        intervalMode = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "MAX_DATA_FILE_LENGTH":
+                        maxDataFileLength = Integer.parseInt(rhs);
+                        break;
+                    case "LOGON":
+                        logOn = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "nAttenuators":
+                        nAttenuators = Integer.parseInt(rhs);
+                        break;
+                    case "Attenuator1":
+                        for (String s : rhs.split(",")) attenuator1.add(Integer.parseInt(s));
+                        break;
+                    case "AFGain":
+                        for (String s : rhs.split(",")) afGain.add(Integer.parseInt(s));
+                        break;
+                    case "SleepMode":
+                        sleepMode = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "SyncGPS":
+                        syncGPS = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "Iridium":
+                        iridium = (Integer.parseInt(rhs) != 0);
+                        break;
+                    case "Reg00":
+                        reg00 = rhs;
+                        break;
+                    case "Reg01":
+                        reg01 = rhs;
+                        break;
+                    case "Reg02":
+                        reg02 = rhs;
+                        break;
+                    case "Reg0B":
+                        reg0B = rhs;
+                        break;
+                    case "Reg0C":
+                        reg0C = rhs;
+                        break;
+                    case "Reg0D":
+                        reg0D = rhs;
+                        break;
+                }
             }
         } catch (FileNotFoundException e) {
             throw new InvalidConfigException(e.getMessage());
         } catch (IOException e) {
             throw new InvalidConfigException(e.getMessage());
+        } catch (NullPointerException e) {
+            throw new InvalidConfigException("File must not be null");
         }
     }
 
@@ -141,7 +196,7 @@ public class Config {
                         + ";\n"
                         + "\n"
                         + ";   Number of samples per burst (>=10)\n"
-                        + ";"); // TODO check whether this semicolon should be here
+                        + ";");
 
         builder.append("N_ADC_SAMPLES=").append(nADCSamples).append("\n");
 
@@ -521,8 +576,9 @@ public class Config {
      * @param values values to be used
      */
     public void setTriples(List<Integer> values) throws InvalidConfigException {
+        if (values == null) throw new InvalidConfigException("values must not be null");
         // ensure that only lists which a size of a multiple of 3, and max 4 triples so 12 values
-        if (values.size() % 3 == 0 && values.size() <= 12)
+        if (values.size() % 3 == 0 && values.size() <= 12 && values != null)
             triples = new ArrayList<>(values); // performs a clone of the data
         else
             throw new InvalidConfigException(
@@ -868,6 +924,7 @@ public class Config {
      * @param values values for attenuator1
      */
     public void setAttenuator1(List<Integer> values) throws InvalidConfigException {
+        if (values == null) throw new InvalidConfigException("values must not be null");
         // should this be a double, the max value is 31.5?
         boolean flag = true;
         for (int i : values) if (!(i > 0 && i <= 31.5)) flag = false;
@@ -902,6 +959,7 @@ public class Config {
      * @param values values for afGain
      */
     public void setAFGain(List<Integer> values) throws InvalidConfigException {
+        if (values == null) throw new InvalidConfigException("values must not be null");
         // should this be a double, the max value is 31.5?
         boolean flag = true;
         for (int i : values) if (!(i > 0 && i <= 31.5)) flag = false;

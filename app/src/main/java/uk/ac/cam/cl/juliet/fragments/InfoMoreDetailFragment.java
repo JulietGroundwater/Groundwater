@@ -1,31 +1,43 @@
 package uk.ac.cam.cl.juliet.fragments;
 
-import android.Manifest;
-import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
+import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.webkit.WebChromeClient;
 import android.webkit.WebSettings;
 import android.webkit.WebView;
 import android.webkit.WebViewClient;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.gson.Gson;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotData3D;
+import uk.ac.cam.cl.juliet.computationengine.plotdata.PlotDataGenerator3D;
+import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.Datapoint;
+import uk.ac.cam.cl.juliet.models.MultipleBurstsDataTypes;
+import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
+import uk.ac.cam.cl.juliet.tasks.ILiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
+import uk.ac.cam.cl.juliet.tasks.LiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
 
 /**
@@ -33,13 +45,24 @@ import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
  *
  * @author Ben Cole
  */
-public class InfoMoreDetailFragment extends Fragment implements IProcessingCallback {
+public class InfoMoreDetailFragment extends Fragment
+        implements ILiveProcessingTask, AdapterView.OnItemSelectedListener {
+
+    private final int BURST_CODE = 1;
+    private final int JAVASCRIPT_BATCH_SIZE = 10000;
 
     private WebView webview;
     private TextView webviewText;
-    private final int BURST_CODE = 1;
     private InternalDataHandler idh;
-    private Map<String, List<PlotData3D>> cache;
+    private Map<String, List<PlotDataGenerator3D>> cache;
+    private MenuItem connect;
+    private MenuItem measure;
+    private MenuItem disconnect;
+    private ConnectionSimulator simulator;
+    private boolean connected;
+    private boolean gatheringData;
+    private SingleOrManyBursts currentLiveBursts;
+    private Spinner detailedSpinner;
 
     @Nullable
     @Override
@@ -48,6 +71,11 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
             @Nullable ViewGroup container,
             @Nullable Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_info_detail, container, false);
+
+        // Menu boolean
+        setHasOptionsMenu(true);
+        this.connected = false;
+        this.gatheringData = false;
 
         // Initialise text
         webviewText = (TextView) view.findViewById(R.id.webview_title);
@@ -60,6 +88,19 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
         WebSettings webSettings = webview.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webview.setWebChromeClient(new WebChromeClient());
+
+        // Initialise spinner
+        detailedSpinner = view.findViewById(R.id.detailed_spinner);
+        String[] datatypes =
+                new String[] {
+                    MultipleBurstsDataTypes.POWER.getDisplayableName(),
+                    MultipleBurstsDataTypes.PHASE.getDisplayableName()
+                };
+        ArrayAdapter<String> adapter =
+                new ArrayAdapter<>(
+                        getContext(), R.layout.support_simple_spinner_dropdown_item, datatypes);
+        detailedSpinner.setAdapter(adapter);
+        detailedSpinner.setOnItemSelectedListener(this);
 
         idh = InternalDataHandler.getInstance();
 
@@ -78,32 +119,35 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
                     }
                 });
 
-        // Here, thisActivity is the current activity
-        if (ContextCompat.checkSelfPermission(
-                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
-
-            // Permission is not granted
-            // Should we show an explanation?
-            if (ActivityCompat.shouldShowRequestPermissionRationale(
-                    getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)) {
-                // Show an explanation to the user *asynchronously* -- don't block
-                // this thread waiting for the user's response! After the user
-                // sees the explanation, try again to request the permission.
-            } else {
-                // No explanation needed; request the permission
-                ActivityCompat.requestPermissions(
-                        getActivity(),
-                        new String[] {Manifest.permission.READ_EXTERNAL_STORAGE},
-                        BURST_CODE);
-            }
-        } else {
-            if (checkFile()) {
-                updateChart();
-            }
-        }
-
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_data, menu);
+        measure = menu.findItem(R.id.take_measurement_button);
+        connect = menu.findItem(R.id.connect_button);
+        disconnect = menu.findItem(R.id.disconnect_button);
+        // Only have connect visible if we aren't running any data gathering
+        toggleMenuItems();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.connect_button:
+                establishConnection();
+                return true;
+            case R.id.take_measurement_button:
+                gatherData();
+                return true;
+            case R.id.disconnect_button:
+                destroyConnection();
+                return true;
+        }
+        return false;
     }
 
     /**
@@ -121,17 +165,9 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
                 ProcessingTask task = new ProcessingTask(this);
                 task.execute();
             } else {
-                List<PlotData3D> dataSets = cache.get(idh.getSelectedData().getNameToDisplay());
-                for (int set = 0; set < dataSets.size(); set++) {
-                    PlotData3D current = dataSets.get(set);
-                    for (int y = 0; y < current.getYValues().size(); y++) {
-                        datapoints.add(
-                                new Datapoint(
-                                        set,
-                                        current.getYValues().get(y),
-                                        current.getZValues().get(0).get(y)));
-                    }
-                }
+                List<PlotDataGenerator3D> generators =
+                        cache.get(idh.getSelectedData().getNameToDisplay());
+                datapoints = generateDatapoints(generators);
                 updateWebview(datapoints);
             }
         }
@@ -160,13 +196,130 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
                     public void onPageFinished(WebView view, String url) {
                         // After the HTML page loads, run JS to initialize graph
                         Gson gson = new Gson();
+
                         // Convert the data to json which the D3 can handle
-                        String json = gson.toJson(datapoints);
-                        webview.loadUrl("javascript:initGraph(" + json + ")");
+                        int i = 1;
+                        List<Datapoint> temp = new ArrayList<>();
+                        for (Datapoint datapoint : datapoints) {
+                            temp.add(datapoint);
+                            // URLs have a maximum length so we must load the data in batches to the
+                            // JavaScript
+                            if (i % JAVASCRIPT_BATCH_SIZE == 0) {
+                                webview.loadUrl("javascript:loadData(" + gson.toJson(temp) + ")");
+                                temp.clear();
+                            }
+                            i++;
+                        }
+
+                        // Load in the last batch and init the graph
+                        webview.loadUrl("javascript:loadData(" + gson.toJson(temp) + ")");
+                        webview.loadUrl("javascript:initGraph()");
                     }
                 });
         // Load base html from the assets directory
         webview.loadUrl("file:///android_asset/html/graph.html");
+    }
+
+    /** Establishes a connection and waits for the data gathering to commence */
+    private void establishConnection() {
+        // We know we will have a good connection so change buttons
+        this.connected = true;
+        toggleMenuItems();
+
+        simulator = ConnectionSimulator.getInstance();
+
+        // Create a new directory in groundwater for the incoming data
+        String name = new Date().toString();
+        idh.setCurrentLiveData(name);
+        idh.setProcessingLiveData(true);
+
+        // Create store for the bursts
+        List<SingleOrManyBursts> singles = new ArrayList<>();
+        this.currentLiveBursts =
+                new SingleOrManyBursts(singles, false, idh.getCurrentLiveData(), null);
+        idh.silentlySelectData(this.currentLiveBursts);
+
+        AsyncTask.execute(
+                new Runnable() {
+                    @Override
+                    public void run() {
+                        // Connect to our simulated connection
+                        InternalDataHandler idh = InternalDataHandler.getInstance();
+                        simulator.connect();
+                        List<File> prevAndCurrent = new ArrayList<>();
+                        boolean firstTime = true;
+                        while (simulator.getConnecitonLive()) {
+                            while (!simulator.getTransientFiles().isEmpty()
+                                    || simulator.getDataReady()) {
+
+                                if (firstTime) {
+                                    idh.addNewDirectory(idh.getCurrentLiveData());
+                                    firstTime = false;
+                                }
+
+                                File polledFile = simulator.pollData();
+                                if (polledFile != null) {
+                                    prevAndCurrent.add(polledFile);
+                                }
+                                // Wait for two files so phase difference can be generated
+                                if (prevAndCurrent.size() > 1) {
+                                    File previousFile = prevAndCurrent.get(0);
+                                    File currentFile = prevAndCurrent.get(1);
+                                    if (previousFile != null) {
+                                        idh.addFileToDirectory(
+                                                idh.getCurrentLiveData(), previousFile);
+                                        processLiveData(
+                                                previousFile,
+                                                currentFile,
+                                                !simulator.getDataReady());
+                                    }
+                                    prevAndCurrent.remove(0);
+                                }
+                            }
+                        }
+                        simulator.disconnect();
+                    }
+                });
+    }
+
+    /**
+     * Starts the <code>LiveProcessingTask</code>
+     *
+     * @param previousFile
+     * @param currentFile
+     * @param lastFile
+     */
+    private void processLiveData(File previousFile, File currentFile, boolean lastFile) {
+        List<IProcessingCallback> listeners = new ArrayList<>();
+        listeners.add(this);
+        // TODO: This is undoubtedly a hack and should be fixed in the future...
+        LiveProcessingTask task =
+                new LiveProcessingTask(
+                        listeners,
+                        previousFile,
+                        currentFile,
+                        this.currentLiveBursts,
+                        lastFile,
+                        MultipleBurstsDataTypes.fromString(
+                                (String) detailedSpinner.getSelectedItem()));
+        task.executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    /** Called to initialise the data gathering phase */
+    private void gatherData() {
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        simulator.beginDataGathering();
+        this.gatheringData = true;
+        toggleMeasuringButton();
+    }
+
+    /** Destroying the connection and setting the menu items correctly */
+    private void destroyConnection() {
+        simulator.disconnect();
+        this.connected = false;
+        // Set live data to false and select the correct data from the filesystem
+        idh.setProcessingLiveData(false);
+        toggleMenuItems();
     }
 
     @Override
@@ -181,7 +334,153 @@ public class InfoMoreDetailFragment extends Fragment implements IProcessingCallb
     }
 
     @Override
-    public void onTaskCompleted(List<Datapoint> result) {
-        updateWebview(result);
+    public void onTaskCompleted(
+            List<PlotDataGenerator3D> generators, boolean isLive, boolean isLast) {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        // If we are drawing live data then we need to be updating the cached values because we
+        // don't yet have them all
+        if (isLive) {
+            if (cache.containsKey(idh.getCurrentLiveData())) {
+                cache.get(idh.getCurrentLiveData()).addAll(generators);
+            } else {
+                List<PlotDataGenerator3D> data = new ArrayList<>(generators);
+                cache.put(idh.getCurrentLiveData(), data);
+            }
+            updateWebview(generateDatapoints(cache.get(idh.getCurrentLiveData())));
+        } else {
+            cache.put(idh.getSelectedData().getNameToDisplay(), generators);
+            updateWebview(generateDatapoints(cache.get(idh.getSelectedData().getNameToDisplay())));
+        }
+
+        // For live processing we need to check for the last file received
+        if (isLast) {
+            this.connected = false;
+            idh.setProcessingLiveData(false);
+            // TODO: Same hack as above - communication between fragments is difficult
+            toggleMenuItems();
+        }
+    }
+
+    /**
+     * For generating the datapoints to plot from the <code>PlotDataGenerator3D</code> generators -
+     * NOTE: this code assumes the generators are paired in order to get the phase differences and
+     * hence the <code>x</code> values start at 1 to get the second generator from each pair that
+     * will have phase data.
+     *
+     * @param generators - the processed data collections
+     * @return <code>List<Datapoint></code> - the plottable points
+     */
+    private List<Datapoint> generateDatapoints(List<PlotDataGenerator3D> generators) {
+        // Convert time to natural numbers for the x-axis
+        Map<Double, Integer> converter = new HashMap<>();
+        MultipleBurstsDataTypes selected =
+                MultipleBurstsDataTypes.fromString((String) detailedSpinner.getSelectedItem());
+        int count = 1;
+        for (int generator = 0; generator < generators.size(); generator++) {
+            PlotData3D current;
+            if (selected == MultipleBurstsDataTypes.POWER) {
+                current = generators.get(generator).getPowerPlotData();
+            } else {
+                current = generators.get(generator).getPhaseDiffPlotData();
+            }
+            for (int x = 1; x < current.getXValues().size(); x++) {
+                if (!converter.containsKey(current.getXValues().get(x))) {
+                    converter.put(current.getXValues().get(x), count);
+                    count++;
+                }
+            }
+        }
+
+        List<Datapoint> datapoints = new ArrayList<>();
+        if (selected == MultipleBurstsDataTypes.POWER) {
+            for (int generator = 0; generator < generators.size(); generator++) {
+                PlotData3D current;
+                current = generators.get(generator).getPowerPlotData();
+                // Add to the datapoints list
+                // TODO: Check if this correct with Encho
+                for (int x = 1; x < current.getXValues().size(); x++) {
+                    for (int y = current.getYValues().size() - 1; y >= 0; y--) {
+                        datapoints.add(
+                                new Datapoint(
+                                        converter.get(current.getXValues().get(x)),
+                                        current.getYValues().get(y),
+                                        current.getZValues().get(x).get(y)));
+                    }
+                }
+            }
+        } else {
+            for (int generator = 0; generator < generators.size(); generator++) {
+                PlotData3D current;
+                current = generators.get(generator).getPhaseDiffPlotData();
+                // Add to the datapoints list
+                for (int x = 1; x < current.getXValues().size(); x++) {
+                    for (int y = current.getYValues().size() - 1; y >= 0; y--) {
+                        datapoints.add(
+                                new Datapoint(
+                                        converter.get(current.getXValues().get(x)),
+                                        current.getYValues().get(y),
+                                        current.getZValues().get(x).get(y)));
+                    }
+                }
+            }
+        }
+
+        // Convert to datapoints for JSON serialisation later
+
+        return datapoints;
+    }
+
+    /** Helper function for measure button toggling */
+    private void toggleMeasuringButton() {
+        if (this.gatheringData) {
+            measure.setEnabled(false);
+            measure.setVisible(false);
+        }
+    }
+
+    /** Helper function for menu items toggling */
+    private void toggleMenuItems() {
+        if (!connected) {
+            connect.setVisible(true);
+            connect.setEnabled(true);
+            disconnect.setVisible(false);
+            disconnect.setEnabled(false);
+            measure.setVisible(false);
+            measure.setEnabled(false);
+        } else {
+            connect.setVisible(false);
+            connect.setEnabled(false);
+            disconnect.setVisible(true);
+            disconnect.setEnabled(true);
+            measure.setVisible(true);
+            measure.setEnabled(true);
+        }
+        toggleMeasuringButton();
+    }
+
+    /**
+     * When computing live data we need to keep track of this in order to update the Internal Data
+     * Handler correctly.
+     *
+     * @param bursts - the few bursts that are computed at a time
+     */
+    @Override
+    public void receiveSingleOrManyBursts(List<SingleOrManyBursts> bursts) {
+        try {
+            // Adding the small list (usually of one) to the current live bursts session
+            this.currentLiveBursts.getListOfBursts().addAll(bursts);
+        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
+    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+        updateChart();
+    }
+
+    @Override
+    public void onNothingSelected(AdapterView<?> parent) {
+        Log.d("Spinner", "Nothing selected on detailed spinner");
     }
 }

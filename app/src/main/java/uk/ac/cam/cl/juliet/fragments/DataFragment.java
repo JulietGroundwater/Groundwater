@@ -334,6 +334,7 @@ public class DataFragment extends Fragment
      * <p>Call when the set of files has been modified.
      */
     public void notifyFilesChanged() {
+        // System.out.println("ESTOY AQUI");
         adapter.notifyDataSetChanged();
     }
 
