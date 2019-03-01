@@ -12,6 +12,11 @@
         android:orientation="vertical"
         android:gravity="center">
 
+        <Spinner
+            android:id="@+id/detailed_spinner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"></Spinner>
+
         <TextView
             android:id="@+id/webview_title"
             android:layout_width="match_parent"

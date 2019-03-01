@@ -69,13 +69,13 @@ public class DataFragmentWrapper extends Fragment
 
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
         inflater.inflate(R.menu.menu_sync, menu);
         // Init the menu items
         signIn = menu.getItem(0);
         signOut = menu.getItem(1);
         displayCorrectAuthButtons();
-        super.onCreateOptionsMenu(menu, inflater);
     }
 
     @Override
@@ -83,6 +83,10 @@ public class DataFragmentWrapper extends Fragment
         switch (item.getItemId()) {
             case R.id.sync_button:
                 showSyncDialog();
+                return true;
+            case R.id.refresh:
+                // TODO: Update files in the DataFragment
+                Log.d("DataFragmentWrapper", "Update your files!");
                 return true;
             case R.id.sign_in_button:
                 // Handling Microsoft connection

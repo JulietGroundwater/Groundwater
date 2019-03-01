@@ -24,6 +24,7 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.AttenuatorSettings;
 import uk.ac.cam.cl.juliet.dialogs.AttenuatorsDialog;
 
@@ -64,7 +65,7 @@ public class SettingsFragment extends Fragment
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
-
+        this.setHasOptionsMenu(true);
         connectionStatusText = view.findViewById(R.id.connectionStatusText);
         connectionStatusIcon = view.findViewById(R.id.connectionStatusImageView);
 
@@ -106,8 +107,8 @@ public class SettingsFragment extends Fragment
     }
 
     private boolean getConnectionStatus() {
-        // TODO: Implement
-        return true;
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        return simulator.getConnecitonLive();
     }
 
     private void setConnectedStatus(boolean connected) {
