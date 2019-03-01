@@ -144,18 +144,6 @@ public class SingleOrManyBursts implements Serializable {
     }
 
     /**
-     * Returns a human-readable representation of the GPS location of this burst or collection of
-     * bursts.
-     *
-     * @return A human-readable representation of the GPS location
-     */
-    public String getGPSToDisplay() {
-        // TODO: Generate something meaningful here
-        //        return "GPS coordinates or something here...";
-        return "No GPS information.";
-    }
-
-    /**
      * Sets whether this burst or collection of bursts has been synced with OneDrive.
      *
      * @param isSyncedToOneDrive true if this has been uploaded to OneDrive; false if not
