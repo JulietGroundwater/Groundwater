@@ -20,7 +20,7 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
     public ProcessingTask(IProcessingCallback task) {
         try {
             generateBursts();
-            listOfBursts = InternalDataHandler.getInstance().getSelectedData().getListOfBursts();
+            listOfBursts = InternalDataHandler.getInstance().getCollectionSelected().getListOfBursts();
             listener = task;
         } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();
@@ -33,8 +33,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
         // Generate the bursts (done here so load time is quicker)
         InternalDataHandler idh = InternalDataHandler.getInstance();
         List<SingleOrManyBursts> list = new ArrayList<>();
-        File file = idh.getFileByName(idh.getSelectedData().getNameToDisplay());
-        SingleOrManyBursts many = idh.getSelectedData();
+        File file = idh.getFileByName(idh.getCollectionSelected().getNameToDisplay());
+        SingleOrManyBursts many = idh.getCollectionSelected();
         if (file.listFiles() != null) {
             for (int i = 0; i < file.listFiles().length; i++) {
                 File innerFile = file.listFiles()[i];
@@ -52,7 +52,7 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
         PlotDataGenerator3D pdg = null;
         List<Burst> burstList = new ArrayList<>();
         int current = 1;
-        if (listOfBursts.size() > 0) {
+        if (listOfBursts.size() > 1) {
             try {
                 burstList.add(listOfBursts.get(0).getSingleBurst());
                 burstList.add(listOfBursts.get(current).getSingleBurst());
