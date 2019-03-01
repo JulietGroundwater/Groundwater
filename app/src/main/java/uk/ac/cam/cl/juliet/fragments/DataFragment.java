@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.pm.PackageManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -42,6 +43,8 @@ public class DataFragment extends Fragment
     private RecyclerView filesRecyclerView;
     private TextView noFilesToDisplayText;
     private FilesListAdapter adapter;
+
+    private File currentDirectory;
     private SingleOrManyBursts currentNode;
     private List<SingleOrManyBursts> filesList;
     private Button plotAllFilesButton;
@@ -65,25 +68,24 @@ public class DataFragment extends Fragment
             return null; // TODO: handle this better
         }
         String folderPath = arguments.getString(FOLDER_PATH);
-        File folder = new File(folderPath);
-        currentNode = getDataFiles(folder);
-        try {
-            filesList = currentNode.getListOfBursts();
-        } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
-            e.printStackTrace();
-        }
+        currentDirectory = new File(folderPath);
+        filesList = new ArrayList<>();
+        currentNode =
+                new SingleOrManyBursts(
+                        filesList, currentDirectory, false); // TODO: Detect if uploaded to onedrive
 
-        // Set up the UI
+        // Set up the files list UI
         filesRecyclerView = view.findViewById(R.id.filesListRecyclerView);
         filesRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         adapter = new FilesListAdapter(filesList);
         adapter.setOnDataFileSelectedListener(this);
         filesRecyclerView.setAdapter(adapter);
-        noFilesToDisplayText = view.findViewById(R.id.noFilesText);
-        int visibility = filesList.isEmpty() ? View.VISIBLE : View.INVISIBLE;
-        noFilesToDisplayText.setVisibility(visibility);
 
-        // Set up and potentially disable the "plot all filesList" button
+        // Find the "no files to display" message
+        noFilesToDisplayText = view.findViewById(R.id.noFilesText);
+        setNoFilesMessageVisibility(false);
+
+        // Set up and potentially disable the "plot all files" button
         plotAllFilesButton = view.findViewById(R.id.displayAllFilesButton);
         if (!getEligibleForPlottingAllFiles()) {
             plotAllFilesButton.setEnabled(false);
@@ -98,31 +100,21 @@ public class DataFragment extends Fragment
         return view;
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        refreshFiles();
+    }
+
     /**
-     * Loads all files in the directory that was passed as an argument to the fragment.
+     * Updates the visibility of the "no files to display" message.
      *
-     * @return A <code>List</code> of all <code>SingleOrManyBursts</code> in this directory.
+     * <p>If there are no files loaded then the message will be displayed; otherwise it will be
+     * hidden.
      */
-    private SingleOrManyBursts loadFilesInFolder(File folder) {
-        List<SingleOrManyBursts> files = new ArrayList<>();
-        if (!folder.isFile()) {
-            for (File file : folder.listFiles()) {
-                SingleOrManyBursts inner;
-                if (file.isFile()) {
-                    inner =
-                            new SingleOrManyBursts(
-                                    (Burst) null,
-                                    file,
-                                    false); // TODO: Detect if synced to OneDrive
-                } else {
-                    inner =
-                            new SingleOrManyBursts(
-                                    (ArrayList<SingleOrManyBursts>) null, file, false);
-                }
-                files.add(inner);
-            }
-        } // TODO: Throw exception if attempt to load files from a file??
-        return new SingleOrManyBursts(files, folder, false); // TODO: Detect if synced to OneDrive
+    private void setNoFilesMessageVisibility(boolean visible) {
+        int visibility = visible ? View.VISIBLE : View.INVISIBLE;
+        noFilesToDisplayText.setVisibility(visibility);
     }
 
     /**
@@ -281,11 +273,16 @@ public class DataFragment extends Fragment
      */
     private boolean getEligibleForPlottingAllFiles() {
         if (filesList.isEmpty()) return false;
+        if (currentNode == null) return false;
         boolean eligible = true;
         for (SingleOrManyBursts file : filesList) {
             eligible &= file.getIsSingleBurst();
         }
         return eligible;
+    }
+
+    private void updatePlotAllFilesButtonEnabled() {
+        plotAllFilesButton.setEnabled(getEligibleForPlottingAllFiles());
     }
 
     /** Shows a dialog message to confirm whether a file or folder should be deleted. */
@@ -372,6 +369,60 @@ public class DataFragment extends Fragment
         switch (v.getId()) {
             case R.id.displayAllFilesButton:
                 plotCollection();
+        }
+    }
+
+    /** Asynchronously reloads and synchronously redraws the list of files. */
+    public void refreshFiles() {
+        new RefreshFilesTask(currentDirectory, this).execute();
+    }
+
+    /** Handles reloading and redrawing the list of files. */
+    private static class RefreshFilesTask extends AsyncTask<Void, Void, Void> {
+
+        private File folder;
+        private DataFragment dataFragment;
+
+        public RefreshFilesTask(File directory, DataFragment dataFragment) {
+            folder = directory;
+            this.dataFragment = dataFragment;
+        }
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            // TODO: Show a "loading" spinner + message
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+            dataFragment.filesList.clear();
+            if (!folder.isFile()) {
+                for (File file : folder.listFiles()) {
+                    SingleOrManyBursts inner;
+                    if (file.isFile()) {
+                        inner =
+                                new SingleOrManyBursts(
+                                        (Burst) null,
+                                        file,
+                                        false); // TODO: Detect if synced to OneDrive
+                    } else {
+                        inner =
+                                new SingleOrManyBursts(
+                                        (ArrayList<SingleOrManyBursts>) null, file, false);
+                    }
+                    dataFragment.filesList.add(inner);
+                }
+            } // TODO: Throw exception if attempt to load files from a file??
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result) {
+            dataFragment.updatePlotAllFilesButtonEnabled();
+            dataFragment.adapter.notifyDataSetChanged();
+            dataFragment.setNoFilesMessageVisibility(dataFragment.filesList.isEmpty());
+            // TODO: Hide "loading" spinner + message
         }
     }
 

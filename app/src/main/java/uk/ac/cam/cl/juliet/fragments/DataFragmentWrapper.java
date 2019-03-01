@@ -52,7 +52,7 @@ public class DataFragmentWrapper extends Fragment
 
     private MenuItem signIn;
     private MenuItem signOut;
-
+    private DataFragment currentFragment;
     private User user;
 
     @Nullable
@@ -65,12 +65,15 @@ public class DataFragmentWrapper extends Fragment
         setHasOptionsMenu(true);
         Bundle arguments = new Bundle();
         arguments.putString(DataFragment.FOLDER_PATH, getRootPath());
-        DataFragment dataFragment = new DataFragment();
-        dataFragment.setArguments(arguments);
-        dataFragment.setDataFragmentListener(this);
+        currentFragment = new DataFragment();
+        currentFragment.setArguments(arguments);
+        currentFragment.setDataFragmentListener(this);
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager != null) {
-            fragmentManager.beginTransaction().add(R.id.dataFragmentContent, dataFragment).commit();
+            fragmentManager
+                    .beginTransaction()
+                    .add(R.id.dataFragmentContent, currentFragment)
+                    .commit();
         }
         return view;
     }
@@ -95,6 +98,7 @@ public class DataFragmentWrapper extends Fragment
             case R.id.refresh:
                 // TODO: Update files in the DataFragment
                 Log.d("DataFragmentWrapper", "Update your files!");
+                currentFragment.refreshFiles();
                 return true;
             case R.id.sign_in_button:
                 // Handling Microsoft connection
@@ -164,16 +168,16 @@ public class DataFragmentWrapper extends Fragment
     public void onInnerFolderClicked(SingleOrManyBursts innerFolder) {
         if (innerFolder.getIsSingleBurst()) return; // Should not happen...
 
-        DataFragment innerFragment = new DataFragment();
+        currentFragment = new DataFragment();
         Bundle arguments = new Bundle();
         arguments.putString(FOLDER_PATH, innerFolder.getFile().getAbsolutePath());
-        innerFragment.setArguments(arguments);
-        innerFragment.setDataFragmentListener(this);
+        currentFragment.setArguments(arguments);
+        currentFragment.setDataFragmentListener(this);
         FragmentManager fragmentManager = getFragmentManager();
         if (fragmentManager != null) {
             fragmentManager
                     .beginTransaction()
-                    .replace(R.id.dataFragmentContent, innerFragment, innerFragment.getTag())
+                    .replace(R.id.dataFragmentContent, currentFragment, currentFragment.getTag())
                     .addToBackStack(null)
                     .commit();
         }
