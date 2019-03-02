@@ -409,7 +409,8 @@ public class SettingsFragment extends Fragment
 
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         simulator.connect();
-        setConnectedStatus(getConnectionStatus());
+        setConnectedStatus(getConnectionStatus());  // TODO: Check if this is redundant
+        updateSendToDeviceButtonEnabled();
     }
 
     private void destroyConnection() {
@@ -420,6 +421,7 @@ public class SettingsFragment extends Fragment
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         simulator.disconnect();
         setConnectedStatus(getConnectionStatus());
+        updateSendToDeviceButtonEnabled();
     }
 
     private void toggleMenuItems() {
