@@ -19,8 +19,11 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Locale;
 import uk.ac.cam.cl.juliet.R;
@@ -106,7 +109,13 @@ public class SettingsFragment extends Fragment
         }
     }
 
+    /**
+     * Returns whether we are currently connected to a device.
+     *
+     * @return true if connected; false otherwise
+     */
     private boolean getConnectionStatus() {
+        // TODO: Connect to real device
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         return simulator.getConnecitonLive();
     }
@@ -146,6 +155,15 @@ public class SettingsFragment extends Fragment
         longitudeOutput.setText(R.string.not_set);
     }
 
+    /**
+     * Bundles the selected date and time values as a <code>Date</code> object.
+     *
+     * @return A <code>Date</code> containing the currently selected date and time
+     */
+    private Date getSelectedDateTime() {
+        return (new GregorianCalendar(year, month, day, hourOfDay, minute)).getTime();
+    }
+
     /** Displays a dialog for setting the time of the radar device. */
     private void showSetTimeDialog() {
         Context context = getContext();
@@ -156,6 +174,7 @@ public class SettingsFragment extends Fragment
         int hourOfDay = calendar.get(Calendar.HOUR_OF_DAY);
         int minute = calendar.get(Calendar.MINUTE);
 
+        // Show the dialog
         TimePickerDialog dialog =
                 new TimePickerDialog(
                         context,
@@ -168,7 +187,6 @@ public class SettingsFragment extends Fragment
                         hourOfDay,
                         minute,
                         false);
-
         dialog.show();
     }
 
@@ -181,8 +199,9 @@ public class SettingsFragment extends Fragment
     private void onNewTimeSet(int hour, int minute) {
         this.hourOfDay = hour;
         this.minute = minute;
-        // TODO: handle string formatting properly
-        selectedTimeOutput.setText(hour + ":" + minute);
+        Date date = getSelectedDateTime();
+        SimpleDateFormat format = new SimpleDateFormat("h:mma", Locale.getDefault());
+        selectedTimeOutput.setText(format.format(date));
     }
 
     /** Displays a dialog for setting the date of the radar device. */
@@ -196,6 +215,7 @@ public class SettingsFragment extends Fragment
         int month = calendar.get(Calendar.MONTH);
         int day = calendar.get(Calendar.DAY_OF_MONTH);
 
+        // Show the dialog
         DatePickerDialog dialog =
                 new DatePickerDialog(
                         context,
@@ -209,7 +229,6 @@ public class SettingsFragment extends Fragment
                         year,
                         month,
                         day);
-
         dialog.show();
     }
 
@@ -221,15 +240,15 @@ public class SettingsFragment extends Fragment
      * @param day The day of the month
      */
     private void onNewDateSet(int year, int month, int day) {
-        // TODO: handle string formatting properly
         this.year = year;
         this.month = month;
         this.day = day;
-        selectedDateOutput.setText(day + "/" + month + "/" + year);
+        SimpleDateFormat simpleDateFormat = new SimpleDateFormat("d/M/yyyy", Locale.getDefault());
+        String formattedDate = simpleDateFormat.format(getSelectedDateTime());
+        selectedDateOutput.setText(formattedDate);
     }
 
     private void showSetLocationDialog() {
-        // TODO: implement
         Context context = getContext();
         if (context == null) return;
         final Dialog dialog = new Dialog(context);
