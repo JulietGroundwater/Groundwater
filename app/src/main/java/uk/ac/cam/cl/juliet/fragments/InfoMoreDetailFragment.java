@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
@@ -18,6 +17,7 @@ import android.webkit.WebView;
 import android.webkit.WebViewClient;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.gson.Gson;
@@ -46,7 +46,7 @@ import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
  * @author Ben Cole
  */
 public class InfoMoreDetailFragment extends Fragment
-        implements ILiveProcessingTask, AdapterView.OnItemSelectedListener {
+        implements ILiveProcessingTask, ConnectionSimulator.ConnectionListener {
 
     private final int BURST_CODE = 1;
     private final int JAVASCRIPT_BATCH_SIZE = 10000;
@@ -55,14 +55,13 @@ public class InfoMoreDetailFragment extends Fragment
     private TextView webviewText;
     private InternalDataHandler idh;
     private Map<String, List<PlotDataGenerator3D>> cache;
-    private MenuItem connect;
     private MenuItem measure;
-    private MenuItem disconnect;
     private ConnectionSimulator simulator;
     private boolean connected;
     private boolean gatheringData;
     private SingleOrManyBursts currentLiveBursts;
     private Spinner detailedSpinner;
+    private ProgressBar progressBar;
 
     @Nullable
     @Override
@@ -100,12 +99,26 @@ public class InfoMoreDetailFragment extends Fragment
                 new ArrayAdapter<>(
                         getContext(), R.layout.support_simple_spinner_dropdown_item, datatypes);
         detailedSpinner.setAdapter(adapter);
-        detailedSpinner.setOnItemSelectedListener(this);
+
+        // Set the spinners listener
+        detailedSpinner.setOnItemSelectedListener(
+                new AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onItemSelected(
+                            AdapterView<?> parent, View view, int position, long id) {
+                        updateChart();
+                    }
+
+                    @Override
+                    public void onNothingSelected(AdapterView<?> parent) {
+                        System.out.println("Nothing selected!");
+                    }
+                });
 
         idh = InternalDataHandler.getInstance();
 
         // Listen for file changes
-        idh.addListener(
+        idh.addCollectionListener(
                 new InternalDataHandler.FileListener() {
                     @Override
                     public void onChange() {
@@ -119,6 +132,13 @@ public class InfoMoreDetailFragment extends Fragment
                     }
                 });
 
+        // Get progress bar handle
+        progressBar = view.findViewById(R.id.progressBar);
+
+        // Listener for connection changes
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        simulator.addListener(this);
+
         return view;
     }
 
@@ -128,23 +148,15 @@ public class InfoMoreDetailFragment extends Fragment
         menu.clear();
         inflater.inflate(R.menu.menu_data, menu);
         measure = menu.findItem(R.id.take_measurement_button);
-        connect = menu.findItem(R.id.connect_button);
-        disconnect = menu.findItem(R.id.disconnect_button);
         // Only have connect visible if we aren't running any data gathering
-        toggleMenuItems();
+        toggleMeasuringButton();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.connect_button:
-                establishConnection();
-                return true;
             case R.id.take_measurement_button:
                 gatherData();
-                return true;
-            case R.id.disconnect_button:
-                destroyConnection();
                 return true;
         }
         return false;
@@ -158,15 +170,15 @@ public class InfoMoreDetailFragment extends Fragment
     private void updateChart() {
         if (checkFile()) {
             // Create datapoints, json-ise and pass to Javascript
-            webviewText.setText(idh.getSelectedData().getNameToDisplay());
+            webviewText.setText(idh.getCollectionSelected().getNameToDisplay());
 
             List<Datapoint> datapoints = new ArrayList<>();
-            if (!cache.containsKey(idh.getSelectedData().getNameToDisplay())) {
+            if (!cache.containsKey(idh.getCollectionSelected().getNameToDisplay())) {
                 ProcessingTask task = new ProcessingTask(this);
                 task.execute();
             } else {
                 List<PlotDataGenerator3D> generators =
-                        cache.get(idh.getSelectedData().getNameToDisplay());
+                        cache.get(idh.getCollectionSelected().getNameToDisplay());
                 datapoints = generateDatapoints(generators);
                 updateWebview(datapoints);
             }
@@ -180,8 +192,8 @@ public class InfoMoreDetailFragment extends Fragment
      */
     private boolean checkFile() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        if (idh.getSelectedData() == null) return false;
-        return idh.getSelectedData().getIsManyBursts();
+        if (idh.getCollectionSelected() == null) return false;
+        return idh.getCollectionSelected().getIsManyBursts();
     }
 
     /**
@@ -222,10 +234,6 @@ public class InfoMoreDetailFragment extends Fragment
 
     /** Establishes a connection and waits for the data gathering to commence */
     private void establishConnection() {
-        // We know we will have a good connection so change buttons
-        this.connected = true;
-        toggleMenuItems();
-
         simulator = ConnectionSimulator.getInstance();
 
         // Create a new directory in groundwater for the incoming data
@@ -236,7 +244,7 @@ public class InfoMoreDetailFragment extends Fragment
         // Create store for the bursts
         List<SingleOrManyBursts> singles = new ArrayList<>();
         this.currentLiveBursts = new SingleOrManyBursts(singles, null, false);
-        idh.silentlySelectData(this.currentLiveBursts);
+        idh.silentlySelectCollectionData(this.currentLiveBursts);
 
         AsyncTask.execute(
                 new Runnable() {
@@ -244,15 +252,16 @@ public class InfoMoreDetailFragment extends Fragment
                     public void run() {
                         // Connect to our simulated connection
                         InternalDataHandler idh = InternalDataHandler.getInstance();
-                        simulator.connect();
                         List<File> prevAndCurrent = new ArrayList<>();
                         boolean firstTime = true;
                         while (simulator.getConnecitonLive()) {
                             while (!simulator.getTransientFiles().isEmpty()
                                     || simulator.getDataReady()) {
 
+                                // New data therefore we can create the folder to store the data in
                                 if (firstTime) {
-                                    idh.addNewDirectory(idh.getCurrentLiveData());
+                                    File file = idh.addNewDirectory(idh.getCurrentLiveData());
+                                    currentLiveBursts.setFile(file);
                                     firstTime = false;
                                 }
 
@@ -291,7 +300,6 @@ public class InfoMoreDetailFragment extends Fragment
     private void processLiveData(File previousFile, File currentFile, boolean lastFile) {
         List<IProcessingCallback> listeners = new ArrayList<>();
         listeners.add(this);
-        // TODO: This is undoubtedly a hack and should be fixed in the future...
         LiveProcessingTask task =
                 new LiveProcessingTask(
                         listeners,
@@ -310,15 +318,6 @@ public class InfoMoreDetailFragment extends Fragment
         simulator.beginDataGathering();
         this.gatheringData = true;
         toggleMeasuringButton();
-    }
-
-    /** Destroying the connection and setting the menu items correctly */
-    private void destroyConnection() {
-        simulator.disconnect();
-        this.connected = false;
-        // Set live data to false and select the correct data from the filesystem
-        idh.setProcessingLiveData(false);
-        toggleMenuItems();
     }
 
     @Override
@@ -347,16 +346,17 @@ public class InfoMoreDetailFragment extends Fragment
             }
             updateWebview(generateDatapoints(cache.get(idh.getCurrentLiveData())));
         } else {
-            cache.put(idh.getSelectedData().getNameToDisplay(), generators);
-            updateWebview(generateDatapoints(cache.get(idh.getSelectedData().getNameToDisplay())));
+            cache.put(idh.getCollectionSelected().getNameToDisplay(), generators);
+            updateWebview(
+                    generateDatapoints(cache.get(idh.getCollectionSelected().getNameToDisplay())));
         }
 
         // For live processing we need to check for the last file received
         if (isLast) {
             this.connected = false;
+            this.gatheringData = false;
             idh.setProcessingLiveData(false);
-            // TODO: Same hack as above - communication between fragments is difficult
-            toggleMenuItems();
+            toggleMeasuringButton();
         }
     }
 
@@ -431,30 +431,26 @@ public class InfoMoreDetailFragment extends Fragment
 
     /** Helper function for measure button toggling */
     private void toggleMeasuringButton() {
-        if (this.gatheringData) {
-            measure.setEnabled(false);
-            measure.setVisible(false);
-        }
-    }
+        if (measure != null) {
 
-    /** Helper function for menu items toggling */
-    private void toggleMenuItems() {
-        if (!connected) {
-            connect.setVisible(true);
-            connect.setEnabled(true);
-            disconnect.setVisible(false);
-            disconnect.setEnabled(false);
-            measure.setVisible(false);
-            measure.setEnabled(false);
-        } else {
-            connect.setVisible(false);
-            connect.setEnabled(false);
-            disconnect.setVisible(true);
-            disconnect.setEnabled(true);
-            measure.setVisible(true);
-            measure.setEnabled(true);
+            // Set progress bar and disable spinner
+            if (this.gatheringData) {
+                progressBar.setVisibility(View.VISIBLE);
+                // detailedSpinner.setEnabled(false);
+            } else {
+                progressBar.setVisibility(View.INVISIBLE);
+                // detailedSpinner.setEnabled(true);
+            }
+
+            // Set measuring action
+            if (this.connected && !this.gatheringData) {
+                measure.setEnabled(true);
+                measure.setVisible(true);
+            } else if (this.gatheringData || !this.connected) {
+                measure.setEnabled(false);
+                measure.setVisible(false);
+            }
         }
-        toggleMeasuringButton();
     }
 
     /**
@@ -474,12 +470,11 @@ public class InfoMoreDetailFragment extends Fragment
     }
 
     @Override
-    public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-        updateChart();
-    }
-
-    @Override
-    public void onNothingSelected(AdapterView<?> parent) {
-        Log.d("Spinner", "Nothing selected on detailed spinner");
+    public void onConnectionChange(boolean isConnected) {
+        this.connected = isConnected;
+        if (isConnected) {
+            establishConnection();
+            toggleMeasuringButton();
+        }
     }
 }

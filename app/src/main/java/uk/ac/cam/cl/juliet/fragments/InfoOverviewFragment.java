@@ -85,7 +85,7 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
         idh = InternalDataHandler.getInstance();
 
         // Listen for file changes
-        idh.addListener(
+        idh.addSingleListener(
                 new InternalDataHandler.FileListener() {
                     @Override
                     public void onChange() {
@@ -108,19 +108,20 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
                 PlotData2D twoDimData = null;
 
                 // Compute burst
-                SingleOrManyBursts file = idh.getSelectedData();
-                File fileToProcess = idh.getSelectedDataFile();
+                SingleOrManyBursts file = idh.getSingleSelected();
+                File fileToProcess = idh.getSingleSelectedDataFile();
                 Burst burst = new Burst(fileToProcess);
                 file.setSingleBurst(burst); // getting an invalid burst exception here
 
                 // Check the cache in case the same file was selected again and it is already
                 // computed
-                if (cache.containsKey(idh.getSelectedDataFile().getAbsolutePath())) {
-                    twoDimDataGen = cache.get(idh.getSelectedDataFile().getAbsolutePath());
+                if (cache.containsKey(idh.getSingleSelectedDataFile().getAbsolutePath())) {
+                    twoDimDataGen = cache.get(idh.getSingleSelectedDataFile().getAbsolutePath());
                 } else {
-                    twoDimDataGen = new PlotDataGenerator2D(idh.getSelectedData().getSingleBurst());
+                    twoDimDataGen =
+                            new PlotDataGenerator2D(idh.getSingleSelected().getSingleBurst());
                     // Add to the cache
-                    cache.put(idh.getSelectedDataFile().getAbsolutePath(), twoDimDataGen);
+                    cache.put(idh.getSingleSelectedDataFile().getAbsolutePath(), twoDimDataGen);
                 }
 
                 // Choose the correct data to visualise
@@ -145,7 +146,7 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
 
                 // Create a line data set and then the line data
                 LineDataSet dataset =
-                        new LineDataSet(entries, idh.getSelectedData().getNameToDisplay());
+                        new LineDataSet(entries, idh.getSingleSelected().getNameToDisplay());
                 dataset.setCircleColor(Color.LTGRAY);
                 dataset.setColor(ColorTemplate.MATERIAL_COLORS[0]);
                 LineData data = new LineData(dataset);
@@ -177,8 +178,8 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
 
     private boolean checkFile() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        if (idh.getSelectedData() == null) return false;
-        return idh.getSelectedData().getIsSingleBurst();
+        if (idh.getSingleSelected() == null) return false;
+        return idh.getSingleSelected().getIsSingleBurst();
     }
 
     @Override
