@@ -25,6 +25,16 @@ import uk.ac.cam.cl.juliet.views.AttenuatorConfigurationView;
  */
 public class AttenuatorsDialog extends DialogFragment implements View.OnClickListener {
 
+    /**
+     * Sets the maximum number of attenuators that can be added. Once they have all been added, the
+     * "add" button will be disabled until one is removed again.
+     */
+    public static int MAX_ATTENUATORS = 4;
+
+    /**
+     * Used to pass in the currently selected attenuator settings so that the user's previous
+     * choices are restored if they click "configure attenuators" again.
+     */
     public static final String ATTENUATOR_SETTINGS = "attenuator_settings";
 
     private Button closeButton;
@@ -65,6 +75,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         for (View v : attenuatorsList) {
             attenuatorsContainer.addView(v);
         }
+        updateAddRemoveAttenuatorsButtonsEnabled();
         return view;
     }
 
@@ -114,6 +125,18 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         List<AttenuatorConfigurationView> result = new ArrayList<>();
         result.add(new AttenuatorConfigurationView(getContext()));
         return result;
+    }
+
+    /**
+     * Updates the enabled status of the "add" and "remove" buttons.
+     *
+     * <p>If there is only one attenuator remaining then the "remove" button will be disabled;
+     * otherwise it will be enabled. The "add" button will be enabled until <code>MAX_ATTENUATORS
+     * </code> is reached, at which point it will be disabled until an attenuator is removed.
+     */
+    private void updateAddRemoveAttenuatorsButtonsEnabled() {
+        removeAttenuatorButton.setEnabled(attenuatorsList.size() > 1);
+        addAttenuatorButton.setEnabled(attenuatorsList.size() < MAX_ATTENUATORS);
     }
 
     @Override
@@ -196,9 +219,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         attenuatorsContainer.addView(view);
 
         // If needed, re-enable the "remove attenuator" button
-        if (attenuatorsList.size() > 1) {
-            removeAttenuatorButton.setEnabled(true);
-        }
+        updateAddRemoveAttenuatorsButtonsEnabled();
     }
 
     /**
@@ -217,8 +238,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         attenuatorsContainer.removeViewAt(attenuatorsList.size());
 
         // If needed, disable the "remove attenuator" button
-        boolean removeButtonEnabled = (attenuatorsList.size() > 1);
-        removeAttenuatorButton.setEnabled(removeButtonEnabled);
+        updateAddRemoveAttenuatorsButtonsEnabled();
     }
 
     /** Ensures that a listener has an <code>onAttenuatorsSelected</code> callback. */
