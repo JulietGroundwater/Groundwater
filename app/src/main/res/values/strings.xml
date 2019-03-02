@@ -51,4 +51,7 @@
     <string name="are_you_sure_discard_changes">Are you sure you want do discard your changes?</string>
     <string name="discard">Discard</string>
     <string name="keep">Keep</string>
+    <string name="latitude">Latitude:</string>
+    <string name="attenuators">Attenuators:</string>
+    <string name="set">Set</string>
 </resources>

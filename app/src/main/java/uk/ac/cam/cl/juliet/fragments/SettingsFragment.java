@@ -45,6 +45,7 @@ public class SettingsFragment extends Fragment
     private TextView selectedTimeOutput;
     private TextView latitudeOutput;
     private TextView longitudeOutput;
+    private TextView attenuatorsSetOutput;
     private Button setDateButton;
     private Button setTimeButton;
     private Button setGPSButton;
@@ -77,6 +78,7 @@ public class SettingsFragment extends Fragment
         selectedTimeOutput = view.findViewById(R.id.selectedTimeText);
         latitudeOutput = view.findViewById(R.id.latitudeText);
         longitudeOutput = view.findViewById(R.id.longitudeText);
+        attenuatorsSetOutput = view.findViewById(R.id.attenuatorsSetText);
 
         // Find the buttons and set this class as the click listener
         setDateButton = view.findViewById(R.id.setDateButton);
@@ -150,6 +152,7 @@ public class SettingsFragment extends Fragment
         gains.add(-14);
         locationSet = false;
         attenuatorsSet = false;
+        attenuatorsSetOutput.setText(R.string.not_set);
         // TODO: look up device location and initialise to that
         latitudeOutput.setText(R.string.not_set);
         longitudeOutput.setText(R.string.not_set);
@@ -335,6 +338,7 @@ public class SettingsFragment extends Fragment
         this.gains = gains;
         if (this.attenuators != null && this.gains != null) {
             attenuatorsSet = true;
+            attenuatorsSetOutput.setText(R.string.set);
             updateSendToDeviceButtonEnabled();
         }
     }
