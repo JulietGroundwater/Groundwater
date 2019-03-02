@@ -116,8 +116,9 @@ public class Range {
             rms = FastMath.sqrt(rms);
 
             for (int j = 0; j < p; j++) {
-                fftVif[2 * j] *= FastMath.sqrt((double) (2 * padding)) / (double) (p);
-                fftVif[2 * j + 1] *= FastMath.sqrt((double) (2 * padding)) / (double) (p);
+                double scale = FastMath.sqrt((double) (2 * padding)) / (double) (p);
+                fftVif[2 * j] *= scale;
+                fftVif[2 * j + 1] *= scale;
 
                 fftVif[2 * j] /= rms;
                 fftVif[2 * j + 1] /= rms;
