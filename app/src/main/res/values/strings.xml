@@ -54,4 +54,5 @@
     <string name="latitude">Latitude:</string>
     <string name="attenuators">Attenuators:</string>
     <string name="set">Set</string>
+    <string name="no_single_file_selected_message">No file selected!\n\nChoose an individual file from the Data screen and it will be plotted here.</string>
 </resources>
