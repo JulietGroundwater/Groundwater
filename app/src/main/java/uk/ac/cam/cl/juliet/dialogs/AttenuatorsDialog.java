@@ -1,9 +1,12 @@
 package uk.ac.cam.cl.juliet.dialogs;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -117,7 +120,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.closeButton:
-                dismiss();
+                showConfirmDiscardChangesDialog();
                 break;
             case R.id.doneButton:
                 onDone();
@@ -128,6 +131,40 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
             case R.id.removeAttenuatorButton:
                 removeAttenuator();
         }
+    }
+
+    /**
+     * Displays a dialog asking the user whether they wish to discard or keep their changes.
+     *
+     * <p>If the user chooses "keep" then nothing will happen. If the user chooses "discard" then
+     * the <code>AttenuatorsDialog</code> will close and the user will be returned to the <code>
+     * SettingsFragment</code> with no changes applied.
+     */
+    private void showConfirmDiscardChangesDialog() {
+        Context context = getContext();
+        if (context == null) return;
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.discard_changes)
+                .setMessage(R.string.are_you_sure_discard_changes)
+                .setPositiveButton(
+                        R.string.discard,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                dismiss();
+                            }
+                        })
+                .setNegativeButton(
+                        R.string.keep,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                .create()
+                .show();
     }
 
     /**
