@@ -143,7 +143,7 @@ public class DataFragment extends Fragment
             // Show the plot of the data that the user just selected
             Activity activity = getActivity();
             if (activity instanceof MainActivity) {
-                ((MainActivity) activity).showChartScreen();
+                ((MainActivity) activity).showChartScreen(true);
             }
 
         } else {
@@ -220,11 +220,11 @@ public class DataFragment extends Fragment
      * displaying the list of files to the plot of the collection.
      */
     private void plotCollection() {
+        if (getActivity() instanceof MainActivity) {
+            ((MainActivity) getActivity()).showChartScreen(false);
+        }
         InternalDataHandler idh = InternalDataHandler.getInstance();
         idh.setCollectionSelected(currentNode);
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showChartScreen();
-        }
     }
 
     /**

@@ -112,7 +112,6 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
                 viewPager.setCurrentItem(0, false);
@@ -131,8 +130,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     /** Displays the info screen containing charts. */
-    public void showChartScreen() {
+    public void showChartScreen(boolean singlePlot) {
         bottomNavigation.setSelectedItemId(R.id.action_info);
+        if (singlePlot) {
+            displayFragment.showSinglePlotScreen();
+        } else {
+            displayFragment.showCollectionPlotScreen();
+        }
     }
 
     /**
