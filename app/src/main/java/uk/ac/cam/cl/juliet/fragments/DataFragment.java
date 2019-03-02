@@ -18,6 +18,7 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import com.microsoft.identity.client.MsalClientException;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
@@ -26,6 +27,8 @@ import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
+import uk.ac.cam.cl.juliet.data.DriveAnalysisCallback;
+import uk.ac.cam.cl.juliet.data.GraphServiceController;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
@@ -68,9 +71,7 @@ public class DataFragment extends Fragment
         String folderPath = arguments.getString(FOLDER_PATH);
         currentDirectory = new File(folderPath);
         filesList = new ArrayList<>();
-        currentNode =
-                new SingleOrManyBursts(
-                        filesList, currentDirectory, false); // TODO: Detect if uploaded to onedrive
+        currentNode = new SingleOrManyBursts(filesList, currentDirectory, false);
 
         // Set up the files list UI
         filesRecyclerView = view.findViewById(R.id.filesListRecyclerView);
@@ -393,6 +394,25 @@ public class DataFragment extends Fragment
                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
+    /** Check to see if the current directory's files are synced */
+    private void areFilesSynced() throws FileNotFoundException {
+        final InternalDataHandler idh = InternalDataHandler.getInstance();
+        GraphServiceController gsc = new GraphServiceController();
+        // Iterate over the files and if they're in the current directory then set sync status
+        for (SingleOrManyBursts single : filesList) {
+            if (single.getIsSingleBurst()) {
+                if (idh.getSyncedFiles()
+                        .contains(
+                                idh.getRelativeFromAbsolute(single.getFile().getAbsolutePath()))) {
+                    single.setSyncStatus(true);
+                }
+            }
+        }
+        gsc.getFolder(
+                idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                new DriveAnalysisCallback(currentDirectory, filesList, adapter));
+    }
+
     /** Handles reloading and redrawing the list of files. */
     private static class RefreshFilesTask extends AsyncTask<Void, Void, Void> {
 
@@ -422,11 +442,7 @@ public class DataFragment extends Fragment
                 for (File file : folder.listFiles()) {
                     SingleOrManyBursts inner;
                     if (file.isFile()) {
-                        inner =
-                                new SingleOrManyBursts(
-                                        (Burst) null,
-                                        file,
-                                        false); // TODO: Detect if synced to OneDrive
+                        inner = new SingleOrManyBursts((Burst) null, file, false);
                     } else {
                         inner =
                                 new SingleOrManyBursts(
@@ -445,6 +461,18 @@ public class DataFragment extends Fragment
             dataFragment.setNoFilesMessageVisibility(dataFragment.filesList.isEmpty());
             dataFragment.loadingFilesSpinner.setVisibility(View.INVISIBLE);
             dataFragment.filesRecyclerView.setVisibility(View.VISIBLE);
+            try {
+                AuthenticationManager auth = AuthenticationManager.getInstance();
+                // If the user is logged in and the authentication result isn't null
+                if (auth.isUserLoggedIn() && auth.getAuthResult() != null) {
+                    // Check to see if the files of the currentDirectory are synced
+                    dataFragment.areFilesSynced();
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            } catch (MsalClientException e) {
+                e.printStackTrace();
+            }
         }
     }
 

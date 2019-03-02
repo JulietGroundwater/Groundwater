@@ -88,6 +88,19 @@ public class DataFragmentWrapper extends Fragment
         signIn = menu.getItem(0);
         signOut = menu.getItem(1);
         uploadAllFilesButton = menu.findItem(R.id.sync_all_files_button);
+
+        // Try silently logging in
+        try {
+            AuthenticationManager authManager = AuthenticationManager.getInstance();
+            PublicClientApplication clientApp = authManager.getPublicClient();
+            List<User> users = clientApp.getUsers();
+            if (users != null && users.size() == 1) {
+                // There is a cached user so silently login
+                authManager.acquireTokenSilently(users.get(0), true, this);
+            }
+        } catch (MsalClientException ex) {
+            ex.printStackTrace();
+        }
         displayCorrectAuthButtons();
         updateUploadAllFilesButtonVisibility();
     }
@@ -350,17 +363,24 @@ public class DataFragmentWrapper extends Fragment
             try {
                 file = files[0];
                 // Send the data using the graph service controller
-                AuthenticationManager auth = AuthenticationManager.getInstance();
-                InternalDataHandler idh = InternalDataHandler.getInstance();
+                final AuthenticationManager auth = AuthenticationManager.getInstance();
+                final InternalDataHandler idh = InternalDataHandler.getInstance();
                 if (auth.isUserLoggedIn()) {
                     gsc.uploadDatafile(
-                            file.getNameToDisplay(),
-                            "dat",
+                            idh.getRelativeFromAbsolute(file.getFile().getAbsolutePath()),
                             idh.convertToBytes(file.getFile()),
                             new ICallback<DriveItem>() {
                                 @Override
                                 public void success(DriveItem driveItem) {
                                     Log.d("UPLOAD", "Upload was successful!");
+                                    // Set the file in the global sync set
+                                    try {
+                                        idh.addSyncedFile(
+                                                idh.getRelativeFromAbsolute(
+                                                        file.getFile().getAbsolutePath()));
+                                    } catch (FileNotFoundException ex) {
+                                        ex.printStackTrace();
+                                    }
                                 }
 
                                 @Override
