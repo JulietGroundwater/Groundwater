@@ -118,6 +118,9 @@ public class DataFragmentWrapper extends Fragment
                 signOut.setVisible(false);
                 signIn.setVisible(true);
                 updateUploadAllFilesButtonVisibility();
+                if (currentFragment != null) {
+                    currentFragment.notifySignInStatusChanged(false);
+                }
         }
         return false;
     }
@@ -285,7 +288,7 @@ public class DataFragmentWrapper extends Fragment
     /**
      * On successful authentication set the user
      *
-     * @param res the authetnication result
+     * @param res the authentication result
      */
     @Override
     public void onSuccess(AuthenticationResult res) {
@@ -294,6 +297,9 @@ public class DataFragmentWrapper extends Fragment
         signIn.setVisible(false);
         signOut.setVisible(true);
         updateUploadAllFilesButtonVisibility();
+        if (currentFragment != null) {
+            currentFragment.notifySignInStatusChanged(true);
+        }
     }
 
     /**

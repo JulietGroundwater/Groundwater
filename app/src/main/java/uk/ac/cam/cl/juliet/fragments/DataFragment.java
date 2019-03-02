@@ -412,6 +412,22 @@ public class DataFragment extends Fragment
         }
     }
 
+    /**
+     * Notifies this fragment that the user's sign in status has changed.
+     *
+     * <p>If true is passed then the upload status indicator will be shown for every row; otherwise
+     * it will be hidden.
+     */
+    public void notifySignInStatusChanged(boolean signedIn) {
+        int numberOfViews = filesRecyclerView.getChildCount();
+        for (int i = 0; i < numberOfViews; i++) {
+            FilesListAdapter.FilesListViewHolder viewHolder =
+                    (FilesListAdapter.FilesListViewHolder)
+                            filesRecyclerView.getChildViewHolder(filesRecyclerView.getChildAt(i));
+            viewHolder.setSyncStatusVisibility(signedIn);
+        }
+    }
+
     /** Asynchronously reloads and synchronously redraws the list of files. */
     public void refreshFiles() {
         new RefreshFilesTask(currentDirectory, this).execute();
