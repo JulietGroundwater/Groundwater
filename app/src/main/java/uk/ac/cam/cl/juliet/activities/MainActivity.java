@@ -32,11 +32,12 @@ import uk.ac.cam.cl.juliet.fragments.ToggleableSwipeViewPager;
 public class MainActivity extends AppCompatActivity
         implements BottomNavigationView.OnNavigationItemSelectedListener {
 
+    private final int READ_CONSTANT = 1;
+    private final int OFF_SCREEN_LIMIT = 10;
     private BottomNavigationView bottomNavigation;
     private DisplayFragment displayFragment;
     private DataFragmentWrapper dataFragment;
     private SettingsFragment settingsFragment;
-    private final int READ_CONSTANT = 1;
     private FragmentManager fragmentManager;
     private ToggleableSwipeViewPager viewPager;
     private List<PermissionListener> permissionListeners;
@@ -67,6 +68,9 @@ public class MainActivity extends AppCompatActivity
         bottomNavigation = findViewById(R.id.bottomNavigation);
         bottomNavigation.setOnNavigationItemSelectedListener(this);
         bottomNavigation.setSelectedItemId(R.id.action_info);
+
+        // To avoid needlessly re-rendering fragments when switching
+        viewPager.setOffscreenPageLimit(OFF_SCREEN_LIMIT);
 
         // Create listener list
         permissionListeners = new ArrayList<>();

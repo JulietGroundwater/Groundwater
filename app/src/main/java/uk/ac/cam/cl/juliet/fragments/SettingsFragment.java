@@ -10,6 +10,9 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
@@ -51,6 +54,8 @@ public class SettingsFragment extends Fragment
     private Button setGPSButton;
     private Button configureAttenuatorsButton;
     private Button sendToDeviceButton;
+    private MenuItem connect;
+    private MenuItem disconnect;
 
     private int minute;
     private int hourOfDay;
@@ -61,6 +66,7 @@ public class SettingsFragment extends Fragment
     private double latitude;
     private double longitude;
     private boolean attenuatorsSet;
+    private boolean connected;
     private List<Integer> attenuators;
     private List<Integer> gains;
 
@@ -69,7 +75,6 @@ public class SettingsFragment extends Fragment
             @NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View view = inflater.inflate(R.layout.fragment_settings, container, false);
-        this.setHasOptionsMenu(true);
         connectionStatusText = view.findViewById(R.id.connectionStatusText);
         connectionStatusIcon = view.findViewById(R.id.connectionStatusImageView);
 
@@ -95,7 +100,33 @@ public class SettingsFragment extends Fragment
         setDefaultValues();
         setConnectedStatus(getConnectionStatus());
         updateSendToDeviceButtonEnabled();
+        connected = false;
+        this.setHasOptionsMenu(true);
         return view;
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        super.onCreateOptionsMenu(menu, inflater);
+        menu.clear();
+        inflater.inflate(R.menu.menu_settings, menu);
+        connect = menu.findItem(R.id.connect_button);
+        disconnect = menu.findItem(R.id.disconnect_button);
+        // Only have connect visible if we aren't running any data gathering
+        toggleMenuItems();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch (item.getItemId()) {
+            case R.id.connect_button:
+                establishConnection();
+                return true;
+            case R.id.disconnect_button:
+                destroyConnection();
+                return true;
+        }
+        return false;
     }
 
     @Override
@@ -117,9 +148,7 @@ public class SettingsFragment extends Fragment
      * @return true if connected; false otherwise
      */
     private boolean getConnectionStatus() {
-        // TODO: Connect to real device
-        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
-        return simulator.getConnecitonLive();
+        return this.connected;
     }
 
     private void setConnectedStatus(boolean connected) {
@@ -371,5 +400,39 @@ public class SettingsFragment extends Fragment
      */
     private void updateSendToDeviceButtonEnabled() {
         sendToDeviceButton.setEnabled(getConnectionStatus() && locationSet && attenuatorsSet);
+    }
+
+    private void establishConnection() {
+        // We know we will have a good connection so change buttons
+        this.connected = true;
+        toggleMenuItems();
+
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        simulator.connect();
+        setConnectedStatus(getConnectionStatus());
+    }
+
+    private void destroyConnection() {
+        // We know we will have a good connection so change buttons
+        this.connected = false;
+        toggleMenuItems();
+
+        ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        simulator.disconnect();
+        setConnectedStatus(getConnectionStatus());
+    }
+
+    private void toggleMenuItems() {
+        if (!connected) {
+            connect.setVisible(true);
+            connect.setEnabled(true);
+            disconnect.setVisible(false);
+            disconnect.setEnabled(false);
+        } else {
+            connect.setVisible(false);
+            connect.setEnabled(false);
+            disconnect.setVisible(true);
+            disconnect.setEnabled(true);
+        }
     }
 }

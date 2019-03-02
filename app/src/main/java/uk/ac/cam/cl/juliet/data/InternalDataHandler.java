@@ -16,8 +16,10 @@ public class InternalDataHandler {
     private static InternalDataHandler INSTANCE;
     private static final String ROOT_NAME = "groundwater";
     private File root;
-    private SingleOrManyBursts selectedData;
-    private List<FileListener> listeners;
+    private SingleOrManyBursts singleSelected;
+    private SingleOrManyBursts collectionSelected;
+    private List<FileListener> singleListeners;
+    private List<FileListener> collectionListeners;
     private boolean rootEmpty;
     private String currentLiveData;
     private boolean processingLiveData = false;
@@ -32,19 +34,34 @@ public class InternalDataHandler {
     private InternalDataHandler() {
         root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
         rootEmpty = (root.listFiles() == null);
-        if (listeners == null) {
-            listeners = new ArrayList<>();
+        if (singleListeners == null) {
+            singleListeners = new ArrayList<>();
+        }
+        if (collectionListeners == null) {
+            collectionListeners = new ArrayList<>();
         }
     }
 
     /**
-     * Set the globally selected data and notify listeners
+     * Set the globally single file selected and notify listeners
      *
      * @param selectedData is a <code>SingleOrManyBursts</code> instance
      */
-    public void setSelectedData(SingleOrManyBursts selectedData) {
-        this.selectedData = selectedData;
-        for (FileListener listener : listeners) {
+    public void setSingleSelected(SingleOrManyBursts selectedData) {
+        this.singleSelected = selectedData;
+        for (FileListener listener : singleListeners) {
+            listener.onChange();
+        }
+    }
+
+    /**
+     * Set the globally single file selected and notify listeners
+     *
+     * @param selectedData is a <code>SingleOrManyBursts</code> instance
+     */
+    public void setCollectionSelected(SingleOrManyBursts selectedData) {
+        this.collectionSelected = selectedData;
+        for (FileListener listener : collectionListeners) {
             listener.onChange();
         }
     }
@@ -54,17 +71,26 @@ public class InternalDataHandler {
      *
      * @param selectedData
      */
-    public void silentlySelectData(SingleOrManyBursts selectedData) {
-        this.selectedData = selectedData;
+    public void silentlySelectCollectionData(SingleOrManyBursts selectedData) {
+        this.collectionSelected = selectedData;
     }
 
     /**
-     * For adding new listeners to the selected file changes
+     * For adding new single file listeners to the selected file changes
      *
      * @param listener
      */
-    public void addListener(FileListener listener) {
-        this.listeners.add(listener);
+    public void addSingleListener(FileListener listener) {
+        this.singleListeners.add(listener);
+    }
+
+    /**
+     * For adding new single file listeners to the selected file changes
+     *
+     * @param listener
+     */
+    public void addCollectionListener(FileListener listener) {
+        this.collectionListeners.add(listener);
     }
 
     /**
@@ -89,10 +115,10 @@ public class InternalDataHandler {
      *
      * @param dirName - name of the directory
      */
-    public String addNewDirectory(String dirName) {
+    public File addNewDirectory(String dirName) {
         File file = new File(root.getAbsolutePath(), dirName);
         file.mkdir();
-        return file.getAbsolutePath();
+        return file;
     }
 
     /**
@@ -155,8 +181,12 @@ public class InternalDataHandler {
         return new File(root.getAbsolutePath(), filename);
     }
 
-    public File getSelectedDataFile() {
-        return getSelectedData().getFile();
+    public File getSingleSelectedDataFile() {
+        return getSingleSelected().getFile();
+    }
+
+    public File getCollectionSelectedDataFile() {
+        return getCollectionSelected().getFile();
     }
 
     public File getFileByNameIn(String dirName, String filename) {
@@ -167,8 +197,12 @@ public class InternalDataHandler {
         return Environment.getExternalStorageState();
     }
 
-    public SingleOrManyBursts getSelectedData() {
-        return selectedData;
+    public SingleOrManyBursts getSingleSelected() {
+        return this.singleSelected;
+    }
+
+    public SingleOrManyBursts getCollectionSelected() {
+        return this.collectionSelected;
     }
 
     public void setRootEmpty(boolean emptyValue) {
@@ -195,8 +229,12 @@ public class InternalDataHandler {
         return processingLiveData;
     }
 
-    public List<FileListener> getListeners() {
-        return listeners;
+    public List<FileListener> getSingleListeners() {
+        return singleListeners;
+    }
+
+    public List<FileListener> getCollectionListeners() {
+        return collectionListeners;
     }
 
     public interface FileListener {

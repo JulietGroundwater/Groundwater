@@ -1,6 +1,8 @@
 package uk.ac.cam.cl.juliet.connection;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
@@ -10,6 +12,7 @@ public class ConnectionSimulator implements IConnection {
     private boolean connectionLive;
     private boolean dataReady;
     private DeviceSimulator device;
+    private List<ConnectionListener> listeners = new ArrayList<>();
     private static ConnectionSimulator INSTANCE;
 
     private ConnectionSimulator(DeviceSimulator device) {
@@ -30,6 +33,9 @@ public class ConnectionSimulator implements IConnection {
     public void connect() {
         if (device != null) {
             this.connectionLive = device.addConnection(this);
+            for (ConnectionListener listener : listeners) {
+                listener.onConnectionChange(this.connectionLive);
+            }
         }
     }
 
@@ -39,6 +45,9 @@ public class ConnectionSimulator implements IConnection {
         this.dataReady = false;
         if (device != null) {
             device.destoryConnection();
+            for (ConnectionListener listener : listeners) {
+                listener.onConnectionChange(this.connectionLive);
+            }
         }
     }
 
@@ -60,6 +69,10 @@ public class ConnectionSimulator implements IConnection {
 
     public File pollData() {
         return transientFiles.poll();
+    }
+
+    public void addListener(ConnectionListener listener) {
+        listeners.add(listener);
     }
 
     @Override
@@ -87,5 +100,9 @@ public class ConnectionSimulator implements IConnection {
 
     public boolean getConnecitonLive() {
         return this.connectionLive;
+    }
+
+    public interface ConnectionListener {
+        void onConnectionChange(boolean isConnected);
     }
 }

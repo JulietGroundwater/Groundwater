@@ -38,7 +38,6 @@ public class DisplayFragment extends Fragment {
         InfoPagerAdapter adapter = new InfoPagerAdapter(getChildFragmentManager());
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
-
         return view;
     }
 

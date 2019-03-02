@@ -23,6 +23,13 @@
             android:layout_height="wrap_content"
             android:gravity="center_vertical|center_horizontal"/>
 
+        <ProgressBar
+            android:id="@+id/progressBar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:indeterminate="true" />
+
         <WebView
             android:id="@+id/webview"
             android:layout_width="match_parent"
