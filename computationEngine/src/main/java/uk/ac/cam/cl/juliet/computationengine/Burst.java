@@ -37,6 +37,8 @@ public class Burst {
     private static final int MaxHeaderLen = 1500;
     private static final double fs = 4e4;
     private static final double dt = 1.0 / fs;
+    public static final double er = 3.18;
+    public static final int fileFormat = 5;
 
     /**
      * A default constructor if the number of the burst is not specified.
@@ -82,12 +84,12 @@ public class Burst {
      * Constructor for a burst that takes both the filename and the number of the burst to load
      *
      * @param file name of the {code .DAT} file to read from
-     * @param totalNumberOfBursts number of the burst to load (starts from 1)
+     * @param burstNum number of the burst to load (starts from 1)
      * @param mean whether to find the mean of the Burst's data or not
      * @throws InvalidBurstException if there are errors when reading the file
      */
-    public Burst(File file, int totalNumberOfBursts, boolean mean) throws InvalidBurstException {
-        burst = totalNumberOfBursts;
+    public Burst(File file, int burstNum, boolean mean) throws InvalidBurstException {
+        burst = burstNum;
 
         if (file == null) {
             throw new InvalidBurstException("file cannot be null");
@@ -168,7 +170,7 @@ public class Burst {
             int burstSize = chirpsInBurst * nSamples * wordSize;
 
             // Subtract 1 because it's 1 indexed.
-            burstPointer += (totalNumberOfBursts - 1) * (burstSize);
+            burstPointer += (burstNum - 1) * (burstSize);
 
             if (burstPointer > file.length()) {
                 throw new InvalidBurstException("Incorrect number of bursts in the file.");
@@ -276,15 +278,6 @@ public class Burst {
             throw new InvalidBurstException(
                     String.format("Failed to parse file\nError Message: %s\n", e.toString()));
         }
-    }
-
-    /**
-     * Returns the Code parameter
-     *
-     * @return Code parameter
-     */
-    public int getCode() {
-        return 0;
     }
 
     /**
@@ -443,7 +436,7 @@ public class Burst {
      * @return FileFormat parameter
      */
     public int getFileFormat() {
-        return 5;
+        return fileFormat;
     }
 
     /**
@@ -606,7 +599,7 @@ public class Burst {
      * @return er parameter
      */
     public double getEr() {
-        return 3.18;
+        return er;
     }
 
     /**
