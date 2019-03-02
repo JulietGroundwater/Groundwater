@@ -463,8 +463,7 @@ public class InfoMoreDetailFragment extends Fragment
             int startX;
             if (generator == 0 && selected == MultipleBurstsDataTypes.POWER) {
                 startX = 0;
-            }
-            else {
+            } else {
                 startX = 1;
             }
 
@@ -483,16 +482,14 @@ public class InfoMoreDetailFragment extends Fragment
 
             if (selected == MultipleBurstsDataTypes.POWER) {
                 current = generators.get(generator).getPowerPlotData();
-            }
-            else {
+            } else {
                 current = generators.get(generator).getPhaseDiffPlotData();
             }
 
             int startX;
             if (generator == 0 && selected == MultipleBurstsDataTypes.POWER) {
                 startX = 0;
-            }
-            else {
+            } else {
                 startX = 1;
             }
 
@@ -502,9 +499,7 @@ public class InfoMoreDetailFragment extends Fragment
                             new Datapoint(
                                     converter.get(current.getXValues().get(x)),
                                     current.getYValues().get(y),
-                                    current.getZValues().get(x).get(y)
-                            )
-                    );
+                                    current.getZValues().get(x).get(y)));
                 }
             }
         }

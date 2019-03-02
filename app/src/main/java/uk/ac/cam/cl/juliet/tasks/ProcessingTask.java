@@ -67,7 +67,7 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
                     pdg = new PlotDataGenerator3D(burstList);
                     generators.add(pdg);
                     current += BATCH_SIZE - 1;
-                }while(current + 1 < listOfBursts.size());
+                } while (current + 1 < listOfBursts.size());
             } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException ex) {
                 ex.printStackTrace();
             }
