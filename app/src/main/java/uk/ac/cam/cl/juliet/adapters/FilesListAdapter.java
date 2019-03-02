@@ -8,15 +8,13 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import com.microsoft.identity.client.MsalClientException;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
+import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
-/**
- * Adapts a list of files into the RecyclerView in DataFragment.
- *
- * @author Ben Cole
- */
+/** Adapts a list of files into the RecyclerView in DataFragment. */
 public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.FilesListViewHolder> {
 
     private List<SingleOrManyBursts> dataset;
@@ -73,8 +71,11 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
     @Override
     public void onBindViewHolder(@NonNull final FilesListViewHolder filesListViewHolder, int i) {
         final SingleOrManyBursts file = dataset.get(i);
+
+        // Display the file/folder's name
         filesListViewHolder.getTimestampTextView().setText(file.getNameToDisplay());
-        filesListViewHolder.getUploadingSpinner().setVisibility(View.INVISIBLE);
+
+        // Set icon to indicate whether it's a file or a folder
         if (file.getIsSingleBurst()) {
             filesListViewHolder
                     .getTypeImageView()
@@ -84,16 +85,39 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
                     .getTypeImageView()
                     .setImageResource(R.drawable.baseline_folder_black_36);
         }
-        if (file.getSyncStatus()) {
-            filesListViewHolder
-                    .getSyncStatusImageView()
-                    .setImageResource(R.drawable.baseline_cloud_done_black_18);
-        } else {
-            filesListViewHolder
-                    .getSyncStatusImageView()
-                    .setImageResource(R.drawable.baseline_cloud_off_black_18);
+
+        // Determine if logged in and show/hide the "is uploaded" icon
+        boolean loggedIn = false;
+        try {
+            loggedIn = AuthenticationManager.getInstance().isUserLoggedIn();
+        } catch (MsalClientException e) {
+            e.printStackTrace();
         }
+        filesListViewHolder.setSyncStatusVisibility(loggedIn);
+
+        // If the user is logged in (and therefore the icon is visible), show the uploaded or
+        // not uploaded icon accordingly.
+        if (loggedIn) {
+            if (file.getSyncStatus()) {
+                filesListViewHolder
+                        .getSyncStatusImageView()
+                        .setImageResource(R.drawable.baseline_cloud_done_black_18);
+            } else {
+                filesListViewHolder
+                        .getSyncStatusImageView()
+                        .setImageResource(R.drawable.baseline_cloud_off_black_18);
+            }
+        }
+
+        // Set the corresponding image to show whether the file has been uploaded.
+        // TODO: Actually check this! We have just signed in, so we don't know if the file has been
+        // uploaded.
+        filesListViewHolder.setUploaded(file.getSyncStatus());
+
+        // Hide the "uploading" progress spinner
         filesListViewHolder.setSpinnerVisibility(false);
+
+        // Set up click listeners
         filesListViewHolder
                 .getContainer()
                 .setOnClickListener(
@@ -157,6 +181,13 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
             syncStatusImageView.setVisibility(visible ? View.VISIBLE : View.INVISIBLE);
         }
 
+        public void setUploaded(boolean uploaded) {
+            syncStatusImageView.setImageResource(
+                    uploaded
+                            ? R.drawable.baseline_cloud_done_black_18
+                            : R.drawable.baseline_cloud_off_black_18);
+        }
+
         public View getContainer() {
             return container;
         }
@@ -171,10 +202,6 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
 
         public ImageView getSyncStatusImageView() {
             return syncStatusImageView;
-        }
-
-        public ProgressBar getUploadingSpinner() {
-            return uploadingSpinner;
         }
     }
 }

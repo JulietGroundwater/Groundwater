@@ -35,11 +35,7 @@ import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.BurstDataTypes;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
-/**
- * Fragment for the key information page.
- *
- * @author Ben Cole
- */
+/** Fragment for the key information page. */
 public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSelectedListener {
 
     private LineChart exampleChart;
@@ -47,8 +43,22 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
     private InternalDataHandler idh;
     private Map<String, PlotDataGenerator2D> cache;
 
+    private TextView noFileSelectedText;
     private TextView generatingPlotText;
     private ProgressBar generatingPlotSpinner;
+
+    /** Indicates the state that this widget is in. */
+    private enum State {
+
+        /** Display the "please select a file message" */
+        INITIAL,
+
+        /** Display the progress spinner and "generating plot" text */
+        PROCESSING,
+
+        /** Display the chart */
+        FILE_DISPLAYED
+    }
 
     @Nullable
     @Override
@@ -59,7 +69,7 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
         View view = inflater.inflate(R.layout.fragment_info_overview, container, false);
 
         // Create the example chart
-        exampleChart = (LineChart) view.findViewById(R.id.twoD_chart);
+        exampleChart = view.findViewById(R.id.twoD_chart);
         exampleChart.setPinchZoom(true);
         exampleChart.setDragEnabled(true);
 
@@ -93,12 +103,42 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
                     }
                 });
 
+        // Find UI elements
+        noFileSelectedText = view.findViewById(R.id.noFileSelectedMessage);
         generatingPlotSpinner = view.findViewById(R.id.generatingPlotSpinner);
-        generatingPlotSpinner.setVisibility(View.INVISIBLE);
         generatingPlotText = view.findViewById(R.id.generatingPlotText);
-        generatingPlotText.setVisibility(View.INVISIBLE);
+
+        // Set default visibilities
+        updateUIState(State.INITIAL);
 
         return view;
+    }
+
+    /**
+     * Shows and hides UI elements according to the current state.
+     *
+     * @param state The new state of the UI
+     */
+    private void updateUIState(State state) {
+        switch (state) {
+            case INITIAL:
+                noFileSelectedText.setVisibility(View.VISIBLE);
+                exampleChart.setVisibility(View.INVISIBLE);
+                generatingPlotText.setVisibility(View.INVISIBLE);
+                generatingPlotSpinner.setVisibility(View.INVISIBLE);
+                return;
+            case PROCESSING:
+                noFileSelectedText.setVisibility(View.INVISIBLE);
+                exampleChart.setVisibility(View.INVISIBLE);
+                generatingPlotText.setVisibility(View.VISIBLE);
+                generatingPlotSpinner.setVisibility(View.VISIBLE);
+                return;
+            case FILE_DISPLAYED:
+                noFileSelectedText.setVisibility(View.INVISIBLE);
+                exampleChart.setVisibility(View.VISIBLE);
+                generatingPlotText.setVisibility(View.INVISIBLE);
+                generatingPlotSpinner.setVisibility(View.INVISIBLE);
+        }
     }
 
     private void updateChart() {
@@ -162,20 +202,6 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
         }
     }
 
-    /**
-     * Shows or hides the spinner and text that indicate that the application is currently
-     * processing the data and generating a plot.
-     *
-     * @param processing true to show the spinner; false to hide it
-     */
-    private void setShowProcessing(boolean processing) {
-        int chartVisibility = processing ? View.INVISIBLE : View.VISIBLE;
-        int spinnerVisibility = processing ? View.VISIBLE : View.INVISIBLE;
-        exampleChart.setVisibility(chartVisibility);
-        generatingPlotSpinner.setVisibility(spinnerVisibility);
-        generatingPlotText.setVisibility(spinnerVisibility);
-    }
-
     private boolean checkFile() {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         if (idh.getSingleSelected() == null) return false;
@@ -213,7 +239,7 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
 
         @Override
         protected void onPreExecute() {
-            fragment.setShowProcessing(true);
+            fragment.updateUIState(State.PROCESSING);
         }
 
         @Override
@@ -224,7 +250,7 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
 
         @Override
         protected void onPostExecute(Void aVoid) {
-            fragment.setShowProcessing(false);
+            fragment.updateUIState(State.FILE_DISPLAYED);
         }
     }
 }

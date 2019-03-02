@@ -13,13 +13,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import uk.ac.cam.cl.juliet.R;
 
-/**
- * Fragment for the 'information' screen.
- *
- * @author Ben Cole
- */
+/** Fragment for the 'information' screen. */
 public class DisplayFragment extends Fragment {
 
+    private TabLayout tabLayout;
+    private ViewPager viewPager;
     private InfoOverviewFragment infoOverviewFragment;
     private InfoMoreDetailFragment infoMoreDetailFragment;
 
@@ -33,12 +31,20 @@ public class DisplayFragment extends Fragment {
         infoMoreDetailFragment = new InfoMoreDetailFragment();
 
         // Connect the UI elements up
-        TabLayout tabLayout = view.findViewById(R.id.tabLayout);
-        ViewPager viewPager = view.findViewById(R.id.infoViewPager);
+        tabLayout = view.findViewById(R.id.tabLayout);
+        viewPager = view.findViewById(R.id.infoViewPager);
         InfoPagerAdapter adapter = new InfoPagerAdapter(getChildFragmentManager());
         viewPager.setAdapter(adapter);
         tabLayout.setupWithViewPager(viewPager);
         return view;
+    }
+
+    public void showSinglePlotScreen() {
+        viewPager.setCurrentItem(0);
+    }
+
+    public void showCollectionPlotScreen() {
+        viewPager.setCurrentItem(1);
     }
 
     /**

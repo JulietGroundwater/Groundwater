@@ -13,6 +13,7 @@ import android.widget.TextView;
 import java.util.ArrayList;
 import uk.ac.cam.cl.juliet.R;
 
+/** A layout for inputting the settings for one attenuator. */
 public class AttenuatorConfigurationView extends ConstraintLayout {
 
     private static final int ATTENUATION_MIN = 0;

@@ -40,11 +40,7 @@ import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 import uk.ac.cam.cl.juliet.tasks.LiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
 
-/**
- * Displays more detail about the currently open data file.
- *
- * @author Ben Cole
- */
+/** Displays more detail about the currently open data file. */
 public class InfoMoreDetailFragment extends Fragment
         implements ILiveProcessingTask, ConnectionSimulator.ConnectionListener {
 
@@ -61,7 +57,29 @@ public class InfoMoreDetailFragment extends Fragment
     private boolean gatheringData;
     private SingleOrManyBursts currentLiveBursts;
     private Spinner detailedSpinner;
-    private ProgressBar progressBar;
+    private ProgressBar liveProgressBar;
+    private TextView noFilesToPlotMessage;
+    private ProgressBar generatingSpinner;
+    private TextView generatingText;
+
+    /** The state that the UI is in. */
+    private enum State {
+
+        /** The initial state: only the "no files selected" message will be displayed. */
+        INITIAL,
+
+        /** Displays the "generating plot" text and progress spinner. */
+        PROCESSING,
+
+        /** Only the WebView will be displayed. */
+        STATIC_COLLECTION_DISPLAYED,
+
+        /**
+         * The WebView and horizontal progress bar are displayed, to make it clear that data is
+         * still being received.
+         */
+        COLLECTING_LIVE_DATA
+    }
 
     @Nullable
     @Override
@@ -77,13 +95,13 @@ public class InfoMoreDetailFragment extends Fragment
         this.gatheringData = false;
 
         // Initialise text
-        webviewText = (TextView) view.findViewById(R.id.webview_title);
+        webviewText = view.findViewById(R.id.webview_title);
 
         // Initialise cache
         cache = new HashMap<>();
 
         // Initialise webview
-        webview = (WebView) view.findViewById(R.id.webview);
+        webview = view.findViewById(R.id.webview);
         WebSettings webSettings = webview.getSettings();
         webSettings.setJavaScriptEnabled(true);
         webview.setWebChromeClient(new WebChromeClient());
@@ -132,14 +150,64 @@ public class InfoMoreDetailFragment extends Fragment
                     }
                 });
 
-        // Get progress bar handle
-        progressBar = view.findViewById(R.id.progressBar);
+        // Get UI handles
+        liveProgressBar = view.findViewById(R.id.progressBar);
+        noFilesToPlotMessage = view.findViewById(R.id.noFilesToPlotMessage);
+        generatingSpinner = view.findViewById(R.id.generatingSpinner);
+        generatingText = view.findViewById(R.id.generatingText);
 
         // Listener for connection changes
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         simulator.addListener(this);
 
+        updateUIState(State.INITIAL);
+
         return view;
+    }
+
+    /**
+     * Shows and hides UI elements based on the new state.
+     *
+     * @param state The new state of the UI
+     */
+    private void updateUIState(State state) {
+        switch (state) {
+            case INITIAL:
+                webview.setVisibility(View.INVISIBLE);
+                liveProgressBar.setVisibility(View.INVISIBLE);
+                noFilesToPlotMessage.setVisibility(View.VISIBLE);
+                generatingSpinner.setVisibility(View.INVISIBLE);
+                generatingText.setVisibility(View.INVISIBLE);
+                return;
+            case PROCESSING:
+                webview.setVisibility(View.INVISIBLE);
+                liveProgressBar.setVisibility(View.INVISIBLE);
+                noFilesToPlotMessage.setVisibility(View.INVISIBLE);
+                generatingSpinner.setVisibility(View.VISIBLE);
+                generatingText.setVisibility(View.VISIBLE);
+                return;
+            case STATIC_COLLECTION_DISPLAYED:
+                webview.setVisibility(View.VISIBLE);
+                liveProgressBar.setVisibility(View.INVISIBLE);
+                noFilesToPlotMessage.setVisibility(View.INVISIBLE);
+                generatingSpinner.setVisibility(View.INVISIBLE);
+                generatingText.setVisibility(View.INVISIBLE);
+                return;
+            case COLLECTING_LIVE_DATA:
+                webview.setVisibility(View.VISIBLE);
+                liveProgressBar.setVisibility(View.VISIBLE);
+                noFilesToPlotMessage.setVisibility(View.INVISIBLE);
+                generatingSpinner.setVisibility(View.INVISIBLE);
+                generatingText.setVisibility(View.INVISIBLE);
+        }
+    }
+
+    /** Decides whether to show the "measure" button and updates the UI accordingly. */
+    private void updateMeasureVisibility() {
+        boolean visible = connected && !gatheringData;
+        if (measure != null) {
+            measure.setVisible(visible);
+        }
     }
 
     @Override
@@ -149,7 +217,7 @@ public class InfoMoreDetailFragment extends Fragment
         inflater.inflate(R.menu.menu_data, menu);
         measure = menu.findItem(R.id.take_measurement_button);
         // Only have connect visible if we aren't running any data gathering
-        toggleMeasuringButton();
+        updateMeasureVisibility();
     }
 
     @Override
@@ -169,6 +237,8 @@ public class InfoMoreDetailFragment extends Fragment
      */
     private void updateChart() {
         if (checkFile()) {
+            updateUIState(State.PROCESSING);
+
             // Create datapoints, json-ise and pass to Javascript
             webviewText.setText(idh.getCollectionSelected().getNameToDisplay());
 
@@ -230,6 +300,11 @@ public class InfoMoreDetailFragment extends Fragment
                 });
         // Load base html from the assets directory
         webview.loadUrl("file:///android_asset/html/graph.html");
+        if (gatheringData) {
+            updateUIState(State.COLLECTING_LIVE_DATA);
+        } else {
+            updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+        }
     }
 
     /** Establishes a connection and waits for the data gathering to commence */
@@ -317,7 +392,8 @@ public class InfoMoreDetailFragment extends Fragment
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         simulator.beginDataGathering();
         this.gatheringData = true;
-        toggleMeasuringButton();
+        updateUIState(State.COLLECTING_LIVE_DATA);
+        updateMeasureVisibility();
     }
 
     @Override
@@ -345,18 +421,16 @@ public class InfoMoreDetailFragment extends Fragment
                 cache.put(idh.getCurrentLiveData(), data);
             }
             updateWebview(generateDatapoints(cache.get(idh.getCurrentLiveData())));
+            if (isLast) {
+                this.connected = false;
+                this.gatheringData = false;
+                updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+            }
         } else {
             cache.put(idh.getCollectionSelected().getNameToDisplay(), generators);
             updateWebview(
                     generateDatapoints(cache.get(idh.getCollectionSelected().getNameToDisplay())));
-        }
-
-        // For live processing we need to check for the last file received
-        if (isLast) {
-            this.connected = false;
-            this.gatheringData = false;
-            idh.setProcessingLiveData(false);
-            toggleMeasuringButton();
+            updateUIState(State.STATIC_COLLECTION_DISPLAYED);
         }
     }
 
@@ -429,30 +503,6 @@ public class InfoMoreDetailFragment extends Fragment
         return datapoints;
     }
 
-    /** Helper function for measure button toggling */
-    private void toggleMeasuringButton() {
-        if (measure != null) {
-
-            // Set progress bar and disable spinner
-            if (this.gatheringData) {
-                progressBar.setVisibility(View.VISIBLE);
-                // detailedSpinner.setEnabled(false);
-            } else {
-                progressBar.setVisibility(View.INVISIBLE);
-                // detailedSpinner.setEnabled(true);
-            }
-
-            // Set measuring action
-            if (this.connected && !this.gatheringData) {
-                measure.setEnabled(true);
-                measure.setVisible(true);
-            } else if (this.gatheringData || !this.connected) {
-                measure.setEnabled(false);
-                measure.setVisible(false);
-            }
-        }
-    }
-
     /**
      * When computing live data we need to keep track of this in order to update the Internal Data
      * Handler correctly.
@@ -474,7 +524,10 @@ public class InfoMoreDetailFragment extends Fragment
         this.connected = isConnected;
         if (isConnected) {
             establishConnection();
-            toggleMeasuringButton();
+        } else {
+            gatheringData = false;
         }
+        updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+        updateMeasureVisibility();
     }
 }

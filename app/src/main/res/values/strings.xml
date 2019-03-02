@@ -47,4 +47,13 @@
     <string name="disconnect">Disconnect</string>
     <string name="generating_plot">Generating plot…</string>
     <string name="plot_all_files">Plot all files</string>
+    <string name="discard_changes">Discard changes</string>
+    <string name="are_you_sure_discard_changes">Are you sure you want do discard your changes?</string>
+    <string name="discard">Discard</string>
+    <string name="keep">Keep</string>
+    <string name="latitude">Latitude:</string>
+    <string name="attenuators">Attenuators:</string>
+    <string name="set">Set</string>
+    <string name="no_single_file_selected_message">No file selected!\n\nChoose an individual file from the Data screen and it will be plotted here.</string>
+    <string name="no_collection_selected_message">No files selected!\n\nOpen a collection of files from the Data screen and press "plot all files" to see them plotted together here.</string>
 </resources>

@@ -52,6 +52,7 @@ public class DataFragmentWrapper extends Fragment
 
     private MenuItem signIn;
     private MenuItem signOut;
+    private MenuItem uploadAllFilesButton;
     private DataFragment currentFragment;
     private User user;
 
@@ -86,13 +87,15 @@ public class DataFragmentWrapper extends Fragment
         // Init the menu items
         signIn = menu.getItem(0);
         signOut = menu.getItem(1);
+        uploadAllFilesButton = menu.findItem(R.id.sync_all_files_button);
         displayCorrectAuthButtons();
+        updateUploadAllFilesButtonVisibility();
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.sync_button:
+            case R.id.sync_all_files_button:
                 showSyncDialog();
                 return true;
             case R.id.refresh:
@@ -114,8 +117,31 @@ public class DataFragmentWrapper extends Fragment
                 }
                 signOut.setVisible(false);
                 signIn.setVisible(true);
+                updateUploadAllFilesButtonVisibility();
+                if (currentFragment != null) {
+                    currentFragment.notifySignInStatusChanged(false);
+                }
         }
         return false;
+    }
+
+    /**
+     * Shows or hides the "upload all files" button based on whether the user is logged in.
+     *
+     * <p>If the user is signed in then the "upload all files" button will be shown; otherwise it
+     * will be hidden.
+     */
+    private void updateUploadAllFilesButtonVisibility() {
+        if (uploadAllFilesButton == null) return;
+        boolean loggedIn = false;
+        try {
+            loggedIn = AuthenticationManager.getInstance().isUserLoggedIn();
+        } catch (MsalClientException e) {
+            e.printStackTrace();
+            return;
+        }
+        uploadAllFilesButton.setEnabled(loggedIn);
+        uploadAllFilesButton.setVisible(loggedIn);
     }
 
     private String getRootPath() {
@@ -262,7 +288,7 @@ public class DataFragmentWrapper extends Fragment
     /**
      * On successful authentication set the user
      *
-     * @param res the authetnication result
+     * @param res the authentication result
      */
     @Override
     public void onSuccess(AuthenticationResult res) {
@@ -270,6 +296,10 @@ public class DataFragmentWrapper extends Fragment
         // Swap visibility of the buttons
         signIn.setVisible(false);
         signOut.setVisible(true);
+        updateUploadAllFilesButtonVisibility();
+        if (currentFragment != null) {
+            currentFragment.notifySignInStatusChanged(true);
+        }
     }
 
     /**
@@ -281,6 +311,7 @@ public class DataFragmentWrapper extends Fragment
     public void onError(MsalException msalException) {
         Toast.makeText(getContext(), "An error occurred whilst logging you in", Toast.LENGTH_LONG)
                 .show();
+        updateUploadAllFilesButtonVisibility();
     }
 
     /** Notify if the user cancels */

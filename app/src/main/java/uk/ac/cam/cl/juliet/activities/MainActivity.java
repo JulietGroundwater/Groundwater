@@ -24,11 +24,7 @@ import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
 import uk.ac.cam.cl.juliet.fragments.ToggleableSwipeViewPager;
 
-/**
- * The home screen for the application.
- *
- * @author Ben Cole
- */
+/** The home screen for the application. */
 public class MainActivity extends AppCompatActivity
         implements BottomNavigationView.OnNavigationItemSelectedListener {
 
@@ -116,7 +112,6 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
                 viewPager.setCurrentItem(0, false);
@@ -135,8 +130,13 @@ public class MainActivity extends AppCompatActivity
     }
 
     /** Displays the info screen containing charts. */
-    public void showChartScreen() {
+    public void showChartScreen(boolean singlePlot) {
         bottomNavigation.setSelectedItemId(R.id.action_info);
+        if (singlePlot) {
+            displayFragment.showSinglePlotScreen();
+        } else {
+            displayFragment.showCollectionPlotScreen();
+        }
     }
 
     /**

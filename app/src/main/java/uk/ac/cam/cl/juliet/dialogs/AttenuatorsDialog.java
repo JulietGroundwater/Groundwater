@@ -1,9 +1,12 @@
 package uk.ac.cam.cl.juliet.dialogs;
 
+import android.content.Context;
+import android.content.DialogInterface;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
+import android.support.v7.app.AlertDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -15,13 +18,19 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AttenuatorSettings;
 import uk.ac.cam.cl.juliet.views.AttenuatorConfigurationView;
 
-/**
- * A fullscreen dialog for inputting an arbitrary number of (attenuator, gain) pairs.
- *
- * @author Ben Cole
- */
+/** A fullscreen dialog for inputting an arbitrary number of (attenuator, gain) pairs. */
 public class AttenuatorsDialog extends DialogFragment implements View.OnClickListener {
 
+    /**
+     * Sets the maximum number of attenuators that can be added. Once they have all been added, the
+     * "add" button will be disabled until one is removed again.
+     */
+    public static int MAX_ATTENUATORS = 4;
+
+    /**
+     * Used to pass in the currently selected attenuator settings so that the user's previous
+     * choices are restored if they click "configure attenuators" again.
+     */
     public static final String ATTENUATOR_SETTINGS = "attenuator_settings";
 
     private Button closeButton;
@@ -62,6 +71,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         for (View v : attenuatorsList) {
             attenuatorsContainer.addView(v);
         }
+        updateAddRemoveAttenuatorsButtonsEnabled();
         return view;
     }
 
@@ -113,11 +123,23 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         return result;
     }
 
+    /**
+     * Updates the enabled status of the "add" and "remove" buttons.
+     *
+     * <p>If there is only one attenuator remaining then the "remove" button will be disabled;
+     * otherwise it will be enabled. The "add" button will be enabled until <code>MAX_ATTENUATORS
+     * </code> is reached, at which point it will be disabled until an attenuator is removed.
+     */
+    private void updateAddRemoveAttenuatorsButtonsEnabled() {
+        removeAttenuatorButton.setEnabled(attenuatorsList.size() > 1);
+        addAttenuatorButton.setEnabled(attenuatorsList.size() < MAX_ATTENUATORS);
+    }
+
     @Override
     public void onClick(View v) {
         switch (v.getId()) {
             case R.id.closeButton:
-                dismiss();
+                showConfirmDiscardChangesDialog();
                 break;
             case R.id.doneButton:
                 onDone();
@@ -128,6 +150,40 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
             case R.id.removeAttenuatorButton:
                 removeAttenuator();
         }
+    }
+
+    /**
+     * Displays a dialog asking the user whether they wish to discard or keep their changes.
+     *
+     * <p>If the user chooses "keep" then nothing will happen. If the user chooses "discard" then
+     * the <code>AttenuatorsDialog</code> will close and the user will be returned to the <code>
+     * SettingsFragment</code> with no changes applied.
+     */
+    private void showConfirmDiscardChangesDialog() {
+        Context context = getContext();
+        if (context == null) return;
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.discard_changes)
+                .setMessage(R.string.are_you_sure_discard_changes)
+                .setPositiveButton(
+                        R.string.discard,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                                dismiss();
+                            }
+                        })
+                .setNegativeButton(
+                        R.string.keep,
+                        new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                dialog.dismiss();
+                            }
+                        })
+                .create()
+                .show();
     }
 
     /**
@@ -159,9 +215,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         attenuatorsContainer.addView(view);
 
         // If needed, re-enable the "remove attenuator" button
-        if (attenuatorsList.size() > 1) {
-            removeAttenuatorButton.setEnabled(true);
-        }
+        updateAddRemoveAttenuatorsButtonsEnabled();
     }
 
     /**
@@ -180,8 +234,7 @@ public class AttenuatorsDialog extends DialogFragment implements View.OnClickLis
         attenuatorsContainer.removeViewAt(attenuatorsList.size());
 
         // If needed, disable the "remove attenuator" button
-        boolean removeButtonEnabled = (attenuatorsList.size() > 1);
-        removeAttenuatorButton.setEnabled(removeButtonEnabled);
+        updateAddRemoveAttenuatorsButtonsEnabled();
     }
 
     /** Ensures that a listener has an <code>onAttenuatorsSelected</code> callback. */
