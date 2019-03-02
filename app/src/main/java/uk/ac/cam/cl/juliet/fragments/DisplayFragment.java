@@ -13,11 +13,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import uk.ac.cam.cl.juliet.R;
 
-/**
- * Fragment for the 'information' screen.
- *
- * @author Ben Cole
- */
+/** Fragment for the 'information' screen. */
 public class DisplayFragment extends Fragment {
 
     private InfoOverviewFragment infoOverviewFragment;

@@ -31,11 +31,7 @@ import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
-/**
- * Fragment for the 'data' screen.
- *
- * @author Ben Cole
- */
+/** Fragment for the 'data' screen. */
 public class DataFragment extends Fragment
         implements FilesListAdapter.OnDataFileSelectedListener,
                 MainActivity.PermissionListener,

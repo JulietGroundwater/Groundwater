@@ -34,11 +34,7 @@ import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.AttenuatorSettings;
 import uk.ac.cam.cl.juliet.dialogs.AttenuatorsDialog;
 
-/**
- * Fragment for the 'settings' screen.
- *
- * @author Ben Cole
- */
+/** Fragment for the 'settings' screen. */
 public class SettingsFragment extends Fragment
         implements AttenuatorsDialog.OnAttenuatorsSelectedListener, Button.OnClickListener {
 
@@ -409,7 +405,7 @@ public class SettingsFragment extends Fragment
 
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         simulator.connect();
-        setConnectedStatus(getConnectionStatus());  // TODO: Check if this is redundant
+        setConnectedStatus(getConnectionStatus()); // TODO: Check if this is redundant
         updateSendToDeviceButtonEnabled();
     }
 

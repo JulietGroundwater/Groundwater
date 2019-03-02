@@ -14,11 +14,7 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
-/**
- * Adapts a list of files into the RecyclerView in DataFragment.
- *
- * @author Ben Cole
- */
+/** Adapts a list of files into the RecyclerView in DataFragment. */
 public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.FilesListViewHolder> {
 
     private List<SingleOrManyBursts> dataset;

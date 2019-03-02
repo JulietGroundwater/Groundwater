@@ -8,8 +8,6 @@ import uk.ac.cam.cl.juliet.computationengine.Burst;
 /**
  * Encapsulates both single Bursts and lists of Bursts as a single data type to be displayed in a
  * list.
- *
- * @author Ben Cole
  */
 public class SingleOrManyBursts implements Serializable {
 

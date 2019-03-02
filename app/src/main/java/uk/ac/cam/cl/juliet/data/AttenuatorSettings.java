@@ -8,8 +8,6 @@ import java.util.List;
  * Encodes a pair of <code>List<Integer></code> values for the attenuator and gain values.
  *
  * <p>Can be serialized for passing between fragments.
- *
- * @author Ben Cole
  */
 public class AttenuatorSettings implements Serializable {
 

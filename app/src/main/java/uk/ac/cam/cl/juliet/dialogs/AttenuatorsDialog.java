@@ -18,11 +18,7 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AttenuatorSettings;
 import uk.ac.cam.cl.juliet.views.AttenuatorConfigurationView;
 
-/**
- * A fullscreen dialog for inputting an arbitrary number of (attenuator, gain) pairs.
- *
- * @author Ben Cole
- */
+/** A fullscreen dialog for inputting an arbitrary number of (attenuator, gain) pairs. */
 public class AttenuatorsDialog extends DialogFragment implements View.OnClickListener {
 
     /**

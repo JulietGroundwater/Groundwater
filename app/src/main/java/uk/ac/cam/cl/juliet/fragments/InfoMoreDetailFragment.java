@@ -40,11 +40,7 @@ import uk.ac.cam.cl.juliet.tasks.IProcessingCallback;
 import uk.ac.cam.cl.juliet.tasks.LiveProcessingTask;
 import uk.ac.cam.cl.juliet.tasks.ProcessingTask;
 
-/**
- * Displays more detail about the currently open data file.
- *
- * @author Ben Cole
- */
+/** Displays more detail about the currently open data file. */
 public class InfoMoreDetailFragment extends Fragment
         implements ILiveProcessingTask, ConnectionSimulator.ConnectionListener {
 

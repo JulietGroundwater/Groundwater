@@ -24,11 +24,7 @@ import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
 import uk.ac.cam.cl.juliet.fragments.ToggleableSwipeViewPager;
 
-/**
- * The home screen for the application.
- *
- * @author Ben Cole
- */
+/** The home screen for the application. */
 public class MainActivity extends AppCompatActivity
         implements BottomNavigationView.OnNavigationItemSelectedListener {
 

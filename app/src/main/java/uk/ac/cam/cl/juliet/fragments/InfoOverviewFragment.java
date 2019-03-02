@@ -35,11 +35,7 @@ import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.BurstDataTypes;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
-/**
- * Fragment for the key information page.
- *
- * @author Ben Cole
- */
+/** Fragment for the key information page. */
 public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSelectedListener {
 
     private LineChart exampleChart;
