@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
 import com.github.mikephil.charting.charts.LineChart;
+import com.github.mikephil.charting.components.Description;
 import com.github.mikephil.charting.data.Entry;
 import com.github.mikephil.charting.data.LineData;
 import com.github.mikephil.charting.data.LineDataSet;
@@ -72,6 +73,9 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
         exampleChart = view.findViewById(R.id.twoD_chart);
         exampleChart.setPinchZoom(true);
         exampleChart.setDragEnabled(true);
+        Description description = new Description();
+        description.setEnabled(false);
+        exampleChart.setDescription(description);
 
         // Create the spinner and set values
         overviewSpinner = view.findViewById(R.id.overview_spinner);
