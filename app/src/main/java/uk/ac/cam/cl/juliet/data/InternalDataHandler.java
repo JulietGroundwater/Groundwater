@@ -34,7 +34,7 @@ public class InternalDataHandler {
     }
 
     private InternalDataHandler() {
-        root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
+        root = getRootDirectory();
         rootEmpty = (root.listFiles() == null);
 
         // Create the listeners for single changes
@@ -51,6 +51,29 @@ public class InternalDataHandler {
         if (syncedFiles == null) {
             syncedFiles = new HashSet<>();
         }
+    }
+
+    /**
+     * Returns a handle to the root directory for this app.
+     *
+     * <p>If the folder does not exist then it will be created.
+     *
+     * @return The <code>File</code> that refers to the root directory for this app.
+     */
+    private File getRootDirectory() {
+        File systemRoot = Environment.getExternalStorageDirectory();
+        File appRoot = null;
+        for (File f : systemRoot.listFiles()) {
+            if (f.getName().equals(ROOT_NAME) && f.isDirectory()) {
+                appRoot = f;
+                break;
+            }
+        }
+        if (appRoot == null) {
+            appRoot = new File(systemRoot, ROOT_NAME);
+            appRoot.mkdir();
+        }
+        return appRoot;
     }
 
     /**

@@ -15,6 +15,7 @@ public class DeviceSimulator {
     private IConnection connection;
     private Config configuration;
     private boolean finished;
+    private Thread measuringThread;
 
     /**
      * Constructor for the simulated device
@@ -74,20 +75,28 @@ public class DeviceSimulator {
             return;
         }
 
-        Thread thread =
+        if (measuringThread != null) {
+            measuringThread.interrupt();
+        }
+        measuringThread =
                 new Thread(
                         new Runnable() {
                             @Override
                             public void run() {
+                                boolean looping = true;
                                 for (int fileIndex = 0;
                                         fileIndex < root.listFiles().length;
                                         fileIndex++) {
+
+                                    if (Thread.interrupted()) return;
+                                    if (!looping) return;
 
                                     // Return if no more connections
                                     if (connection == null) {
                                         return;
                                     }
                                     // Otherwise add a file to the queue and notify the connections
+                                    connection.addFile(root.listFiles()[fileIndex]);
                                     queue.add(root.listFiles()[fileIndex]);
                                     connection.notifyDataReady();
 
@@ -96,15 +105,24 @@ public class DeviceSimulator {
                                         try {
                                             Thread.sleep(delay);
                                         } catch (InterruptedException e) {
-                                            e.printStackTrace();
+                                            looping = false;
                                         }
                                     }
                                 }
-
-                                // Notify connection that we are done after reading all files
-                                connection.dataFinished();
+                                if (connection != null) {
+                                    connection.dataFinished();
+                                }
                             }
                         });
-        thread.start();
+        measuringThread.start();
+    }
+
+    public void stopMeasuring() {
+        if (measuringThread != null) {
+            measuringThread.interrupt();
+        }
+        if (connection != null) {
+            connection.dataFinished();
+        }
     }
 }

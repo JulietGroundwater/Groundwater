@@ -52,7 +52,8 @@ public class InfoMoreDetailFragment extends Fragment
     private TextView webviewText;
     private InternalDataHandler idh;
     private Map<String, List<PlotDataGenerator3D>> cache;
-    private MenuItem measure;
+    private MenuItem startMeasuringButton;
+    private MenuItem stopMeasuringButton;
     private ConnectionSimulator simulator;
     private boolean connected;
     private boolean gatheringData;
@@ -63,6 +64,9 @@ public class InfoMoreDetailFragment extends Fragment
     private ProgressBar generatingSpinner;
     private TextView generatingText;
     private boolean dataHasBeenPlottedAtLeastOnce;
+
+    private List<File> prevAndCurrent;
+    boolean firstTime;
 
     /** The state that the UI is in. */
     private enum State {
@@ -205,11 +209,13 @@ public class InfoMoreDetailFragment extends Fragment
         }
     }
 
-    /** Decides whether to show the "measure" button and updates the UI accordingly. */
+    /** Decides whether to show the "start measuring" button and updates the UI accordingly. */
     private void updateMeasureVisibility() {
-        boolean visible = connected && !gatheringData;
-        if (measure != null) {
-            measure.setVisible(visible);
+        if (startMeasuringButton != null) {
+            startMeasuringButton.setVisible(connected && !gatheringData);
+        }
+        if (stopMeasuringButton != null) {
+            stopMeasuringButton.setVisible(connected && gatheringData);
         }
     }
 
@@ -218,7 +224,8 @@ public class InfoMoreDetailFragment extends Fragment
         super.onCreateOptionsMenu(menu, inflater);
         menu.clear();
         inflater.inflate(R.menu.menu_data, menu);
-        measure = menu.findItem(R.id.take_measurement_button);
+        startMeasuringButton = menu.findItem(R.id.start_measuring_button);
+        stopMeasuringButton = menu.findItem(R.id.stop_measuring_button);
         // Only have connect visible if we aren't running any data gathering
         updateMeasureVisibility();
     }
@@ -226,8 +233,11 @@ public class InfoMoreDetailFragment extends Fragment
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case R.id.take_measurement_button:
-                gatherData();
+            case R.id.start_measuring_button:
+                startGatheringData();
+                return true;
+            case R.id.stop_measuring_button:
+                stopGatheringData();
                 return true;
         }
         return false;
@@ -314,60 +324,6 @@ public class InfoMoreDetailFragment extends Fragment
     /** Establishes a connection and waits for the data gathering to commence */
     private void establishConnection() {
         simulator = ConnectionSimulator.getInstance();
-
-        // Create a new directory in groundwater for the incoming data
-        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-SS");
-        String name = "Collection-" + dateFormat.format(new Date());
-        idh.setCurrentLiveData(name);
-        idh.setProcessingLiveData(true);
-
-        // Create store for the bursts
-        List<SingleOrManyBursts> singles = new ArrayList<>();
-        this.currentLiveBursts = new SingleOrManyBursts(singles, null, false);
-        idh.silentlySelectCollectionData(this.currentLiveBursts);
-
-        AsyncTask.execute(
-                new Runnable() {
-                    @Override
-                    public void run() {
-                        // Connect to our simulated connection
-                        InternalDataHandler idh = InternalDataHandler.getInstance();
-                        List<File> prevAndCurrent = new ArrayList<>();
-                        boolean firstTime = true;
-                        while (simulator.getConnecitonLive()) {
-                            while (!simulator.getTransientFiles().isEmpty()
-                                    || simulator.getDataReady()) {
-
-                                // New data therefore we can create the folder to store the data in
-                                if (firstTime) {
-                                    File file = idh.addNewDirectory(idh.getCurrentLiveData());
-                                    currentLiveBursts.setFile(file);
-                                    firstTime = false;
-                                }
-
-                                File polledFile = simulator.pollData();
-                                if (polledFile != null) {
-                                    prevAndCurrent.add(polledFile);
-                                }
-                                // Wait for two files so phase difference can be generated
-                                if (prevAndCurrent.size() > 1) {
-                                    File previousFile = prevAndCurrent.get(0);
-                                    File currentFile = prevAndCurrent.get(1);
-                                    if (previousFile != null) {
-                                        idh.addFileToDirectory(
-                                                idh.getCurrentLiveData(), previousFile);
-                                        processLiveData(
-                                                previousFile,
-                                                currentFile,
-                                                !simulator.getDataReady());
-                                    }
-                                    prevAndCurrent.remove(0);
-                                }
-                            }
-                        }
-                        simulator.disconnect();
-                    }
-                });
     }
 
     /**
@@ -393,11 +349,22 @@ public class InfoMoreDetailFragment extends Fragment
     }
 
     /** Called to initialise the data gathering phase */
-    private void gatherData() {
+    private void startGatheringData() {
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
+        prevAndCurrent = new ArrayList<>();
+        firstTime = true;
+        webview.reload();
         simulator.beginDataGathering();
         this.gatheringData = true;
         updateUIState(State.COLLECTING_LIVE_DATA);
+        updateMeasureVisibility();
+    }
+
+    /** Finishes gathering data */
+    private void stopGatheringData() {
+        gatheringData = false;
+        firstTime = true;
+        simulator.stopMeasuring();
         updateMeasureVisibility();
     }
 
@@ -541,5 +508,52 @@ public class InfoMoreDetailFragment extends Fragment
             updateUIState(State.INITIAL);
         }
         updateMeasureVisibility();
+    }
+
+    @Override
+    public void onGatheringDataChange(boolean gatheringData) {
+        this.gatheringData = gatheringData;
+        updateMeasureVisibility();
+        if (!gatheringData) {
+            updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+        }
+    }
+
+    @Override
+    public void fileReady(File newFIle) {
+        simulator = ConnectionSimulator.getInstance();
+        if (firstTime) {
+            // Create a new directory in groundwater for the incoming data
+            SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-SS");
+            String name = "Collection-" + dateFormat.format(new Date());
+            idh.setCurrentLiveData(name);
+            idh.setProcessingLiveData(true);
+
+            // Add empty cache entry
+            cache.put(idh.getCurrentLiveData(), new ArrayList<PlotDataGenerator3D>());
+
+            // Create store for the bursts
+            List<SingleOrManyBursts> singles = new ArrayList<>();
+            this.currentLiveBursts = new SingleOrManyBursts(singles, null, false);
+            idh.silentlySelectCollectionData(this.currentLiveBursts);
+
+            File file = idh.addNewDirectory(idh.getCurrentLiveData());
+            currentLiveBursts.setFile(file);
+            firstTime = false;
+        }
+
+        if (newFIle != null) {
+            prevAndCurrent.add(newFIle);
+        }
+        // Wait for two files so phase difference can be generated
+        if (prevAndCurrent.size() > 1) {
+            File previousFile = prevAndCurrent.get(0);
+            File currentFile = prevAndCurrent.get(1);
+            if (previousFile != null) {
+                idh.addFileToDirectory(idh.getCurrentLiveData(), previousFile);
+                processLiveData(previousFile, currentFile, !simulator.getDataReady());
+            }
+            prevAndCurrent.remove(0);
+        }
     }
 }

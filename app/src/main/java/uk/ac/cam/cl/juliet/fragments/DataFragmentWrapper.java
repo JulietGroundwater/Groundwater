@@ -22,7 +22,6 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CheckBox;
 import android.widget.Toast;
 import com.microsoft.graph.concurrency.ICallback;
 import com.microsoft.graph.core.ClientException;
@@ -241,14 +240,12 @@ public class DataFragmentWrapper extends Fragment
         if (context == null) return;
         final Dialog dialog = new Dialog(context);
         dialog.setContentView(R.layout.dialog_upload_files);
-        final CheckBox deleteAfterUploadingCheckbox =
-                dialog.findViewById(R.id.deleteAfterUploadingCheckbox);
         dialog.findViewById(R.id.uploadButton)
                 .setOnClickListener(
                         new Button.OnClickListener() {
                             @Override
                             public void onClick(View v) {
-                                uploadAllUnsyncedFiles(deleteAfterUploadingCheckbox.isChecked());
+                                uploadAllUnsyncedFiles();
                                 dialog.cancel();
                             }
                         });
@@ -263,20 +260,16 @@ public class DataFragmentWrapper extends Fragment
         dialog.show();
     }
 
-    /**
-     * Uploads all unsynced files to OneDrive.
-     *
-     * @param deleteAfterUploading true if files should be deleted after uploading; false to keep
-     *     files on device after uploading
-     */
-    private void uploadAllUnsyncedFiles(boolean deleteAfterUploading) {
+    /** Uploads all unsynced files to OneDrive. */
+    private void uploadAllUnsyncedFiles() {
         try {
             currentFragment.uploadUnsyncedFiles();
         } catch (IOException io) {
             Toast.makeText(
-                    getContext(),
-                    "There was something wrong with the file data!",
-                    Toast.LENGTH_LONG);
+                            getContext(),
+                            "There was something wrong with the file data!",
+                            Toast.LENGTH_LONG)
+                    .show();
             io.printStackTrace();
         }
     }

@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import uk.ac.cam.cl.juliet.computationengine.Config;
+import uk.ac.cam.cl.juliet.fragments.InfoMoreDetailFragment;
 
 /** Our simulation for a connection to the radar device */
 public class ConnectionSimulator implements IConnection {
@@ -87,7 +88,35 @@ public class ConnectionSimulator implements IConnection {
 
     @Override
     public void dataFinished() {
-        disconnect();
+        dataReady = false;
+        // Make sure we're on UI thread
+        for (ConnectionListener listener : listeners) {
+            if (listener instanceof InfoMoreDetailFragment) {
+                final InfoMoreDetailFragment fragment = (InfoMoreDetailFragment) listener;
+                fragment.getActivity()
+                        .runOnUiThread(
+                                new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        fragment.onGatheringDataChange(false);
+                                    }
+                                });
+            }
+        }
+    }
+
+    public void stopMeasuring() {
+        this.dataReady = false;
+        if (device != null) {
+            device.stopMeasuring();
+        }
+    }
+
+    public void addFile(File file) {
+        transientFiles.add(file);
+        for (ConnectionListener listener : listeners) {
+            listener.fileReady(file);
+        }
     }
 
     public ConcurrentLinkedQueue<File> getTransientFiles() {
@@ -104,5 +133,9 @@ public class ConnectionSimulator implements IConnection {
 
     public interface ConnectionListener {
         void onConnectionChange(boolean isConnected);
+
+        void onGatheringDataChange(boolean gatheringData);
+
+        void fileReady(File file);
     }
 }
