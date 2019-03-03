@@ -1,15 +1,12 @@
 package uk.ac.cam.cl.juliet.fragments;
 
-import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -27,6 +24,7 @@ import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.activities.MainActivity;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
+import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
@@ -220,65 +218,30 @@ public class DataFragment extends Fragment
      * displaying the list of files to the plot of the collection.
      */
     private void plotCollection() {
-        if (getActivity() instanceof MainActivity) {
-            ((MainActivity) getActivity()).showChartScreen(false);
-        }
-        InternalDataHandler idh = InternalDataHandler.getInstance();
-        idh.setCollectionSelected(currentNode);
-    }
-
-    /**
-     * Returns a list of all data files that are stored on the device.
-     *
-     * @return an ArrayList of data files stored on the device
-     */
-    private SingleOrManyBursts getRootNode() {
-        InternalDataHandler idh = InternalDataHandler.getInstance();
-        List<SingleOrManyBursts> files = new ArrayList<>();
-
-        File groundwater;
-
-        if (ContextCompat.checkSelfPermission(
-                        getActivity(), Manifest.permission.READ_EXTERNAL_STORAGE)
-                == PackageManager.PERMISSION_GRANTED) {
-
-            groundwater = idh.getRoot();
-            try {
-                files = getDataFiles(groundwater).getListOfBursts();
-            } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
-                e.printStackTrace();
-            }
+        Context context = getContext();
+        if (context == null) return;
+        if (ConnectionSimulator.getInstance().getDataReady()) {
+            // Currently receiving live data: not safe to plot this collection so show a dialog
+            new AlertDialog.Builder(context)
+                    .setTitle(R.string.data_collection_in_progress)
+                    .setMessage(R.string.cant_plot_collection_while_live_message)
+                    .setPositiveButton(
+                            R.string.dismiss,
+                            new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    dialog.cancel();
+                                }
+                            })
+                    .show();
         } else {
-            return null;
-        }
-
-        // TODO: Check for OneDrive sync
-        return new SingleOrManyBursts(files, groundwater, false);
-    }
-
-    /**
-     * Recursively searches the file structure, starting at the passed file, finding all data
-     * folders and files that can be displayed.
-     *
-     * @param folder The folder from which to start the search
-     * @return A SingleOrManyBursts instance containing the tree of files
-     */
-    private SingleOrManyBursts getDataFiles(File folder) {
-        SingleOrManyBursts result;
-        if (folder.isFile()) {
-            result =
-                    new SingleOrManyBursts(
-                            (Burst) null, folder, false); // TODO: Check for OneDrive sync
-        } else {
-            List<SingleOrManyBursts> values = new ArrayList<>();
-            result = new SingleOrManyBursts(values, folder, false);
-            for (File innerFile : folder.listFiles()) {
-                SingleOrManyBursts singleOrManyBursts = getDataFiles(innerFile);
-                values.add(singleOrManyBursts);
+            // Not receiving live data so safe to plot this collection
+            if (getActivity() instanceof MainActivity) {
+                ((MainActivity) getActivity()).showChartScreen(false);
             }
-            result.setFile(folder);
+            InternalDataHandler idh = InternalDataHandler.getInstance();
+            idh.setCollectionSelected(currentNode);
         }
-        return result;
     }
 
     /**
