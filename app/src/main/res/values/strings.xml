@@ -55,7 +55,7 @@
     <string name="attenuators">Attenuators:</string>
     <string name="set">Set</string>
     <string name="no_single_file_selected_message">No file selected!\n\nChoose an individual file from the Data screen and it will be plotted here.</string>
-    <string name="no_collection_selected_message">No files selected!\n\nOpen a collection of files from the Data screen and press "plot all files" to see them plotted together here.</string>
+    <string name="no_collection_selected_message">No files selected!\n\nTo plot a collection of files, either choose a folder from the Data screen and select \"plot all files\", or connect to a device and begin collecting live data.</string>
     <string name="data_collection_in_progress">Data collection in progress</string>
     <string name="cant_plot_collection_while_live_message">You can\'t plot a collection while data collection is in progress.</string>
     <string name="dismiss">Dismiss</string>
