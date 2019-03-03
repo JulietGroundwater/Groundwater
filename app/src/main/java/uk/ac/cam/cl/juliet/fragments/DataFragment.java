@@ -376,54 +376,59 @@ public class DataFragment extends Fragment
         final InternalDataHandler idh = InternalDataHandler.getInstance();
         final GraphServiceController gsc = new GraphServiceController();
 
+        uploadFiles();
+
         // First check for the folder
-        gsc.getFolder(
-                idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
-                new ICallback<DriveItem>() {
-
-                    @Override
-                    public void success(DriveItem driveItem) {
-                        // Folder exists so add folder to synced and begin adding files
-                        InternalDataHandler idh = InternalDataHandler.getInstance();
-                        try {
-                            idh.addSyncedFile(
-                                    idh.getRelativeFromAbsolute(
-                                            currentDirectory.getAbsolutePath()));
-                        } catch (IOException io) {
-                            io.printStackTrace();
-                        }
-                        uploadFiles();
-                    }
-
-                    @Override
-                    public void failure(ClientException ex) {
-                        // Folder doesn't exist so create it
-                        try {
-                            final String relativePath =
-                                    idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath());
-                            gsc.createFolder(
-                                    relativePath,
-                                    currentDirectory.getName(),
-                                    new ICallback<DriveItem>() {
-                                        @Override
-                                        public void success(DriveItem driveItem) {
-                                            // Folder successfully created - add it and begin
-                                            // uploading
-                                            idh.addSyncedFile(relativePath);
-                                            uploadFiles();
-                                        }
-
-                                        @Override
-                                        public void failure(ClientException ex) {
-                                            System.out.println("Failed to create the folder!");
-                                            ex.printStackTrace();
-                                        }
-                                    });
-                        } catch (IOException io) {
-                            io.printStackTrace();
-                        }
-                    }
-                });
+        //        gsc.getFolder(
+        //                idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+        //                new ICallback<DriveItem>() {
+        //
+        //                    @Override
+        //                    public void success(DriveItem driveItem) {
+        //                        // Folder exists so add folder to synced and begin adding files
+        //                        InternalDataHandler idh = InternalDataHandler.getInstance();
+        //                        try {
+        //                            idh.addSyncedFile(
+        //                                    idh.getRelativeFromAbsolute(
+        //                                            currentDirectory.getAbsolutePath()));
+        //                        } catch (IOException io) {
+        //                            io.printStackTrace();
+        //                        }
+        //                        uploadFiles();
+        //                    }
+        //
+        //                    @Override
+        //                    public void failure(ClientException ex) {
+        //                        // Folder doesn't exist so create it
+        //                        try {
+        //                            final String relativePath =
+        //
+        // idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath());
+        //                            gsc.createFolder(
+        //                                    relativePath,
+        //                                    currentDirectory.getName(),
+        //                                    new ICallback<DriveItem>() {
+        //                                        @Override
+        //                                        public void success(DriveItem driveItem) {
+        //                                            // Folder successfully created - add it and
+        // begin
+        //                                            // uploading
+        //                                            idh.addSyncedFile(relativePath);
+        //                                            uploadFiles();
+        //                                        }
+        //
+        //                                        @Override
+        //                                        public void failure(ClientException ex) {
+        //                                            System.out.println("Failed to create the
+        // folder!");
+        //                                            ex.printStackTrace();
+        //                                        }
+        //                                    });
+        //                        } catch (IOException io) {
+        //                            io.printStackTrace();
+        //                        }
+        //                    }
+        //                });
     }
 
     /** A method for beginning to upload all of the files to One Drive */
