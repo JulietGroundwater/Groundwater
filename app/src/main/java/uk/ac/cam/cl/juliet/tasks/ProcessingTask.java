@@ -19,28 +19,27 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
 
     public ProcessingTask(IProcessingCallback task) {
         try {
-            generateBursts();
             listOfBursts =
                     InternalDataHandler.getInstance().getCollectionSelected().getListOfBursts();
             listener = task;
         } catch (SingleOrManyBursts.AccessSingleBurstAsManyException e) {
             e.printStackTrace();
-        } catch (InvalidBurstException e) {
-            e.printStackTrace();
         }
     }
 
-    private void generateBursts() throws InvalidBurstException {
+    private void generateBursts(int from, int to) throws InvalidBurstException {
         // Generate the bursts (done here so load time is quicker)
         InternalDataHandler idh = InternalDataHandler.getInstance();
         List<SingleOrManyBursts> list = new ArrayList<>();
         File file = idh.getFileByName(idh.getCollectionSelected().getNameToDisplay());
         SingleOrManyBursts many = idh.getCollectionSelected();
         if (file.listFiles() != null) {
-            for (int i = 0; i < file.listFiles().length; i++) {
-                File innerFile = file.listFiles()[i];
+            for (int i = from; i < to; i++) {
                 try {
-                    many.getListOfBursts().get(i).setSingleBurst(new Burst(innerFile, 1));
+                    if (i < listOfBursts.size()) {
+                        File innerFile = file.listFiles()[i];
+                        many.getListOfBursts().get(i).setSingleBurst(new Burst(innerFile, 1));
+                    }
                 } catch (SingleOrManyBursts.AccessSingleBurstAsManyException
                         | SingleOrManyBursts.AccessManyBurstsAsSingleException e) {
                     e.printStackTrace();
@@ -58,6 +57,12 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
             try {
                 do {
                     burstList.clear();
+                    try {
+                        // Only generate the bursts we need now to avoid excessive GC
+                        generateBursts(current, current + BATCH_SIZE - 1);
+                    } catch (InvalidBurstException ibe) {
+                        ibe.printStackTrace();
+                    }
                     for (int i = current; i < current + BATCH_SIZE - 1; i++) {
                         if (i >= listOfBursts.size()) {
                             break;

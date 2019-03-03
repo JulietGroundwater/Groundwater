@@ -28,6 +28,10 @@ function showGraph(svg, height, width) {
   var zMin = Math.min.apply(null, d3.map(data, function(d) {return d.z;}).keys())
   var zMax = Math.max.apply(null, d3.map(data, function(d) {return d.z;}).keys())
 
+  // Set the modulo for the x-axis
+  var numberOfTicks = 10;
+  var modulo = Math.floor(myGroups.length / numberOfTicks);
+
   // Build X scales and axis
   var x = d3.scaleBand()
     .range([ 0, width ])
@@ -36,7 +40,7 @@ function showGraph(svg, height, width) {
   svg.append("g")
     .style("font-size", 15)
     .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x).tickFormat(d3.formatPrefix(".1", 1e1)).tickValues(x.domain().filter(function(d,i){ return !(i%10)})))
+    .call(d3.axisBottom(x).tickFormat(d3.format(",d")).tickValues(x.domain().filter(function(d,i){ return !(i%modulo)})))
     .select(".domain").remove()
 
   // Build Y scales and axis - bit messy
