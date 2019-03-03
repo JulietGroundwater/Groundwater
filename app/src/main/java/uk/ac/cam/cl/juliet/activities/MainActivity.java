@@ -19,24 +19,21 @@ import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
-import uk.ac.cam.cl.juliet.fragments.DataFragment;
+import uk.ac.cam.cl.juliet.fragments.DataFragmentWrapper;
 import uk.ac.cam.cl.juliet.fragments.DisplayFragment;
 import uk.ac.cam.cl.juliet.fragments.SettingsFragment;
 import uk.ac.cam.cl.juliet.fragments.ToggleableSwipeViewPager;
 
-/**
- * The home screen for the application.
- *
- * @author Ben Cole
- */
+/** The home screen for the application. */
 public class MainActivity extends AppCompatActivity
         implements BottomNavigationView.OnNavigationItemSelectedListener {
 
+    private final int READ_CONSTANT = 1;
+    private final int OFF_SCREEN_LIMIT = 10;
     private BottomNavigationView bottomNavigation;
     private DisplayFragment displayFragment;
-    private DataFragment dataFragment;
+    private DataFragmentWrapper dataFragment;
     private SettingsFragment settingsFragment;
-    private final int READ_CONSTANT = 1;
     private FragmentManager fragmentManager;
     private ToggleableSwipeViewPager viewPager;
     private List<PermissionListener> permissionListeners;
@@ -49,7 +46,7 @@ public class MainActivity extends AppCompatActivity
 
         // Create an instance of each fragment
         displayFragment = new DisplayFragment();
-        dataFragment = new DataFragment();
+        dataFragment = new DataFragmentWrapper();
         settingsFragment = new SettingsFragment();
 
         // Set up a ViewPager to handle displaying the three Fragments
@@ -68,14 +65,25 @@ public class MainActivity extends AppCompatActivity
         bottomNavigation.setOnNavigationItemSelectedListener(this);
         bottomNavigation.setSelectedItemId(R.id.action_info);
 
+        // To avoid needlessly re-rendering fragments when switching
+        viewPager.setOffscreenPageLimit(OFF_SCREEN_LIMIT);
+
         // Create listener list
         permissionListeners = new ArrayList<>();
 
         // Get user permission to access file system
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE)
-                != PackageManager.PERMISSION_GRANTED) {
+                        != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(
+                                this, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) {
             ActivityCompat.requestPermissions(
-                    this, new String[] {Manifest.permission.READ_EXTERNAL_STORAGE}, READ_CONSTANT);
+                    this,
+                    new String[] {
+                        Manifest.permission.READ_EXTERNAL_STORAGE,
+                        Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    },
+                    READ_CONSTANT);
         }
     }
 
@@ -104,7 +112,6 @@ public class MainActivity extends AppCompatActivity
      */
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem menuItem) {
-        // TODO: Find way to not have to recreate Fragment objects
         switch (menuItem.getItemId()) {
             case R.id.action_info:
                 viewPager.setCurrentItem(0, false);
@@ -120,6 +127,16 @@ public class MainActivity extends AppCompatActivity
                 return true;
         }
         return false;
+    }
+
+    /** Displays the info screen containing charts. */
+    public void showChartScreen(boolean singlePlot) {
+        bottomNavigation.setSelectedItemId(R.id.action_info);
+        if (singlePlot) {
+            displayFragment.showSinglePlotScreen();
+        } else {
+            displayFragment.showCollectionPlotScreen();
+        }
     }
 
     /**

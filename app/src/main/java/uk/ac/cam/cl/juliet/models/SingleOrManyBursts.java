@@ -1,15 +1,15 @@
 package uk.ac.cam.cl.juliet.models;
 
+import java.io.File;
+import java.io.Serializable;
 import java.util.List;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 
 /**
  * Encapsulates both single Bursts and lists of Bursts as a single data type to be displayed in a
  * list.
- *
- * @author Ben Cole
  */
-public class SingleOrManyBursts {
+public class SingleOrManyBursts implements Serializable {
 
     /** Internally used to specify which type an instance contains. */
     private enum Type {
@@ -26,19 +26,18 @@ public class SingleOrManyBursts {
     private List<SingleOrManyBursts> listOfBursts;
     private Burst singleBurst;
     private boolean syncedToOneDrive;
-    private String fileName;
-    private String directoryName;
+    private File file;
 
     /**
      * Creates an instance for a single Burst object.
      *
      * @param burst The Burst to be contained
      */
-    public SingleOrManyBursts(Burst burst, boolean isSyncedToOneDrive, String fileName) {
+    public SingleOrManyBursts(Burst burst, File file, boolean isSyncedToOneDrive) {
+        this.file = file;
         this.singleBurst = burst;
-        type = Type.SINGLE;
-        this.fileName = fileName;
         syncedToOneDrive = isSyncedToOneDrive;
+        type = Type.SINGLE;
     }
 
     /**
@@ -47,11 +46,11 @@ public class SingleOrManyBursts {
      * @param listOfBursts The List of SingleOrManyBurst instances to be contained
      */
     public SingleOrManyBursts(
-            List<SingleOrManyBursts> listOfBursts, boolean isSyncedToOneDrive, String dirName) {
+            List<SingleOrManyBursts> listOfBursts, File folder, boolean isSyncedToOneDrive) {
+        this.file = folder;
         this.listOfBursts = listOfBursts;
         type = Type.MANY;
         syncedToOneDrive = isSyncedToOneDrive;
-        this.directoryName = dirName;
     }
 
     /**
@@ -77,10 +76,11 @@ public class SingleOrManyBursts {
      *
      * @param burst The burst to set it to
      */
-    public void setSingleBurst(Burst burst) {
-        if (this.singleBurst == null) {
-            this.singleBurst = burst;
+    public void setSingleBurst(Burst burst) throws AccessManyBurstsAsSingleException {
+        if (type == Type.MANY) {
+            throw new AccessManyBurstsAsSingleException();
         }
+        this.singleBurst = burst;
     }
 
     /**
@@ -98,7 +98,11 @@ public class SingleOrManyBursts {
         }
     }
 
-    public void setListOfBursts(List<SingleOrManyBursts> bursts) {
+    public void setListOfBursts(List<SingleOrManyBursts> bursts)
+            throws AccessSingleBurstAsManyException {
+        if (type == Type.SINGLE) {
+            throw new AccessSingleBurstAsManyException();
+        }
         this.listOfBursts = bursts;
     }
 
@@ -123,25 +127,7 @@ public class SingleOrManyBursts {
      * @return the name of this file or collection of files
      */
     public String getNameToDisplay() {
-        switch (type) {
-            case SINGLE:
-                return this.fileName;
-            case MANY:
-                return this.directoryName;
-            default:
-                return "Something went wrong lol";
-        }
-    }
-
-    /**
-     * Returns a human-readable representation of the GPS location of this burst or collection of
-     * bursts.
-     *
-     * @return A human-readable representation of the GPS location
-     */
-    public String getGPSToDisplay() {
-        // TODO: Generate something meaningful here
-        return "GPS coordinates or something here...";
+        return file.getName();
     }
 
     /**
@@ -160,5 +146,13 @@ public class SingleOrManyBursts {
      */
     public boolean getSyncStatus() {
         return syncedToOneDrive;
+    }
+
+    public void setFile(File file) {
+        this.file = file;
+    }
+
+    public File getFile() {
+        return file;
     }
 }

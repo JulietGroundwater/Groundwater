@@ -6,11 +6,7 @@ import android.util.AttributeSet;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
-/**
- * Offers the same functionality as a ViewPager, except you can disable sideways swiping.
- *
- * @author Ben Cole
- */
+/** Offers the same functionality as a ViewPager, except you can disable sideways swiping. */
 public class ToggleableSwipeViewPager extends ViewPager {
 
     private boolean allowSwiping = true;

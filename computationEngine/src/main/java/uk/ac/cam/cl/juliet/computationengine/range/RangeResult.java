@@ -27,6 +27,10 @@ public class RangeResult {
         this.specCor = specCor;
     }
 
+    public int getSize() {
+        return Rcoarse.size();
+    }
+
     public List<Double> getRcoarse() {
         return new ArrayList<>(Rcoarse);
     }
