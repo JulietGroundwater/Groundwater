@@ -371,30 +371,90 @@ public class DataFragment extends Fragment
 
     /** Uploads the unsynced files in the directory */
     public void uploadUnsyncedFiles() throws IOException {
-        InternalDataHandler idh = InternalDataHandler.getInstance();
-        GraphServiceController gsc = new GraphServiceController();
+        final InternalDataHandler idh = InternalDataHandler.getInstance();
+        final GraphServiceController gsc = new GraphServiceController();
+
+        // First check for the folder
+        gsc.getFolder(
+                idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                new ICallback<DriveItem>() {
+
+                    @Override
+                    public void success(DriveItem driveItem) {
+                        // Folder exists so add folder to synced and begin adding files
+                        InternalDataHandler idh = InternalDataHandler.getInstance();
+                        try {
+                            idh.addSyncedFile(
+                                    idh.getRelativeFromAbsolute(
+                                            currentDirectory.getAbsolutePath()));
+                        } catch (IOException io) {
+                            io.printStackTrace();
+                        }
+                        uploadFiles();
+                    }
+
+                    @Override
+                    public void failure(ClientException ex) {
+                        // Folder doesn't exist so create it
+                        try {
+                            final String relativePath =
+                                    idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath());
+                            gsc.createFolder(
+                                    relativePath,
+                                    currentDirectory.getName(),
+                                    new ICallback<DriveItem>() {
+                                        @Override
+                                        public void success(DriveItem driveItem) {
+                                            // Folder successfully created - add it and begin
+                                            // uploading
+                                            idh.addSyncedFile(relativePath);
+                                            uploadFiles();
+                                        }
+
+                                        @Override
+                                        public void failure(ClientException ex) {
+                                            System.out.println("Failed to create the folder!");
+                                            ex.printStackTrace();
+                                        }
+                                    });
+                        } catch (IOException io) {
+                            io.printStackTrace();
+                        }
+                    }
+                });
+    }
+
+    /** A method for beginning to upload all of the files to One Drive */
+    private void uploadFiles() {
+        final InternalDataHandler idh = InternalDataHandler.getInstance();
+        final GraphServiceController gsc = new GraphServiceController();
+        // TODO: Maybe batch these for performance issues
         for (final SingleOrManyBursts singleOrMany : filesList) {
             if (singleOrMany.getIsSingleBurst()) {
-                gsc.uploadDatafile(
-                        idh.getRelativeFromAbsolute(singleOrMany.getFile().getAbsolutePath()),
-                        idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
-                        idh.convertToBytes(singleOrMany.getFile()),
-                        new ICallback<DriveItem>() {
-                            @Override
-                            public void success(DriveItem driveItem) {
-                                singleOrMany.setSyncStatus(true);
-                                adapter.notifyDataSetChanged();
-                            }
+                try {
+                    gsc.uploadDatafile(
+                            idh.getRelativeFromAbsolute(singleOrMany.getFile().getAbsolutePath()),
+                            idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                            idh.convertToBytes(singleOrMany.getFile()),
+                            new ICallback<DriveItem>() {
+                                @Override
+                                public void success(DriveItem driveItem) {
+                                    singleOrMany.setSyncStatus(true);
+                                    adapter.notifyDataSetChanged();
+                                }
 
-                            @Override
-                            public void failure(ClientException ex) {
-                                Toast.makeText(
-                                        getContext(),
-                                        "Failed to upload: " + singleOrMany.getNameToDisplay(),
-                                        Toast.LENGTH_LONG);
-                                ex.printStackTrace();
-                            }
-                        });
+                                @Override
+                                public void failure(ClientException ex) {
+                                    Toast.makeText(
+                                            getContext(),
+                                            "Failed to upload: " + singleOrMany.getNameToDisplay(),
+                                            Toast.LENGTH_LONG);
+                                    ex.printStackTrace();
+                                }
+                            });
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
             }
         }
     }
