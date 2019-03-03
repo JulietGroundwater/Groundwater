@@ -2,6 +2,7 @@ package uk.ac.cam.cl.juliet.tasks;
 
 import android.os.AsyncTask;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
@@ -27,11 +28,13 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    private void generateBursts(int from, int to) throws InvalidBurstException {
+    private void generateBursts(int from, int to) throws InvalidBurstException, IOException {
         // Generate the bursts (done here so load time is quicker)
         InternalDataHandler idh = InternalDataHandler.getInstance();
-        List<SingleOrManyBursts> list = new ArrayList<>();
-        File file = idh.getFileByName(idh.getCollectionSelected().getNameToDisplay());
+        File file =
+                idh.getFileByName(
+                        idh.getRelativeFromAbsolute(
+                                idh.getCollectionSelected().getFile().getAbsolutePath()));
         SingleOrManyBursts many = idh.getCollectionSelected();
         if (file.listFiles() != null) {
             for (int i = from; i < to; i++) {
@@ -62,6 +65,8 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
                         generateBursts(current, current + BATCH_SIZE - 1);
                     } catch (InvalidBurstException ibe) {
                         ibe.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
                     for (int i = current; i < current + BATCH_SIZE - 1; i++) {
                         if (i >= listOfBursts.size()) {

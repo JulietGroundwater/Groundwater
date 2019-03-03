@@ -3,6 +3,8 @@ package uk.ac.cam.cl.juliet.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -446,9 +448,11 @@ public class DataFragment extends Fragment
                                 @Override
                                 public void failure(ClientException ex) {
                                     Toast.makeText(
-                                            getContext(),
-                                            "Failed to upload: " + singleOrMany.getNameToDisplay(),
-                                            Toast.LENGTH_LONG);
+                                                    getContext(),
+                                                    "Failed to upload: "
+                                                            + singleOrMany.getNameToDisplay(),
+                                                    Toast.LENGTH_LONG)
+                                            .show();
                                     ex.printStackTrace();
                                 }
                             });
@@ -485,6 +489,18 @@ public class DataFragment extends Fragment
 
     /** Asynchronously reloads and synchronously redraws the list of files. */
     public void refreshFiles() {
+        if (!isNetworkConnected()) {
+            try {
+                AuthenticationManager auth = AuthenticationManager.getInstance();
+                if (auth.isUserLoggedIn()) {
+                    AuthenticationManager.getInstance().disconnect();
+                    listener.notifyNoInternet();
+                }
+                Toast.makeText(getContext(), "No Internet Connection", Toast.LENGTH_SHORT).show();
+            } catch (MsalClientException ex) {
+                ex.printStackTrace();
+            }
+        }
         new RefreshFilesTask(currentDirectory, this)
                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
@@ -571,6 +587,17 @@ public class DataFragment extends Fragment
         }
     }
 
+    private boolean isNetworkConnected() {
+        ConnectivityManager conManager =
+                (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = conManager.getActiveNetworkInfo();
+        if (netInfo == null) {
+            return false;
+        } else {
+            return netInfo.isConnectedOrConnecting();
+        }
+    }
+
     /**
      * Used by a wrapper class so that this instance can be replaced with another instance to
      * display the contents of the folder that was selected.
@@ -599,5 +626,8 @@ public class DataFragment extends Fragment
 
         /** Notifies the container that this fragment is now the active one */
         void notifyIsActiveFragment(DataFragment activeFragment);
+
+        /** Notify on network changed */
+        void notifyNoInternet();
     }
 }

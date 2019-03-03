@@ -207,7 +207,7 @@ public class InternalDataHandler {
     }
 
     public File getFileByName(String filename) {
-        return new File(root.getAbsolutePath(), filename);
+        return new File(root.getParentFile().getAbsolutePath(), filename);
     }
 
     public File getSingleSelectedDataFile() {

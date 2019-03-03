@@ -286,6 +286,12 @@ public class DataFragmentWrapper extends Fragment
         currentFragment = activeFragment;
     }
 
+    @Override
+    public void notifyNoInternet() {
+        displayCorrectAuthButtons();
+        updateUploadAllFilesButtonVisibility();
+    }
+
     /** Begins the authentication process with Microsoft */
     private void connect() {
         // Get the Authentication Manager Instance
@@ -438,16 +444,18 @@ public class DataFragmentWrapper extends Fragment
 
         @Override
         public void success(DriveItem driveItem) {
-            Toast.makeText(getContext(), "Found root folder in One Drive", Toast.LENGTH_SHORT);
+            Toast.makeText(getContext(), "Found root folder in One Drive", Toast.LENGTH_SHORT)
+                    .show();
             InternalDataHandler.getInstance().addSyncedFile(InternalDataHandler.ROOT_NAME);
         }
 
         @Override
         public void failure(ClientException ex) {
             Toast.makeText(
-                    getContext(),
-                    "Couldn't find root folder in One Drive so making one",
-                    Toast.LENGTH_SHORT);
+                            getContext(),
+                            "Couldn't find root folder in One Drive so making one",
+                            Toast.LENGTH_SHORT)
+                    .show();
             GraphServiceController gsc = new GraphServiceController();
             gsc.createFolder(
                     "",
@@ -456,9 +464,10 @@ public class DataFragmentWrapper extends Fragment
                         @Override
                         public void success(DriveItem driveItem) {
                             Toast.makeText(
-                                    currentFragment.getContext(),
-                                    InternalDataHandler.ROOT_NAME + " was created!",
-                                    Toast.LENGTH_SHORT);
+                                            currentFragment.getContext(),
+                                            InternalDataHandler.ROOT_NAME + " was created!",
+                                            Toast.LENGTH_SHORT)
+                                    .show();
                             InternalDataHandler.getInstance()
                                     .addSyncedFile(InternalDataHandler.ROOT_NAME);
                         }
@@ -466,7 +475,10 @@ public class DataFragmentWrapper extends Fragment
                         @Override
                         public void failure(ClientException ex) {
                             Toast.makeText(
-                                    getContext(), "Something went wrong!", Toast.LENGTH_SHORT);
+                                            getContext(),
+                                            "Something went wrong!",
+                                            Toast.LENGTH_SHORT)
+                                    .show();
                             ex.printStackTrace();
                         }
                     });
