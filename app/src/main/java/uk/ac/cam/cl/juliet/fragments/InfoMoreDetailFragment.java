@@ -22,6 +22,8 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.gson.Gson;
 import java.io.File;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -315,7 +317,8 @@ public class InfoMoreDetailFragment extends Fragment
         simulator = ConnectionSimulator.getInstance();
 
         // Create a new directory in groundwater for the incoming data
-        String name = new Date().toString();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-SS");
+        String name = "Collection-" + dateFormat.format(new Date());
         idh.setCurrentLiveData(name);
         idh.setProcessingLiveData(true);
 

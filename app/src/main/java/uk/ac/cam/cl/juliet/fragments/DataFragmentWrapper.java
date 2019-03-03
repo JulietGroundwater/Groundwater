@@ -226,8 +226,9 @@ public class DataFragmentWrapper extends Fragment
     public void uploadFile(
             DataFragment parent,
             FilesListAdapter.FilesListViewHolder viewHolder,
-            SingleOrManyBursts file) {
-        new UploadFileTask(parent, viewHolder).execute(file);
+            SingleOrManyBursts file,
+            SingleOrManyBursts folder) {
+        new UploadFileTask(parent, viewHolder, folder).execute(file);
     }
 
     /** Displays a dialog for syncing the files with the server. */
@@ -340,13 +341,17 @@ public class DataFragmentWrapper extends Fragment
         private DataFragment parent;
         private FilesListAdapter.FilesListViewHolder viewHolder;
         private GraphServiceController gsc;
+        private boolean success;
+        private SingleOrManyBursts folder;
 
         public UploadFileTask(
-                DataFragment parent, FilesListAdapter.FilesListViewHolder viewHolder) {
+                DataFragment parent, FilesListAdapter.FilesListViewHolder viewHolder, SingleOrManyBursts folder) {
             super();
             this.parent = parent;
             this.viewHolder = viewHolder;
             this.gsc = new GraphServiceController();
+            this.success = false;
+            this.folder = folder;
         }
 
         @Override
@@ -368,6 +373,7 @@ public class DataFragmentWrapper extends Fragment
                 if (auth.isUserLoggedIn()) {
                     gsc.uploadDatafile(
                             idh.getRelativeFromAbsolute(file.getFile().getAbsolutePath()),
+                            idh.getRelativeFromAbsolute(folder.getFile().getAbsolutePath()),
                             idh.convertToBytes(file.getFile()),
                             new ICallback<DriveItem>() {
                                 @Override
@@ -385,6 +391,7 @@ public class DataFragmentWrapper extends Fragment
 
                                 @Override
                                 public void failure(ClientException ex) {
+                                    System.out.println("FILE FAILURE");
                                     ex.printStackTrace();
                                 }
                             });

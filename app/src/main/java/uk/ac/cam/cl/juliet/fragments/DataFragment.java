@@ -345,7 +345,7 @@ public class DataFragment extends Fragment
     private void uploadFile(
             SingleOrManyBursts file, FilesListAdapter.FilesListViewHolder viewHolder) {
         if (listener == null) return;
-        listener.uploadFile(this, viewHolder, file);
+        listener.uploadFile(this, viewHolder, file, currentNode);
     }
 
     /** Called on permission granted - refresh file listing */
@@ -499,7 +499,8 @@ public class DataFragment extends Fragment
         void uploadFile(
                 DataFragment parent,
                 FilesListAdapter.FilesListViewHolder viewHolder,
-                SingleOrManyBursts file);
+                SingleOrManyBursts file,
+                SingleOrManyBursts folder);
 
         /** Notifies the container that this fragment is now the active one */
         void notifyIsActiveFragment(DataFragment activeFragment);
