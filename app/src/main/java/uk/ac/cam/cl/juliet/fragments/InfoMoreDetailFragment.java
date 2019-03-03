@@ -22,7 +22,6 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.gson.Gson;
 import java.io.File;
-import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;

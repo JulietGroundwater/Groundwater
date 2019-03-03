@@ -93,10 +93,14 @@ public class DataFragmentWrapper extends Fragment
         try {
             AuthenticationManager authManager = AuthenticationManager.getInstance();
             PublicClientApplication clientApp = authManager.getPublicClient();
+            GraphServiceController gsc = new GraphServiceController();
             List<User> users = clientApp.getUsers();
             if (users != null && users.size() == 1) {
                 // There is a cached user so silently login
                 authManager.acquireTokenSilently(users.get(0), true, this);
+                // Can now do the first check for files
+                gsc.hasGroundwaterFolder(new RootCallback());
+                currentFragment.refreshFiles();
             }
         } catch (MsalClientException ex) {
             ex.printStackTrace();
@@ -266,7 +270,15 @@ public class DataFragmentWrapper extends Fragment
      *     files on device after uploading
      */
     private void uploadAllUnsyncedFiles(boolean deleteAfterUploading) {
-        // TODO: implement
+        try {
+            currentFragment.uploadUnsyncedFiles();
+        } catch (IOException io) {
+            Toast.makeText(
+                    getContext(),
+                    "There was something wrong with the file data!",
+                    Toast.LENGTH_LONG);
+            io.printStackTrace();
+        }
     }
 
     @Override
@@ -307,6 +319,10 @@ public class DataFragmentWrapper extends Fragment
     @Override
     public void onSuccess(AuthenticationResult res) {
         user = res.getUser();
+        // Try and check the files
+        GraphServiceController gsc = new GraphServiceController();
+        gsc.hasGroundwaterFolder(new RootCallback());
+        currentFragment.refreshFiles();
         // Swap visibility of the buttons
         signIn.setVisible(false);
         signOut.setVisible(true);
@@ -345,7 +361,9 @@ public class DataFragmentWrapper extends Fragment
         private SingleOrManyBursts folder;
 
         public UploadFileTask(
-                DataFragment parent, FilesListAdapter.FilesListViewHolder viewHolder, SingleOrManyBursts folder) {
+                DataFragment parent,
+                FilesListAdapter.FilesListViewHolder viewHolder,
+                SingleOrManyBursts folder) {
             super();
             this.parent = parent;
             this.viewHolder = viewHolder;
@@ -413,6 +431,45 @@ public class DataFragmentWrapper extends Fragment
             viewHolder.setSpinnerVisibility(false);
             viewHolder.setSyncStatusVisibility(true);
             parent.notifyFilesChanged();
+        }
+    }
+
+    private class RootCallback implements ICallback<DriveItem> {
+
+        @Override
+        public void success(DriveItem driveItem) {
+            Toast.makeText(getContext(), "Found root folder in One Drive", Toast.LENGTH_SHORT);
+            InternalDataHandler.getInstance().addSyncedFile(InternalDataHandler.ROOT_NAME);
+        }
+
+        @Override
+        public void failure(ClientException ex) {
+            Toast.makeText(
+                    getContext(),
+                    "Couldn't find root folder in One Drive so making one",
+                    Toast.LENGTH_SHORT);
+            GraphServiceController gsc = new GraphServiceController();
+            gsc.createFolder(
+                    "",
+                    InternalDataHandler.ROOT_NAME,
+                    new ICallback<DriveItem>() {
+                        @Override
+                        public void success(DriveItem driveItem) {
+                            Toast.makeText(
+                                    currentFragment.getContext(),
+                                    InternalDataHandler.ROOT_NAME + " was created!",
+                                    Toast.LENGTH_SHORT);
+                            InternalDataHandler.getInstance()
+                                    .addSyncedFile(InternalDataHandler.ROOT_NAME);
+                        }
+
+                        @Override
+                        public void failure(ClientException ex) {
+                            Toast.makeText(
+                                    getContext(), "Something went wrong!", Toast.LENGTH_SHORT);
+                            ex.printStackTrace();
+                        }
+                    });
         }
     }
 }

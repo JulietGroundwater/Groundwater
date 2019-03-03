@@ -31,9 +31,7 @@ public class DriveAnalysisCallback implements ICallback<DriveItem> {
             try {
                 idh.addSyncedFile(
                         idh.getRelativeFromAbsolute(
-                                (currentDirectory.getAbsolutePath())
-                                        + "/"
-                                        + child.name.toUpperCase()));
+                                (currentDirectory.getAbsolutePath()) + "/" + child.name));
             } catch (FileNotFoundException ex) {
                 ex.printStackTrace();
             }

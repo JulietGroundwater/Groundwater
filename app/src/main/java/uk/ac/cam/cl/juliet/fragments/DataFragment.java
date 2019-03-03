@@ -16,9 +16,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+import com.microsoft.graph.concurrency.ICallback;
+import com.microsoft.graph.core.ClientException;
+import com.microsoft.graph.extensions.DriveItem;
 import com.microsoft.identity.client.MsalClientException;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
@@ -362,6 +367,36 @@ public class DataFragment extends Fragment
      */
     public void setDataFragmentListener(DataFragmentListener listener) {
         this.listener = listener;
+    }
+
+    /** Uploads the unsynced files in the directory */
+    public void uploadUnsyncedFiles() throws IOException {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        GraphServiceController gsc = new GraphServiceController();
+        for (final SingleOrManyBursts singleOrMany : filesList) {
+            if (singleOrMany.getIsSingleBurst()) {
+                gsc.uploadDatafile(
+                        idh.getRelativeFromAbsolute(singleOrMany.getFile().getAbsolutePath()),
+                        idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                        idh.convertToBytes(singleOrMany.getFile()),
+                        new ICallback<DriveItem>() {
+                            @Override
+                            public void success(DriveItem driveItem) {
+                                singleOrMany.setSyncStatus(true);
+                                adapter.notifyDataSetChanged();
+                            }
+
+                            @Override
+                            public void failure(ClientException ex) {
+                                Toast.makeText(
+                                        getContext(),
+                                        "Failed to upload: " + singleOrMany.getNameToDisplay(),
+                                        Toast.LENGTH_LONG);
+                                ex.printStackTrace();
+                            }
+                        });
+            }
+        }
     }
 
     @Override
