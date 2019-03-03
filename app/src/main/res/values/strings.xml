@@ -63,5 +63,6 @@
     <string name="please_give_storage_permissions_message">Please give Groundwater access to storage permissions and network access. The app cannot function without the ability to read and write files on this device, and checking your internet connection.</string>
     <string name="update_permissions">Update permissions</string>
     <string name="upload_all">Upload all</string>
-    <string name="upload_unsynchronised_files">Upload unsynchronised files</string>
+    <string name="upload_unsynchronised_files">Upload non-synchronised files?</string>
+    <string name="upload_unsyncronised_files_content">Do you want to upload all files in this directory that have not been synchronised to OneDrive?</string>
 </resources>
