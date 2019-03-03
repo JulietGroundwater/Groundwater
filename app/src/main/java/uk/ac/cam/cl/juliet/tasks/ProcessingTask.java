@@ -56,32 +56,32 @@ public class ProcessingTask extends AsyncTask<Void, Void, Void> {
         PlotDataGenerator3D pdg = null;
         List<Burst> burstList = new ArrayList<>();
         int current = 0;
-        if (listOfBursts.size() > 1) {
-            try {
-                do {
-                    burstList.clear();
-                    try {
-                        // Only generate the bursts we need now to avoid excessive GC
-                        generateBursts(current, current + BATCH_SIZE - 1);
-                    } catch (InvalidBurstException ibe) {
-                        ibe.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+
+        try {
+            do {
+                burstList.clear();
+                try {
+                    // Only generate the bursts we need now to avoid excessive GC
+                    generateBursts(current, current + BATCH_SIZE - 1);
+                } catch (InvalidBurstException ibe) {
+                    ibe.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                for (int i = current; i < current + BATCH_SIZE - 1; i++) {
+                    if (i >= listOfBursts.size()) {
+                        break;
                     }
-                    for (int i = current; i < current + BATCH_SIZE - 1; i++) {
-                        if (i >= listOfBursts.size()) {
-                            break;
-                        }
-                        burstList.add(listOfBursts.get(i).getSingleBurst());
-                    }
-                    pdg = new PlotDataGenerator3D(burstList);
-                    generators.add(pdg);
-                    current += BATCH_SIZE - 1;
-                } while (current + 1 < listOfBursts.size());
-            } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException ex) {
-                ex.printStackTrace();
-            }
+                    burstList.add(listOfBursts.get(i).getSingleBurst());
+                }
+                pdg = new PlotDataGenerator3D(burstList);
+                generators.add(pdg);
+                current += BATCH_SIZE - 1;
+            } while (current + 1 < listOfBursts.size());
+        } catch (SingleOrManyBursts.AccessManyBurstsAsSingleException ex) {
+            ex.printStackTrace();
         }
+
         return null;
     }
 

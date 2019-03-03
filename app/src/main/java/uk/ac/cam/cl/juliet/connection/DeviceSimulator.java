@@ -96,9 +96,9 @@ public class DeviceSimulator {
                                         return;
                                     }
                                     // Otherwise add a file to the queue and notify the connections
+                                    connection.notifyDataReady();
                                     connection.addFile(root.listFiles()[fileIndex]);
                                     queue.add(root.listFiles()[fileIndex]);
-                                    connection.notifyDataReady();
 
                                     // Mimic data gathering by sleeping for a specified time
                                     if (fileIndex != root.listFiles().length - 1) {

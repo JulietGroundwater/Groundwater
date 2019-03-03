@@ -47,11 +47,15 @@ public class LiveProcessingTask extends AsyncTask<Void, Void, List<PlotData3D>> 
         List<PlotData3D> datasets = new ArrayList<>();
         try {
             // Add new SingleOrManyBurst to be passed out later for storage
-            Burst prevBurst = new Burst(this.previousFile, 1);
-            singleOrManyBurstsList.add(new SingleOrManyBursts(prevBurst, this.previousFile, false));
             // For phase data we need the previous burst and the current burst to calculate the
             // difference
-            burstList.add(prevBurst);
+            if (previousFile != null) {
+                Burst prevBurst = new Burst(this.previousFile, 1);
+                singleOrManyBurstsList.add(
+                        new SingleOrManyBursts(prevBurst, this.previousFile, false));
+                burstList.add(prevBurst);
+            }
+
             Burst currBurst = new Burst(this.currentFile, 1);
             burstList.add(currBurst);
             pdg = new PlotDataGenerator3D(burstList);
