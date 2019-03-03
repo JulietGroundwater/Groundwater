@@ -93,11 +93,12 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         } catch (MsalClientException e) {
             e.printStackTrace();
         }
-        filesListViewHolder.setSyncStatusVisibility(loggedIn);
 
-        // If the user is logged in (and therefore the icon is visible), show the uploaded or
-        // not uploaded icon accordingly.
-        if (loggedIn) {
+        // Decide whether to show the sync status indicator: this will only be done if the user
+        // is logged in, and will only be shown for files (not folders).
+        boolean showSyncStatus = loggedIn && file.getIsSingleBurst();
+        filesListViewHolder.setSyncStatusVisibility(showSyncStatus);
+        if (showSyncStatus) {
             if (file.getSyncStatus()) {
                 filesListViewHolder
                         .getSyncStatusImageView()
@@ -110,8 +111,6 @@ public class FilesListAdapter extends RecyclerView.Adapter<FilesListAdapter.File
         }
 
         // Set the corresponding image to show whether the file has been uploaded.
-        // TODO: Actually check this! We have just signed in, so we don't know if the file has been
-        // uploaded.
         filesListViewHolder.setUploaded(file.getSyncStatus());
 
         // Hide the "uploading" progress spinner
