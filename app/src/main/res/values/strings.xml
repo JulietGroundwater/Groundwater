@@ -59,6 +59,6 @@
     <string name="data_collection_in_progress">Data collection in progress</string>
     <string name="cant_plot_collection_while_live_message">You can\'t plot a collection while data collection is in progress.</string>
     <string name="dismiss">Dismiss</string>
-    <string name="please_give_storage_permissions_message">Please give Groundwater access to storage permissions. The app cannot function without the ability to read and write files on this device.</string>
+    <string name="please_give_storage_permissions_message">Please give Groundwater access to storage permissions and network access. The app cannot function without the ability to read and write files on this device, and checking your internet connection.</string>
     <string name="update_permissions">Update permissions</string>
 </resources>

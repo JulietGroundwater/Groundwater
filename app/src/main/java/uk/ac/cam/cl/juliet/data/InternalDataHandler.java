@@ -7,14 +7,15 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /** A Class that handles all of the internal data passing and manipulation */
 public class InternalDataHandler {
 
+    public static final String ROOT_NAME = "groundwater";
     private static InternalDataHandler INSTANCE;
-    private static final String ROOT_NAME = "groundwater";
     private File root;
     private SingleOrManyBursts singleSelected;
     private SingleOrManyBursts collectionSelected;
@@ -23,6 +24,7 @@ public class InternalDataHandler {
     private boolean rootEmpty;
     private String currentLiveData;
     private boolean processingLiveData = false;
+    private HashSet<String> syncedFiles;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
@@ -34,11 +36,20 @@ public class InternalDataHandler {
     private InternalDataHandler() {
         root = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), ROOT_NAME);
         rootEmpty = (root.listFiles() == null);
+
+        // Create the listeners for single changes
         if (singleListeners == null) {
             singleListeners = new ArrayList<>();
         }
+
+        // Create the listeners for collection changes
         if (collectionListeners == null) {
             collectionListeners = new ArrayList<>();
+        }
+
+        // Create the synced files cache
+        if (syncedFiles == null) {
+            syncedFiles = new HashSet<>();
         }
     }
 
@@ -173,12 +184,30 @@ public class InternalDataHandler {
         return list;
     }
 
+    /**
+     * A method for taking the absolute path from the Android device and return the root-relative
+     * path
+     *
+     * @param absolutePath
+     * @return a path relative to the identified root name (e.g. groundwater)
+     * @throws FileNotFoundException
+     */
+    public String getRelativeFromAbsolute(String absolutePath) throws FileNotFoundException {
+        String[] splitPath = absolutePath.split(ROOT_NAME);
+        if (splitPath.length == 2) {
+            return ROOT_NAME + splitPath[1];
+        } else if (absolutePath.contains(ROOT_NAME)) {
+            return ROOT_NAME;
+        }
+        throw new FileNotFoundException("No root name detected");
+    }
+
     public File getRoot() {
         return root;
     }
 
     public File getFileByName(String filename) {
-        return new File(root.getAbsolutePath(), filename);
+        return new File(root.getParentFile().getAbsolutePath(), filename);
     }
 
     public File getSingleSelectedDataFile() {
@@ -235,6 +264,21 @@ public class InternalDataHandler {
 
     public List<FileListener> getCollectionListeners() {
         return collectionListeners;
+    }
+
+    /**
+     * Add a file to the cached synced files
+     *
+     * @param filepath - this should be the relative path to the root
+     */
+    public void addSyncedFile(String filepath) {
+        if (syncedFiles != null) {
+            syncedFiles.add(filepath);
+        }
+    }
+
+    public HashSet<String> getSyncedFiles() {
+        return syncedFiles;
     }
 
     public interface FileListener {

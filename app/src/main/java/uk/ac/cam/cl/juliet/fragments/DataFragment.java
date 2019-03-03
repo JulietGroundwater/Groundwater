@@ -3,6 +3,8 @@ package uk.ac.cam.cl.juliet.fragments;
 import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -16,8 +18,14 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Toast;
+import com.microsoft.graph.concurrency.ICallback;
+import com.microsoft.graph.core.ClientException;
+import com.microsoft.graph.extensions.DriveItem;
 import com.microsoft.identity.client.MsalClientException;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import uk.ac.cam.cl.juliet.R;
@@ -26,6 +34,8 @@ import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
 import uk.ac.cam.cl.juliet.computationengine.Burst;
 import uk.ac.cam.cl.juliet.connection.ConnectionSimulator;
 import uk.ac.cam.cl.juliet.data.AuthenticationManager;
+import uk.ac.cam.cl.juliet.data.DriveAnalysisCallback;
+import uk.ac.cam.cl.juliet.data.GraphServiceController;
 import uk.ac.cam.cl.juliet.data.InternalDataHandler;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
@@ -68,9 +78,7 @@ public class DataFragment extends Fragment
         String folderPath = arguments.getString(FOLDER_PATH);
         currentDirectory = new File(folderPath);
         filesList = new ArrayList<>();
-        currentNode =
-                new SingleOrManyBursts(
-                        filesList, currentDirectory, false); // TODO: Detect if uploaded to onedrive
+        currentNode = new SingleOrManyBursts(filesList, currentDirectory, false);
 
         // Set up the files list UI
         filesRecyclerView = view.findViewById(R.id.filesListRecyclerView);
@@ -344,7 +352,7 @@ public class DataFragment extends Fragment
     private void uploadFile(
             SingleOrManyBursts file, FilesListAdapter.FilesListViewHolder viewHolder) {
         if (listener == null) return;
-        listener.uploadFile(this, viewHolder, file);
+        listener.uploadFile(this, viewHolder, file, currentNode);
     }
 
     /** Called on permission granted - refresh file listing */
@@ -361,6 +369,98 @@ public class DataFragment extends Fragment
      */
     public void setDataFragmentListener(DataFragmentListener listener) {
         this.listener = listener;
+    }
+
+    /** Uploads the unsynced files in the directory */
+    public void uploadUnsyncedFiles() throws IOException {
+        final InternalDataHandler idh = InternalDataHandler.getInstance();
+        final GraphServiceController gsc = new GraphServiceController();
+
+        // First check for the folder
+        gsc.getFolder(
+                idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                new ICallback<DriveItem>() {
+
+                    @Override
+                    public void success(DriveItem driveItem) {
+                        // Folder exists so add folder to synced and begin adding files
+                        InternalDataHandler idh = InternalDataHandler.getInstance();
+                        try {
+                            idh.addSyncedFile(
+                                    idh.getRelativeFromAbsolute(
+                                            currentDirectory.getAbsolutePath()));
+                        } catch (IOException io) {
+                            io.printStackTrace();
+                        }
+                        uploadFiles();
+                    }
+
+                    @Override
+                    public void failure(ClientException ex) {
+                        // Folder doesn't exist so create it
+                        try {
+                            final String relativePath =
+                                    idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath());
+                            gsc.createFolder(
+                                    relativePath,
+                                    currentDirectory.getName(),
+                                    new ICallback<DriveItem>() {
+                                        @Override
+                                        public void success(DriveItem driveItem) {
+                                            // Folder successfully created - add it and begin
+                                            // uploading
+                                            idh.addSyncedFile(relativePath);
+                                            uploadFiles();
+                                        }
+
+                                        @Override
+                                        public void failure(ClientException ex) {
+                                            System.out.println("Failed to create the folder!");
+                                            ex.printStackTrace();
+                                        }
+                                    });
+                        } catch (IOException io) {
+                            io.printStackTrace();
+                        }
+                    }
+                });
+    }
+
+    /** A method for beginning to upload all of the files to One Drive */
+    private void uploadFiles() {
+        final InternalDataHandler idh = InternalDataHandler.getInstance();
+        final GraphServiceController gsc = new GraphServiceController();
+        // TODO: Maybe batch these for performance issues
+        for (final SingleOrManyBursts singleOrMany : filesList) {
+            if (singleOrMany.getIsSingleBurst()) {
+                try {
+                    gsc.uploadDatafile(
+                            idh.getRelativeFromAbsolute(singleOrMany.getFile().getAbsolutePath()),
+                            idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                            idh.convertToBytes(singleOrMany.getFile()),
+                            new ICallback<DriveItem>() {
+                                @Override
+                                public void success(DriveItem driveItem) {
+                                    singleOrMany.setSyncStatus(true);
+                                    adapter.notifyDataSetChanged();
+                                }
+
+                                @Override
+                                public void failure(ClientException ex) {
+                                    Toast.makeText(
+                                                    getContext(),
+                                                    "Failed to upload: "
+                                                            + singleOrMany.getNameToDisplay(),
+                                                    Toast.LENGTH_LONG)
+                                            .show();
+                                    ex.printStackTrace();
+                                }
+                            });
+                } catch (IOException io) {
+                    io.printStackTrace();
+                }
+            }
+        }
     }
 
     @Override
@@ -389,8 +489,39 @@ public class DataFragment extends Fragment
 
     /** Asynchronously reloads and synchronously redraws the list of files. */
     public void refreshFiles() {
+        if (!isNetworkConnected()) {
+            try {
+                AuthenticationManager auth = AuthenticationManager.getInstance();
+                if (auth.isUserLoggedIn()) {
+                    AuthenticationManager.getInstance().disconnect();
+                    listener.notifyNoInternet();
+                }
+                Toast.makeText(getContext(), "No Internet Connection", Toast.LENGTH_SHORT).show();
+            } catch (MsalClientException ex) {
+                ex.printStackTrace();
+            }
+        }
         new RefreshFilesTask(currentDirectory, this)
                 .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+    }
+
+    /** Check to see if the current directory's files are synced */
+    private void areFilesSynced() throws FileNotFoundException {
+        final InternalDataHandler idh = InternalDataHandler.getInstance();
+        GraphServiceController gsc = new GraphServiceController();
+        // Iterate over the files and if they're in the current directory then set sync status
+        for (SingleOrManyBursts single : filesList) {
+            if (single.getIsSingleBurst()) {
+                if (idh.getSyncedFiles()
+                        .contains(
+                                idh.getRelativeFromAbsolute(single.getFile().getAbsolutePath()))) {
+                    single.setSyncStatus(true);
+                }
+            }
+        }
+        gsc.getFolder(
+                idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
+                new DriveAnalysisCallback(currentDirectory, filesList, adapter));
     }
 
     /** Handles reloading and redrawing the list of files. */
@@ -422,11 +553,7 @@ public class DataFragment extends Fragment
                 for (File file : folder.listFiles()) {
                     SingleOrManyBursts inner;
                     if (file.isFile()) {
-                        inner =
-                                new SingleOrManyBursts(
-                                        (Burst) null,
-                                        file,
-                                        false); // TODO: Detect if synced to OneDrive
+                        inner = new SingleOrManyBursts((Burst) null, file, false);
                     } else {
                         inner =
                                 new SingleOrManyBursts(
@@ -445,6 +572,29 @@ public class DataFragment extends Fragment
             dataFragment.setNoFilesMessageVisibility(dataFragment.filesList.isEmpty());
             dataFragment.loadingFilesSpinner.setVisibility(View.INVISIBLE);
             dataFragment.filesRecyclerView.setVisibility(View.VISIBLE);
+            try {
+                AuthenticationManager auth = AuthenticationManager.getInstance();
+                // If the user is logged in and the authentication result isn't null
+                if (auth.isUserLoggedIn() && auth.getAuthResult() != null) {
+                    // Check to see if the files of the currentDirectory are synced
+                    dataFragment.areFilesSynced();
+                }
+            } catch (FileNotFoundException ex) {
+                ex.printStackTrace();
+            } catch (MsalClientException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    private boolean isNetworkConnected() {
+        ConnectivityManager conManager =
+                (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo netInfo = conManager.getActiveNetworkInfo();
+        if (netInfo == null) {
+            return false;
+        } else {
+            return netInfo.isConnectedOrConnecting();
         }
     }
 
@@ -471,9 +621,13 @@ public class DataFragment extends Fragment
         void uploadFile(
                 DataFragment parent,
                 FilesListAdapter.FilesListViewHolder viewHolder,
-                SingleOrManyBursts file);
+                SingleOrManyBursts file,
+                SingleOrManyBursts folder);
 
         /** Notifies the container that this fragment is now the active one */
         void notifyIsActiveFragment(DataFragment activeFragment);
+
+        /** Notify on network changed */
+        void notifyNoInternet();
     }
 }

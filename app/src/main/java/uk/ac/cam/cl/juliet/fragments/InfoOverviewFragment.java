@@ -151,17 +151,17 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
                 PlotDataGenerator2D twoDimDataGen = null;
                 PlotData2D twoDimData = null;
 
-                // Compute burst
-                SingleOrManyBursts file = idh.getSingleSelected();
-                File fileToProcess = idh.getSingleSelectedDataFile();
-                Burst burst = new Burst(fileToProcess);
-                file.setSingleBurst(burst); // getting an invalid burst exception here
-
                 // Check the cache in case the same file was selected again and it is already
                 // computed
                 if (cache.containsKey(idh.getSingleSelectedDataFile().getAbsolutePath())) {
                     twoDimDataGen = cache.get(idh.getSingleSelectedDataFile().getAbsolutePath());
                 } else {
+                    // Compute burst
+                    SingleOrManyBursts file = idh.getSingleSelected();
+                    File fileToProcess = idh.getSingleSelectedDataFile();
+                    Burst burst = new Burst(fileToProcess);
+                    file.setSingleBurst(burst); // getting an invalid burst exception here
+
                     twoDimDataGen =
                             new PlotDataGenerator2D(idh.getSingleSelected().getSingleBurst());
                     // Add to the cache

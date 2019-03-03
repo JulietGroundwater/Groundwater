@@ -23,8 +23,10 @@ public class InitialActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         Intent intent;
         if (alreadyHasPermissions()) {
+            System.out.println("no request: " + alreadyHasPermissions());
             intent = new Intent(this, MainActivity.class);
         } else {
+            System.out.println("request: " + alreadyHasPermissions());
             intent = new Intent(this, RequestPermissionsActivity.class);
         }
         startActivity(intent);

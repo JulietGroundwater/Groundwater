@@ -22,6 +22,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import com.google.gson.Gson;
 import java.io.File;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -315,7 +316,8 @@ public class InfoMoreDetailFragment extends Fragment
         simulator = ConnectionSimulator.getInstance();
 
         // Create a new directory in groundwater for the incoming data
-        String name = new Date().toString();
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-SS");
+        String name = "Collection-" + dateFormat.format(new Date());
         idh.setCurrentLiveData(name);
         idh.setProcessingLiveData(true);
 
@@ -459,7 +461,15 @@ public class InfoMoreDetailFragment extends Fragment
             } else {
                 current = generators.get(generator).getPhaseDiffPlotData();
             }
-            for (int x = 1; x < current.getXValues().size(); x++) {
+
+            int startX;
+            if (generator == 0 && selected == MultipleBurstsDataTypes.POWER) {
+                startX = 0;
+            } else {
+                startX = 1;
+            }
+
+            for (int x = startX; x < current.getXValues().size(); x++) {
                 if (!converter.containsKey(current.getXValues().get(x))) {
                     converter.put(current.getXValues().get(x), count);
                     count++;
@@ -468,35 +478,30 @@ public class InfoMoreDetailFragment extends Fragment
         }
 
         List<Datapoint> datapoints = new ArrayList<>();
-        if (selected == MultipleBurstsDataTypes.POWER) {
-            for (int generator = 0; generator < generators.size(); generator++) {
-                PlotData3D current;
+
+        for (int generator = 0; generator < generators.size(); generator++) {
+            PlotData3D current;
+
+            if (selected == MultipleBurstsDataTypes.POWER) {
                 current = generators.get(generator).getPowerPlotData();
-                // Add to the datapoints list
-                // TODO: Check if this correct with Encho
-                for (int x = 1; x < current.getXValues().size(); x++) {
-                    for (int y = current.getYValues().size() - 1; y >= 0; y--) {
-                        datapoints.add(
-                                new Datapoint(
-                                        converter.get(current.getXValues().get(x)),
-                                        current.getYValues().get(y),
-                                        current.getZValues().get(x).get(y)));
-                    }
-                }
-            }
-        } else {
-            for (int generator = 0; generator < generators.size(); generator++) {
-                PlotData3D current;
+            } else {
                 current = generators.get(generator).getPhaseDiffPlotData();
-                // Add to the datapoints list
-                for (int x = 1; x < current.getXValues().size(); x++) {
-                    for (int y = current.getYValues().size() - 1; y >= 0; y--) {
-                        datapoints.add(
-                                new Datapoint(
-                                        converter.get(current.getXValues().get(x)),
-                                        current.getYValues().get(y),
-                                        current.getZValues().get(x).get(y)));
-                    }
+            }
+
+            int startX;
+            if (generator == 0 && selected == MultipleBurstsDataTypes.POWER) {
+                startX = 0;
+            } else {
+                startX = 1;
+            }
+
+            for (int x = startX; x < current.getXValues().size(); x++) {
+                for (int y = current.getYValues().size() - 1; y >= 0; y--) {
+                    datapoints.add(
+                            new Datapoint(
+                                    converter.get(current.getXValues().get(x)),
+                                    current.getYValues().get(y),
+                                    current.getZValues().get(x).get(y)));
                 }
             }
         }

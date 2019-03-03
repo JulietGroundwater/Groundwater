@@ -155,7 +155,7 @@ public class AuthenticationManager extends Application {
             @Override
             public void onError(MsalException exception) {
                 // Log failed authentication
-                Log.e(TAG, "Failed Authentication: " + exception.getMessage());
+                Log.e(TAG, "Failed Silent Authentication: " + exception.getMessage());
 
                 // Pass callback through to the activity callback
                 if (activityCallback != null) {
@@ -182,5 +182,9 @@ public class AuthenticationManager extends Application {
 
     public PublicClientApplication getPublicClient() {
         return PUBLIC_CLIENT;
+    }
+
+    public AuthenticationResult getAuthResult() {
+        return authResult;
     }
 }

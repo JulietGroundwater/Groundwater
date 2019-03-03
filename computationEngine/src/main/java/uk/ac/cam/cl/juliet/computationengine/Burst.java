@@ -3,6 +3,7 @@ package uk.ac.cam.cl.juliet.computationengine;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -19,7 +20,7 @@ import org.apache.commons.math3.complex.Complex;
  * Class to represent a Burst from the radar, this is a java representation of the vdat struct from
  * {@code fmcw_load()}. The only required methods are getters for each of the fields in the struct.
  */
-public class Burst {
+public class Burst implements Serializable {
 
     private String filename;
     private int subBurstsInBurst, average, nAttenuators, nSamples, chirpsInBurst, burst;
