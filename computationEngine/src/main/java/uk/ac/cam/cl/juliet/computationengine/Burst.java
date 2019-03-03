@@ -37,8 +37,8 @@ public class Burst {
     private static final int MaxHeaderLen = 1500;
     private static final double fs = 4e4;
     private static final double dt = 1.0 / fs;
-    public static final double er = 3.18;
-    public static final int fileFormat = 5;
+    private static final double er = 3.18;
+    private static final int fileFormat = 5;
 
     /**
      * A default constructor if the number of the burst is not specified.
