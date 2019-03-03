@@ -20,6 +20,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
 import android.widget.Spinner;
 import android.widget.TextView;
+import android.widget.Toast;
 import com.google.gson.Gson;
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -350,14 +351,21 @@ public class InfoMoreDetailFragment extends Fragment
 
     /** Called to initialise the data gathering phase */
     private void startGatheringData() {
+        //Clear previous plot
+        updateWebview(new ArrayList<Datapoint>());
+
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         prevAndCurrent = new ArrayList<>();
         firstTime = true;
         webview.reload();
-        simulator.beginDataGathering();
         this.gatheringData = true;
         updateUIState(State.COLLECTING_LIVE_DATA);
         updateMeasureVisibility();
+        simulator.beginDataGathering();
+
+        if (!this.gatheringData) {
+            Toast.makeText(getContext(), "No files. Please add a folder called data_files.", Toast.LENGTH_LONG).show();
+        }
     }
 
     /** Finishes gathering data */

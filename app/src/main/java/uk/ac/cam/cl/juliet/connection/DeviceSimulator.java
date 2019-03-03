@@ -69,7 +69,6 @@ public class DeviceSimulator {
     public void takeMeasurement(final ConcurrentLinkedQueue<File> queue) {
         this.finished = false;
         if (root.listFiles() == null) {
-            System.out.println("NO FILES PLEASE ADD A FOLDER CALLED DATA_FILES");
             // Notify connection that we are done after reading all files
             connection.dataFinished();
             return;
@@ -95,6 +94,7 @@ public class DeviceSimulator {
                                     if (connection == null) {
                                         return;
                                     }
+
                                     // Otherwise add a file to the queue and notify the connections
                                     connection.addFile(root.listFiles()[fileIndex]);
                                     queue.add(root.listFiles()[fileIndex]);
