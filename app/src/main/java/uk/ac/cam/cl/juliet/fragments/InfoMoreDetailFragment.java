@@ -61,6 +61,7 @@ public class InfoMoreDetailFragment extends Fragment
     private TextView noFilesToPlotMessage;
     private ProgressBar generatingSpinner;
     private TextView generatingText;
+    private boolean dataHasBeenPlottedAtLeastOnce;
 
     /** The state that the UI is in. */
     private enum State {
@@ -93,6 +94,7 @@ public class InfoMoreDetailFragment extends Fragment
         setHasOptionsMenu(true);
         this.connected = false;
         this.gatheringData = false;
+        dataHasBeenPlottedAtLeastOnce = false;
 
         // Initialise text
         webviewText = view.findViewById(R.id.webview_title);
@@ -300,6 +302,7 @@ public class InfoMoreDetailFragment extends Fragment
                 });
         // Load base html from the assets directory
         webview.loadUrl("file:///android_asset/html/graph.html");
+        dataHasBeenPlottedAtLeastOnce = true;
         if (gatheringData) {
             updateUIState(State.COLLECTING_LIVE_DATA);
         } else {
@@ -527,7 +530,11 @@ public class InfoMoreDetailFragment extends Fragment
         } else {
             gatheringData = false;
         }
-        updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+        if (dataHasBeenPlottedAtLeastOnce) {
+            updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+        } else {
+            updateUIState(State.INITIAL);
+        }
         updateMeasureVisibility();
     }
 }
