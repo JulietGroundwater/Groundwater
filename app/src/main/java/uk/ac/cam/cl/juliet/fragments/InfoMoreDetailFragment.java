@@ -351,7 +351,7 @@ public class InfoMoreDetailFragment extends Fragment
 
     /** Called to initialise the data gathering phase */
     private void startGatheringData() {
-        //Clear previous plot
+        // Clear previous plot
         updateWebview(new ArrayList<Datapoint>());
 
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
@@ -364,7 +364,11 @@ public class InfoMoreDetailFragment extends Fragment
         simulator.beginDataGathering();
 
         if (!this.gatheringData) {
-            Toast.makeText(getContext(), "No files. Please add a folder called data_files.", Toast.LENGTH_LONG).show();
+            Toast.makeText(
+                            getContext(),
+                            "No files. Please add a folder called data_files.",
+                            Toast.LENGTH_LONG)
+                    .show();
         }
     }
 
