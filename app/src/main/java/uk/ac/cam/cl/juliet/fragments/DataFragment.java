@@ -407,8 +407,12 @@ public class DataFragment extends Fragment
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            dataFragment.loadingFilesSpinner.setVisibility(View.VISIBLE);
-            dataFragment.filesRecyclerView.setVisibility(View.INVISIBLE);
+            if (dataFragment.loadingFilesSpinner != null) {
+                dataFragment.loadingFilesSpinner.setVisibility(View.VISIBLE);
+            }
+            if (dataFragment.filesRecyclerView != null) {
+                dataFragment.filesRecyclerView.setVisibility(View.INVISIBLE);
+            }
         }
 
         @Override
