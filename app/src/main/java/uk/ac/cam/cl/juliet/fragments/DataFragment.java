@@ -389,7 +389,8 @@ public class DataFragment extends Fragment
 
     /** Asynchronously reloads and synchronously redraws the list of files. */
     public void refreshFiles() {
-        new RefreshFilesTask(currentDirectory, this).execute();
+        new RefreshFilesTask(currentDirectory, this)
+                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
     }
 
     /** Handles reloading and redrawing the list of files. */
