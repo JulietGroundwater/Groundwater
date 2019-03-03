@@ -352,6 +352,7 @@ public class InfoMoreDetailFragment extends Fragment
     private void startGatheringData() {
         ConnectionSimulator simulator = ConnectionSimulator.getInstance();
         prevAndCurrent = new ArrayList<>();
+        prevAndCurrent.add(null);
         firstTime = true;
         webview.reload();
         simulator.beginDataGathering();
@@ -520,7 +521,7 @@ public class InfoMoreDetailFragment extends Fragment
     }
 
     @Override
-    public void fileReady(File newFIle) {
+    public void fileReady(File newFile) {
         simulator = ConnectionSimulator.getInstance();
         if (firstTime) {
             // Create a new directory in groundwater for the incoming data
@@ -542,17 +543,17 @@ public class InfoMoreDetailFragment extends Fragment
             firstTime = false;
         }
 
-        if (newFIle != null) {
-            prevAndCurrent.add(newFIle);
+        if (newFile != null) {
+            prevAndCurrent.add(newFile);
         }
         // Wait for two files so phase difference can be generated
         if (prevAndCurrent.size() > 1) {
             File previousFile = prevAndCurrent.get(0);
             File currentFile = prevAndCurrent.get(1);
-            if (previousFile != null) {
-                idh.addFileToDirectory(idh.getCurrentLiveData(), previousFile);
-                processLiveData(previousFile, currentFile, !simulator.getDataReady());
-            }
+
+            idh.addFileToDirectory(idh.getCurrentLiveData(), currentFile);
+            processLiveData(previousFile, currentFile, !simulator.getDataReady());
+
             prevAndCurrent.remove(0);
         }
     }
