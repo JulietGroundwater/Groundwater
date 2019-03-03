@@ -88,7 +88,7 @@ public class PlotDataGenerator2D {
             yValues.add(spec[i].getArgument());
         }
 
-        amplitudePlotData = new PlotData2D(xValues, yValues);
+        phasePlotData = new PlotData2D(xValues, yValues);
 
         // Phase
         yValues = new ArrayList<>();
@@ -97,7 +97,7 @@ public class PlotDataGenerator2D {
             yValues.add(value);
         }
 
-        phasePlotData = new PlotData2D(xValues, yValues);
+        amplitudePlotData = new PlotData2D(xValues, yValues);
     }
 
     /**
