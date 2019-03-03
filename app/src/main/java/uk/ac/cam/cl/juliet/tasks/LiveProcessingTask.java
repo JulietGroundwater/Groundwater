@@ -51,7 +51,8 @@ public class LiveProcessingTask extends AsyncTask<Void, Void, List<PlotData3D>> 
             // difference
             if (previousFile != null) {
                 Burst prevBurst = new Burst(this.previousFile, 1);
-                singleOrManyBurstsList.add(new SingleOrManyBursts(prevBurst, this.previousFile, false));
+                singleOrManyBurstsList.add(
+                        new SingleOrManyBursts(prevBurst, this.previousFile, false));
                 burstList.add(prevBurst);
             }
 
