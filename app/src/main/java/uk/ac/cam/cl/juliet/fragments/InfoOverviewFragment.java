@@ -192,6 +192,7 @@ public class InfoOverviewFragment extends Fragment implements Spinner.OnItemSele
                 LineDataSet dataset =
                         new LineDataSet(entries, idh.getSingleSelected().getNameToDisplay());
                 dataset.setCircleColor(Color.LTGRAY);
+                dataset.setDrawCircles(false);
                 dataset.setColor(ColorTemplate.MATERIAL_COLORS[0]);
                 LineData data = new LineData(dataset);
 

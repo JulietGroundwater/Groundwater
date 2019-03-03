@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.connection;
 
+import java.io.File;
 import uk.ac.cam.cl.juliet.computationengine.Config;
 
 /** Representing the interface for connecting to the radar device */
@@ -31,4 +32,11 @@ public interface IConnection {
 
     /** Notify the connection that all data has been sent and no longer should wait */
     void dataFinished();
+
+    /**
+     * Notify the UI that another file has been received from the device.
+     *
+     * @param file The file that was received
+     */
+    void addFile(File file);
 }

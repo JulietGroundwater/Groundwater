@@ -2,7 +2,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
-            android:id="@+id/take_measurement_button"
-            android:title="@string/measure"
-            app:showAsAction="always" />
+        android:id="@+id/start_measuring_button"
+        android:title="@string/start_measuring"
+        app:showAsAction="always" />
+
+    <item android:id="@+id/stop_measuring_button"
+        android:title="@string/stop_measuring"
+        app:showAsAction="always"/>
 </menu>
