@@ -136,9 +136,7 @@ public class InfoMoreDetailFragment extends Fragment
                     }
 
                     @Override
-                    public void onNothingSelected(AdapterView<?> parent) {
-                        System.out.println("Nothing selected!");
-                    }
+                    public void onNothingSelected(AdapterView<?> parent) {}
                 });
 
         idh = InternalDataHandler.getInstance();
