@@ -4,8 +4,9 @@ import static uk.ac.cam.cl.juliet.fragments.DataFragment.FOLDER_PATH;
 
 import android.Manifest;
 import android.app.Activity;
-import android.app.Dialog;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -21,7 +22,6 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.Toast;
 import com.microsoft.graph.concurrency.ICallback;
 import com.microsoft.graph.core.ClientException;
@@ -238,26 +238,27 @@ public class DataFragmentWrapper extends Fragment
     private void showSyncDialog() {
         Context context = getContext();
         if (context == null) return;
-        final Dialog dialog = new Dialog(context);
-        dialog.setContentView(R.layout.dialog_upload_files);
-        dialog.findViewById(R.id.uploadButton)
-                .setOnClickListener(
-                        new Button.OnClickListener() {
+        new AlertDialog.Builder(context)
+                .setTitle(R.string.upload_unsynchronised_files)
+                .setMessage(R.string.upload_unsyncronised_files_content)
+                .setPositiveButton(
+                        R.string.upload_all,
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(View v) {
+                            public void onClick(DialogInterface dialog, int which) {
                                 uploadAllUnsyncedFiles();
-                                dialog.cancel();
+                                dialog.dismiss();
                             }
-                        });
-        dialog.findViewById(R.id.cancelButton)
-                .setOnClickListener(
-                        new Button.OnClickListener() {
+                        })
+                .setNegativeButton(
+                        R.string.cancel,
+                        new DialogInterface.OnClickListener() {
                             @Override
-                            public void onClick(View v) {
+                            public void onClick(DialogInterface dialog, int which) {
                                 dialog.cancel();
                             }
-                        });
-        dialog.show();
+                        })
+                .show();
     }
 
     /** Uploads all unsynced files to OneDrive. */
