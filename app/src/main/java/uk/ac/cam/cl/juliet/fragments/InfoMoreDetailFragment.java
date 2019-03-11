@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -363,11 +364,14 @@ public class InfoMoreDetailFragment extends Fragment
         simulator.beginDataGathering();
 
         if (!this.gatheringData) {
-            Toast.makeText(
-                            getContext(),
-                            "No files. Please add a folder called data_files.",
-                            Toast.LENGTH_LONG)
-                    .show();
+            Context context = getContext();
+            if (context != null) {
+                Toast.makeText(
+                        context,
+                        "No files. Please add a folder called data_files.",
+                        Toast.LENGTH_LONG)
+                        .show();
+            }
         }
     }
 
@@ -566,5 +570,12 @@ public class InfoMoreDetailFragment extends Fragment
 
             prevAndCurrent.remove(0);
         }
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        updateMeasureVisibility();
     }
 }

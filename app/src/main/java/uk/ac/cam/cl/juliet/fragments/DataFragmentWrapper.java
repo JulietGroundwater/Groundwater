@@ -266,11 +266,14 @@ public class DataFragmentWrapper extends Fragment
         try {
             currentFragment.uploadUnsyncedFiles();
         } catch (IOException io) {
-            Toast.makeText(
-                            getContext(),
-                            "There was something wrong with the file data!",
-                            Toast.LENGTH_LONG)
-                    .show();
+            Context context = getContext();
+            if (context != null) {
+                Toast.makeText(
+                        context,
+                        "There was something wrong with the file data!",
+                        Toast.LENGTH_LONG)
+                        .show();
+            }
             io.printStackTrace();
         }
     }
@@ -337,15 +340,21 @@ public class DataFragmentWrapper extends Fragment
      */
     @Override
     public void onError(MsalException msalException) {
-        Toast.makeText(getContext(), "An error occurred whilst logging you in", Toast.LENGTH_LONG)
-                .show();
+        Context context = getContext();
+        if (context != null) {
+            Toast.makeText(context, "An error occurred whilst logging you in", Toast.LENGTH_LONG)
+                    .show();
+        }
         updateUploadAllFilesButtonVisibility();
     }
 
     /** Notify if the user cancels */
     @Override
     public void onCancel() {
-        Toast.makeText(getContext(), "The user cancelled logging in", Toast.LENGTH_LONG).show();
+        Context context = getContext();
+        if (context != null) {
+            Toast.makeText(context, "The user cancelled logging in", Toast.LENGTH_LONG).show();
+        }
     }
 
     /** Asynchronously uploads a file to OneDrive. */
