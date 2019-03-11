@@ -62,5 +62,6 @@ public class DriveAnalysisCallback implements ICallback<DriveItem> {
     public void failure(ClientException ex) {
         System.out.println(
                 "Could not find " + currentDirectory.getName() + " in the One Drive Folder");
+        this.fragment.setCheckingSync(false);
     }
 }
