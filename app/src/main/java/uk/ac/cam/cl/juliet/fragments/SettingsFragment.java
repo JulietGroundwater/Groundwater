@@ -334,7 +334,10 @@ public class SettingsFragment extends Fragment
 
     /** Displays an error message to inform the user that that entered an invalid location. */
     private void showInvalidLocationDialog() {
-        Toast.makeText(getContext(), R.string.invalid_gps_coords, Toast.LENGTH_SHORT).show();
+        Context context = getContext();
+        if (context != null) {
+            Toast.makeText(context, R.string.invalid_gps_coords, Toast.LENGTH_SHORT).show();
+        }
     }
 
     /** Shows the dialog for setting the attenuators. */

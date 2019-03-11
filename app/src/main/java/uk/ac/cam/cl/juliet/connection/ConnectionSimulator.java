@@ -25,9 +25,13 @@ public class ConnectionSimulator implements IConnection {
 
     public static ConnectionSimulator getInstance() {
         if (INSTANCE == null) {
-            INSTANCE = new ConnectionSimulator(new DeviceSimulator("BAS_RADAR_123", 10000));
+            INSTANCE = new ConnectionSimulator(new DeviceSimulator("BAS_RADAR_123", 3000));
         }
         return INSTANCE;
+    }
+
+    public static void reset() {
+        INSTANCE = null;
     }
 
     @Override
