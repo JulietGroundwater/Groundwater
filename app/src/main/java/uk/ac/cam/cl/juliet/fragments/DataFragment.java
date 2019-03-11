@@ -56,6 +56,7 @@ public class DataFragment extends Fragment
     private SingleOrManyBursts currentNode;
     private List<SingleOrManyBursts> filesList;
     private Button plotAllFilesButton;
+    private boolean checkingSync;
 
     private DataFragmentListener listener;
 
@@ -105,6 +106,8 @@ public class DataFragment extends Fragment
         // Subscribe for permission updates
         MainActivity main = (MainActivity) getActivity();
         if (main != null) main.addListener(this);
+
+        checkingSync = false;
 
         // Return the View that was created
         return view;
@@ -262,6 +265,8 @@ public class DataFragment extends Fragment
      * @return true if eligible; false otherwise
      */
     private boolean getEligibleForPlottingAllFiles() {
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        if (idh.getProcessingData()) return false;
         if (filesList.isEmpty()) return false;
         if (currentNode == null) return false;
         boolean eligible = true;
@@ -446,14 +451,23 @@ public class DataFragment extends Fragment
                 if (auth.isUserLoggedIn()) {
                     AuthenticationManager.getInstance().disconnect();
                     listener.notifyNoInternet();
+                    Toast.makeText(getContext(), "No Internet Connection", Toast.LENGTH_SHORT)
+                            .show();
                 }
-                Toast.makeText(getContext(), "No Internet Connection", Toast.LENGTH_SHORT).show();
             } catch (MsalClientException ex) {
                 ex.printStackTrace();
             }
         }
-        new RefreshFilesTask(currentDirectory, this)
-                .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+
+        if (!checkingSync) {
+            checkingSync = true;
+            new RefreshFilesTask(currentDirectory, this)
+                    .executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+        }
+    }
+
+    public void setCheckingSync(boolean value) {
+        this.checkingSync = value;
     }
 
     /** Check to see if the current directory's files are synced */
@@ -472,7 +486,7 @@ public class DataFragment extends Fragment
         }
         gsc.getFolder(
                 idh.getRelativeFromAbsolute(currentDirectory.getAbsolutePath()),
-                new DriveAnalysisCallback(currentDirectory, filesList, adapter));
+                new DriveAnalysisCallback(currentDirectory, this, filesList, adapter));
     }
 
     /** Handles reloading and redrawing the list of files. */
@@ -539,14 +553,18 @@ public class DataFragment extends Fragment
     }
 
     private boolean isNetworkConnected() {
-        ConnectivityManager conManager =
-                (ConnectivityManager) getActivity().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo netInfo = conManager.getActiveNetworkInfo();
-        if (netInfo == null) {
-            return false;
-        } else {
-            return netInfo.isConnectedOrConnecting();
+        Activity activity = getActivity();
+        if (activity != null) {
+            ConnectivityManager conManager =
+                    (ConnectivityManager) activity.getSystemService(Context.CONNECTIVITY_SERVICE);
+            NetworkInfo netInfo = conManager.getActiveNetworkInfo();
+            if (netInfo == null) {
+                return false;
+            } else {
+                return netInfo.isConnectedOrConnecting();
+            }
         }
+        return false;
     }
 
     /**

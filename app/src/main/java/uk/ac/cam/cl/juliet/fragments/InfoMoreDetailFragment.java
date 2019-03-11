@@ -1,5 +1,6 @@
 package uk.ac.cam.cl.juliet.fragments;
 
+import android.content.Context;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -250,7 +251,7 @@ public class InfoMoreDetailFragment extends Fragment
     private void updateChart() {
         if (checkFile()) {
             updateUIState(State.PROCESSING);
-
+            InternalDataHandler idh = InternalDataHandler.getInstance();
             // Create datapoints, json-ise and pass to Javascript
             webviewText.setText(idh.getCollectionSelected().getNameToDisplay());
 
@@ -313,7 +314,7 @@ public class InfoMoreDetailFragment extends Fragment
         // Load base html from the assets directory
         webview.loadUrl("file:///android_asset/html/graph.html");
         dataHasBeenPlottedAtLeastOnce = true;
-        if (gatheringData) {
+        if (!idh.getProcessingData() && gatheringData) {
             updateUIState(State.COLLECTING_LIVE_DATA);
         } else {
             updateUIState(State.STATIC_COLLECTION_DISPLAYED);
@@ -349,6 +350,16 @@ public class InfoMoreDetailFragment extends Fragment
 
     /** Called to initialise the data gathering phase */
     private void startGatheringData() {
+        // Check to see if we can start measuring
+        InternalDataHandler idh = InternalDataHandler.getInstance();
+        if (idh.getProcessingData()) {
+            Context context = getContext();
+            if (context != null) {
+                Toast.makeText(context, "Currently processing data...", Toast.LENGTH_LONG).show();
+                return;
+            }
+        }
+
         // Clear previous plot
         updateWebview(new ArrayList<Datapoint>());
 
@@ -411,6 +422,7 @@ public class InfoMoreDetailFragment extends Fragment
             }
         } else {
             cache.put(idh.getCollectionSelected().getNameToDisplay(), generators);
+            idh.setProcessingData(false);
             updateWebview(
                     generateDatapoints(cache.get(idh.getCollectionSelected().getNameToDisplay())));
             updateUIState(State.STATIC_COLLECTION_DISPLAYED);
@@ -513,10 +525,13 @@ public class InfoMoreDetailFragment extends Fragment
         } else {
             gatheringData = false;
         }
-        if (dataHasBeenPlottedAtLeastOnce) {
-            updateUIState(State.STATIC_COLLECTION_DISPLAYED);
-        } else {
-            updateUIState(State.INITIAL);
+        // Only change the state if we aren't in the middle of processing data
+        if (!InternalDataHandler.getInstance().getProcessingData()) {
+            if (dataHasBeenPlottedAtLeastOnce) {
+                updateUIState(State.STATIC_COLLECTION_DISPLAYED);
+            } else {
+                updateUIState(State.INITIAL);
+            }
         }
         updateMeasureVisibility();
     }
