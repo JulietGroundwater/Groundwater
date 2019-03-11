@@ -403,12 +403,16 @@ public class DataFragment extends Fragment
 
                                 @Override
                                 public void failure(ClientException ex) {
-                                    Toast.makeText(
-                                                    getContext(),
-                                                    "Failed to upload: "
-                                                            + singleOrMany.getNameToDisplay(),
-                                                    Toast.LENGTH_LONG)
-                                            .show();
+                                    Context context = getContext();
+                                    if (context != null) {
+                                        Toast.makeText(
+                                                        context,
+                                                        "Failed to upload: "
+                                                                + singleOrMany.getNameToDisplay(),
+                                                        Toast.LENGTH_LONG)
+                                                .show();
+                                    }
+
                                     ex.printStackTrace();
                                 }
                             });
@@ -453,6 +457,10 @@ public class DataFragment extends Fragment
                     listener.notifyNoInternet();
                     Toast.makeText(getContext(), "No Internet Connection", Toast.LENGTH_SHORT)
                             .show();
+                }
+                Context context = getContext();
+                if (context != null) {
+                    Toast.makeText(context, "No Internet Connection", Toast.LENGTH_SHORT).show();
                 }
             } catch (MsalClientException ex) {
                 ex.printStackTrace();
