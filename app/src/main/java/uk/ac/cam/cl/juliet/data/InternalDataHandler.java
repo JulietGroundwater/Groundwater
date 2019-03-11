@@ -7,8 +7,10 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /** A Class that handles all of the internal data passing and manipulation */
@@ -24,7 +26,8 @@ public class InternalDataHandler {
     private boolean rootEmpty;
     private String currentLiveData;
     private boolean processingLiveData = false;
-    private HashSet<String> syncedFiles;
+    private boolean processingData = false;
+    private Set<String> syncedFiles;
 
     public static InternalDataHandler getInstance() {
         if (INSTANCE == null) {
@@ -49,7 +52,7 @@ public class InternalDataHandler {
 
         // Create the synced files cache
         if (syncedFiles == null) {
-            syncedFiles = new HashSet<>();
+            syncedFiles = Collections.newSetFromMap(new ConcurrentHashMap<String, Boolean>());
         }
     }
 
@@ -281,6 +284,14 @@ public class InternalDataHandler {
         return processingLiveData;
     }
 
+    public void setProcessingData(boolean value) {
+        processingData = value;
+    }
+
+    public boolean getProcessingData() {
+        return processingData;
+    }
+
     public List<FileListener> getSingleListeners() {
         return singleListeners;
     }
@@ -300,7 +311,7 @@ public class InternalDataHandler {
         }
     }
 
-    public HashSet<String> getSyncedFiles() {
+    public Set<String> getSyncedFiles() {
         return syncedFiles;
     }
 

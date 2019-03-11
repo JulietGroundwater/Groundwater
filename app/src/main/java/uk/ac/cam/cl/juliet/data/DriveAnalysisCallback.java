@@ -7,23 +7,28 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
 import uk.ac.cam.cl.juliet.adapters.FilesListAdapter;
+import uk.ac.cam.cl.juliet.fragments.DataFragment;
 import uk.ac.cam.cl.juliet.models.SingleOrManyBursts;
 
 /** Performs the call to check the sync status of the One Drive files */
 public class DriveAnalysisCallback implements ICallback<DriveItem> {
     private File currentDirectory;
-    private List<SingleOrManyBursts> filesList;
-    private GraphServiceController controller;
+    private DataFragment fragment;
+    private final List<SingleOrManyBursts> filesList;
     private FilesListAdapter adapterToNotify;
 
     public DriveAnalysisCallback(
-            File currentDirectory, List<SingleOrManyBursts> fileList, FilesListAdapter adapter) {
+            File currentDirectory,
+            DataFragment fragment,
+            List<SingleOrManyBursts> fileList,
+            FilesListAdapter adapter) {
         this.currentDirectory = currentDirectory;
+        this.fragment = fragment;
         this.filesList = fileList;
-        this.controller = new GraphServiceController();
         this.adapterToNotify = adapter;
     }
 
+    @Override
     public void success(DriveItem driveItem) {
         InternalDataHandler idh = InternalDataHandler.getInstance();
         // Iterate over the children of the current directory and add to synced file cache
@@ -50,11 +55,13 @@ public class DriveAnalysisCallback implements ICallback<DriveItem> {
             }
         }
         adapterToNotify.notifyDataSetChanged();
+        this.fragment.setCheckingSync(false);
     }
 
     @Override
     public void failure(ClientException ex) {
         System.out.println(
                 "Could not find " + currentDirectory.getName() + " in the One Drive Folder");
+        this.fragment.setCheckingSync(false);
     }
 }
