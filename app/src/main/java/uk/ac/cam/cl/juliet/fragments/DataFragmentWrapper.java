@@ -269,9 +269,9 @@ public class DataFragmentWrapper extends Fragment
             Context context = getContext();
             if (context != null) {
                 Toast.makeText(
-                        context,
-                        "There was something wrong with the file data!",
-                        Toast.LENGTH_LONG)
+                                context,
+                                "There was something wrong with the file data!",
+                                Toast.LENGTH_LONG)
                         .show();
             }
             io.printStackTrace();

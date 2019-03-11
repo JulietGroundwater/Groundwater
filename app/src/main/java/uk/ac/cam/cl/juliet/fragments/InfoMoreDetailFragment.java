@@ -367,9 +367,9 @@ public class InfoMoreDetailFragment extends Fragment
             Context context = getContext();
             if (context != null) {
                 Toast.makeText(
-                        context,
-                        "No files. Please add a folder called data_files.",
-                        Toast.LENGTH_LONG)
+                                context,
+                                "No files. Please add a folder called data_files.",
+                                Toast.LENGTH_LONG)
                         .show();
             }
         }

@@ -401,10 +401,10 @@ public class DataFragment extends Fragment
                                     Context context = getContext();
                                     if (context != null) {
                                         Toast.makeText(
-                                                context,
-                                                "Failed to upload: "
-                                                        + singleOrMany.getNameToDisplay(),
-                                                Toast.LENGTH_LONG)
+                                                        context,
+                                                        "Failed to upload: "
+                                                                + singleOrMany.getNameToDisplay(),
+                                                        Toast.LENGTH_LONG)
                                                 .show();
                                     }
 

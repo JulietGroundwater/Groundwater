@@ -338,7 +338,6 @@ public class SettingsFragment extends Fragment
         if (context != null) {
             Toast.makeText(context, R.string.invalid_gps_coords, Toast.LENGTH_SHORT).show();
         }
-
     }
 
     /** Shows the dialog for setting the attenuators. */
